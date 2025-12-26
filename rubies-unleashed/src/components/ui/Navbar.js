@@ -11,7 +11,7 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "Vault", href: "/explore" },
     { name: "About", href: "/#about" },
-    { name: "Publish", href: "/#publish" },
+    { name: "Publish", href: "https://forms.gle/i7X2sUJ5cnqsUciA6" },
   ];
 
   return (

@@ -87,7 +87,7 @@ export default function GiantRuby() {
 
       {/* 3. THE RUBY SHELL (The Lock) */}
       <div 
-        className={`relative w-80 h-[28rem] transition-all duration-700 ease-out animate-float ${
+        className={`relative w-80 h-112 transition-all duration-700 ease-out animate-float ${
             getTransform("scale-110", "group-hover/ruby:scale-110")
         }`}
       >

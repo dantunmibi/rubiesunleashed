@@ -273,7 +273,7 @@ function ExploreContent() {
                 <section id="vault" className="flex flex-col gap-0 relative min-h-125">
                     
                     {/* ✅ STICKY HEADER WRAPPER */}
-                    <div className="sticky top-0 z-30 bg-[#0b0f19]/95 backdrop-blur-xl border-b border-white/5 pb-4 pt-4 -mx-4 px-4 md:mx-0 md:px-0 transition-all shadow-xl shadow-black/20">
+                    <div className="sticky md:relative top-0 z-30 bg-[#0b0f19]/95 backdrop-blur-xl border-b border-white/5 pb-4 pt-4 -mx-4 px-4 md:mx-0 md:px-0 transition-all shadow-xl shadow-black/20">
                         
                         {/* Header & Search */}
                         <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-4">
