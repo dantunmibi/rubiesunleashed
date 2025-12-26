@@ -22,7 +22,7 @@ export default function Navbar() {
         - 'h-24': Taller to accommodate the bigger logo comfortably.
         - 'bg-gradient-to-b': Subtle fade from black at the top for readability.
       */}
-      <nav className="absolute top-0 left-0 right-0 z-50 h-24 w-full border-none from-black/60 to-transparent">
+      <nav className="absolute top-0 left-0 right-0 z-100 h-24 w-full border-none from-black/60 to-transparent">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between relative">
           {/* 1. LOGO (Left - Contained & Centered) */}
           <Link href="/" className="flex items-center gap-1 group z-50 h-full">

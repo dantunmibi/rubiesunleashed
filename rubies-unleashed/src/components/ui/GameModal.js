@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Heart, Download, Maximize2, ArrowRight } from "lucide-react";
+import { X, Heart, Download, Maximize2, ArrowRight, AlertTriangle, Eye } from "lucide-react";
 import Link from "next/link";
 import { getDownloadIcon } from "@/lib/game-utils"; // Need this helper
 
 export default function GameModal({ game, onClose }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // ✅ NEW: Content Warning State (Default to TRUE if warnings exist)
+  const hasWarnings = game.contentWarnings && game.contentWarnings.length > 0;
+  const [isBlurred, setIsBlurred] = useState(hasWarnings);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("ruby_wishlist") || "[]");
@@ -49,26 +53,54 @@ export default function GameModal({ game, onClose }) {
 
       {/* Modal */}
       <div className="relative w-full max-w-4xl bg-[#161b2c] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[85vh] animate-in zoom-in-95 fade-in duration-300">
-        
+        {/* ✅ FIXED: Use z-60 (Standard Utility) instead of z-[60] */}
         <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 z-20 p-2 bg-black/50 hover:bg-ruby text-white rounded-full transition-colors backdrop-blur-md cursor-pointer border border-white/10"
+          onClick={onClose}
+          className="absolute top-4 right-4 z-60 p-2 rounded-full bg-black/40 border border-white/10 text-white/70 hover:text-white hover:bg-ruby hover:border-ruby transition-all duration-300 hover:rotate-90 backdrop-blur-md"
+          aria-label="Close"
         >
-            <X size={20} />
+          <X size={20} />
         </button>
+        
+        {/* ✅ CONTENT WARNING OVERLAY (Absolute Position) */}
+        {isBlurred && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl p-6 text-center">
+                <div className="bg-red-500/20 p-4 rounded-full mb-4 animate-pulse">
+                    <AlertTriangle size={48} className="text-red-500" />
+                </div>
+                <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Content Warning</h3>
+                <p className="text-slate-300 mb-6 max-w-md">
+                    This content contains elements that may not be suitable for all audiences: <br/>
+                    <span className="text-red-400 font-bold">{game.contentWarnings.join(", ")}</span>
+                </p>
+                <button 
+                    onClick={() => setIsBlurred(false)}
+                    className="bg-white text-black px-8 py-3 rounded-xl font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2"
+                >
+                    <Eye size={18} /> View Content
+                </button>
+                <button 
+                    onClick={onClose} 
+                    className="mt-4 px-6 py-2 rounded-lg border border-white/10 hover:bg-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        )}
 
-        {/* Poster */}
-        <div className="hidden md:block w-[40%] relative bg-slate-900">
+        {/* Poster (Blurred if warning active) */}
+        <div className={`hidden md:block w-[40%] relative bg-slate-900 transition-all duration-500 ${isBlurred ? 'blur-sm grayscale' : ''}`}>
             <img 
                 src={game.image} 
                 alt={game.title} 
-                className="w-full h-full object-cover opacity-90 transition-transform hover:scale-105 duration-700" 
+                className="w-full h-full object-cover opacity-90" 
             />
             <div className="absolute inset-0 bg-linear-to-r from-transparent via-[#161b2c]/20 to-[#161b2c]" />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-8 overflow-y-auto custom-scrollbar flex flex-col">
+        {/* Content (Blurred if warning active) */}
+        <div className={`flex-1 p-8 overflow-y-auto custom-scrollbar flex flex-col transition-all duration-500 ${isBlurred ? 'blur-md opacity-50 pointer-events-none' : ''}`}>
+
             <div className="mb-6">
                 <span className="text-[10px] font-black uppercase tracking-widest text-ruby bg-ruby/10 px-2.5 py-1 rounded border border-ruby/20 mb-3 inline-block">
                     {game.tag || (game.tags?.some(t => ['App', 'PWA', 'Tool'].includes(t)) ? "App" : "Game")}

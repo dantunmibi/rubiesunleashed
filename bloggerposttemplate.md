@@ -29,7 +29,17 @@ HTML
     </p>
 </div>
 
-<br />
+<!-- CONTENT WARNING (OPTIONAL) -->
+<div class="content-warning-box" id="contentWarning" style="display: none;">
+    <div class="warning-header">
+        <span class="warning-icon">⚠️</span>
+        <strong>Content Warning</strong>
+        <span class="close-warning" onclick="closeWarning()">×</span>
+    </div>
+    <div class="warning-content">
+        <p id="warningText"></p>
+    </div>
+</div>
 
 <!-- METADATA -->
 <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -43,6 +53,99 @@ HTML
         <span style="color: #404040;">Build - Windows, Mac, Linux, Android</span>
     </div>
 </div>
+
+<style>
+.content-warning-box {
+    background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.warning-icon {
+    font-size: 24px;
+}
+
+.close-warning {
+    margin-left: auto;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 20px;
+    transition: transform 0.2s;
+}
+
+.close-warning:hover {
+    transform: scale(1.2);
+}
+
+.warning-content {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.warning-content ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.warning-content li {
+    margin: 5px 0;
+}
+</style>
+
+<script>
+function closeWarning() {
+    const warningBox = document.getElementById('contentWarning');
+    warningBox.style.animation = 'fadeOut 0.3s ease-out';
+    setTimeout(() => {
+        warningBox.style.display = 'none';
+        localStorage.setItem('warning_dismissed_{{POST_ID}}', 'true');
+    }, 300);
+}
+
+// Show warning on page load if not dismissed
+window.addEventListener('DOMContentLoaded', function() {
+    const warningBox = document.getElementById('contentWarning');
+    const warningText = document.getElementById('warningText');
+    
+    // Check if already dismissed
+    const dismissed = localStorage.getItem('warning_dismissed_{{POST_ID}}');
+    
+    if (!dismissed && warningText.textContent.trim() !== '') {
+        warningBox.style.display = 'block';
+    }
+});
+</script>
+
+<!-- Warning: Violence -->
+Content Warning:
+- This game contains cartoon violence and combat
+- Recommended for ages 13+
+- Mild language and fantasy themes
 
 <!-- FEATURES -->
 <h3 style="text-align: center; color: #E0115F;">

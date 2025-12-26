@@ -1,193 +1,3 @@
-Here is the updated **Master Project Prompt (v7.0 - Robust & Modular)**.
-
-This version captures the **Modular Architecture**, the **Safety/Crash Prevention Logic**, the **Dynamic Tag System**, and the **Explore Page Overhaul**.
-
-***
-
-# 💎 RUBIES UNLEASHED - Master Project Prompt (v7.0 - Robust & Modular)
-
-## 📋 Project Overview
-*   **Name:** Rubies Unleashed
-*   **Type:** Indie Game Marketplace & Publishing Platform
-*   **Tech Stack:** Next.js 15+ (App Router), React, Tailwind CSS v4, Lucide React Icons
-*   **Data Source:** Blogger API Bridge (Headless CMS via `rubyapks.blogspot.com`)
-
-## 🎨 Visual Design System (Strict Tailwind v4)
-*   **Theme:** "Professional Cinematic Dark Mode"
-*   **Base:** Deep Slate (`bg-[#0b0f19]`).
-*   **Accent:** Ruby Rose (`#E0115F`) for primary actions/glows.
-*   **Animations:** Defined in `globals.css` via `@theme` (e.g., `animate-progress`).
-
-### ⚠️ CODING RULES (STRICT):
-1.  **No Arbitrary Values:** Use `max-w-40`, `h-80`. NOT `h-[350px]`.
-2.  **Aspect Ratio:** Use standard utilities: `aspect-video`, `aspect-2/3`, `aspect-3/4`. **NEVER** use `aspect-[...]`.
-3.  **Safety First:** Always validate objects before accessing properties (e.g., `game?.tags || []`). **Never** assume an API response is perfect.
-4.  **Client Components:** Always use `useEffect` for data fetching from the internal API.
-
-## 🔌 Data Architecture & Logic
-
-### 1. The Logic Brain: `src/lib/game-utils.js`
-**Role:** Pure functions for consistent UI logic.
-*   **`getSmartTag(tags)`:** Prioritizes genres (RPG, Horror) over technical tags (Windows).
-*   **`getTagStyle(tag)`:** Maps keywords to specific Tailwind color classes (e.g., Horror = Red, Sci-Fi = Cyan). Defaults to White/Black for active states.
-*   **`getPlatformInfo` / `getLicenseType`:** Extracts metadata icons.
-
-### 2. The Bridge: `src/lib/blogger.js` (STABLE)
-*   **Deduplication:** Merges identical links.
-*   **Extraction:** Parses HTML description into `features`, `controls`, `requirements` arrays.
-*   **Web Games:** Detects `/html` links as "Web" platform.
-
-## 🗺️ Core Page Structure
-
-### 1. Game Details (`/game/[slug]`)
-**Architecture:** Modular Component System.
-**Controller:** `src/app/game/[slug]/page.js` (Handles Fetching, Shuffle Logic, & Crash Prevention).
-
-**Components (`src/components/game/`):**
-*   **`GameHero.jsx`:** Blurred BG, Poster, Instant Access Buttons.
-*   **`GameMedia.jsx`:** Priority Logic: `Embed` > `Trailer` > `Null`.
-*   **`GameContent.jsx`:** Description, Features Grid, Requirements.
-*   **`GameSidebar.jsx`:** Sticky Info Card. **Must use Nuclear Safety Checks** (`if (!game) return null`).
-*   **`SimilarGames.jsx`:**
-    *   **Logic:** Fetch 50 -> Filter by Tag Overlap -> Fisher-Yates Shuffle -> Take 4.
-    *   **UI:** 4-Column Grid, `aspect-3/4`.
-
-### 2. Explore Vault (`/explore`)
-**Features:**
-*   **Spotlight:** Shows games tagged "Featured" (Fallback to latest).
-*   **Horizontal Ribbon:** Scrollable list of ALL tags sorted by popularity.
-*   **Auto-Centering:** Clicking a tag auto-scrolls the ribbon to center it.
-*   **Deep Linking:** URL `?q=Horror` auto-scrolls page to the Vault section.
-*   **Smart Cards:** Displays the "Smart Tag" with its specific Color Glow.
-
-## 📂 Critical Code References
-
-**Game Sidebar (The "Safe" Component)**
-```jsx
-// src/components/game/GameSidebar.jsx
-export default function GameSidebar({ game }) {
-  if (!game) return null; // 1. Immediate Safety Exit
-  // 2. Safe Extraction
-  const tags = (game.tags && Array.isArray(game.tags)) ? game.tags : [];
-  // ... render ...
-}
-```
-
-**Tag Style Logic (`src/lib/game-utils.js`)**
-```javascript
-const TAG_STYLES = {
-  "Horror": "text-red-400 bg-red-900/20 border-red-500/30",
-  "Action": "text-orange-400 bg-orange-900/20 border-orange-500/30",
-  "Featured": "text-white bg-ruby/20 border-ruby/50 shadow-[...]",
-  "DEFAULT": "text-slate-300 bg-white/5 border-white/10"
-};
-```
-
-**Explore Auto-Scroll (`src/app/explore/page.js`)**
-```javascript
-useEffect(() => {
-   if (!loading && selectedGenre !== "All") {
-       document.getElementById("vault")?.scrollIntoView({ behavior: "smooth", block: "start" });
-       document.getElementById(`tag-btn-${selectedGenre}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-   }
-}, [selectedGenre, loading]);
-```
-
-## 🚀 Next Development Priorities
-
-1.  **Wishlist Page:** `/wishlist` (LocalStorage Grid).
-2.  **Publisher Submission:** `/publish` (Static Guide).
-3.  **SEO:** Dynamic Metadata for Game Pages (`generateMetadata`).
-
-
-Here is the final **Master Project Prompt (v8.0 - Stable Release)**.
-
-This version locks in the **Cinematic UI**, the **Robust API Logic**, the **Modular Component System**, and the **Mobile-Optimized Navbar**.
-
-***
-
-# 💎 RUBIES UNLEASHED - Master Project Prompt (v8.0 - Stable Release)
-
-## 📋 Project Overview
-*   **Name:** Rubies Unleashed
-*   **Type:** Indie Game Marketplace & Publishing Platform
-*   **Tech Stack:** Next.js 15+ (App Router), React, Tailwind CSS v4, Lucide React Icons
-*   **Data Source:** Blogger API Bridge (Headless CMS via `rubyapks.blogspot.com`)
-
-## 🎨 Visual Design System (Strict Tailwind v4)
-*   **Theme:** "Hyper-Professional Cinematic Dark Mode"
-*   **Base:** Deep Slate (`bg-[#0b0f19]`).
-*   **Accent:** Ruby Rose (`#E0115F`) for primary actions/glows.
-*   **Typography:** Sans-serif (Geist/Inter). Massive Headers (`text-8xl`), Tight Tracking (`tracking-tighter`).
-*   **Effects:** Glassmorphism (`backdrop-blur-xl`), Ambient Glows (`blur-[100px]`), 3D Perspective (`perspective-1000`).
-
-### ⚠️ CODING RULES (STRICT):
-1.  **Safety First:** Always validate data (`game?.tags || []`). Never crash on bad API responses.
-2.  **Modular Cards:** Always use `src/components/game/GameCard.jsx` for displaying games. Do NOT rewrite card logic.
-3.  **Client Fetching:** `GameVault` and `GiantRuby` must receive data as **props** from `page.js` to prevent API race conditions.
-4.  **Mobile First:** Navbar must collapse to Icon Only. Text hidden on small screens.
-
-## 🔌 Data Architecture (Robust)
-
-### 1. API Route (`src/app/api/games/route.js`)
-*   **Role:** Proxy to Google Feeds to bypass CORS.
-*   **Logic:** Uses hardcoded Blog ID (`rubyapks.blogspot.com`) + User-Agent headers.
-*   **Fail-Safe:** Returns 500 JSON instead of crashing app.
-
-### 2. The Bridge (`src/lib/blogger.js`)
-*   **Fetch Logic:** Tries Real API first. If Network/DNS fails (`ENOTFOUND`), auto-switches to **Mock Data** (Offline Mode).
-*   **Parser:** `normalizePost` intelligently extracts features/controls using regex. Prevents description truncation on short words.
-
-## 🗺️ Core Page Structure
-
-### 1. Homepage (`/`)
-*   **Controller:** `src/app/page.js` (Fetches data ONCE, passes to children).
-*   **Components:**
-    *   **Hero:** Left Text, Right **Giant Ruby** (Interactive 3D Reveal).
-    *   **GiantRuby:** Hover to split gem and reveal "Featured" games. Floating animation.
-    *   **GameVault:** Grid of 8 latest games using `GameCard`.
-    *   **Features:** 3-Column Glass Cards.
-
-### 2. Explore Vault (`/explore`)
-*   **Search:** Real-time filtering.
-*   **Navigation:**
-    *   **Platform:** Icon Row (PC, Mobile, Web).
-    *   **Genres:** Horizontal Scroll Ribbon (Top 10) OR Expandable Grid (A-Z).
-*   **UX:** Auto-scrolls to vault when filter selected. Centers active tag in ribbon.
-
-### 3. Game Details (`/game/[slug]`)
-*   **Layout:** Hero Header -> 2-Column Content -> Similar Games Footer.
-*   **Sidebar:** Sticky Info Card (Dev, Size, Version). **Nuclear Safety Checks** (`if(!game) return null`).
-*   **Similar Games:** Randomly shuffles 4 relevant games.
-
-## 📂 Critical Component References
-
-**Universal Game Card (`src/components/game/GameCard.jsx`)**
-```jsx
-export default function GameCard({ game }) {
-  // Centralized "Smart Tag" logic
-  const smartTag = getSmartTag(game.tags);
-  const tagStyle = getTagStyle(smartTag);
-  // Renders Image + Gradient + Tag + Title
-}
-```
-
-**Navbar (`src/components/ui/Navbar.jsx`)**
-```jsx
-// Mobile-Optimized Layout
-<nav className="h-20 ...">
-  {/* Logo: Icon Only on Mobile */}
-  <img className="h-12 md:h-14 -ml-2" src="/ru-logo.png" />
-  <span className="hidden md:block">RUBIES UNLEASHED</span>
-</nav>
-```
-
-## 🚀 Next Development Priorities
-
-1.  **Wishlist Page:** `/wishlist` (LocalStorage Grid + Remove Button).
-2.  **Publisher Submission:** `/publish` (Static Guide).
-3.  **SEO:** Dynamic Metadata (`generateMetadata` in `page.js`).
-
 💎 RUBIES UNLEASHED - Master Project Prompt (v9.5 - Universal Marketplace)
 📋 Project Overview
 Name: Rubies Unleashed
@@ -381,3 +191,222 @@ SEO & Metadata: Dynamic <title> (generateMetadata).
 Loading Skeletons: loading.js.
 Error Handling: error.js / not-found.js.
 Static Pages: /publish, /about.
+
+ ┣ 📂public
+ ┃ ┣ 📜file.svg
+ ┃ ┣ 📜globe.svg
+ ┃ ┣ 📜next.svg
+ ┃ ┣ 📜ru-logo.png
+ ┃ ┣ 📜vercel.svg
+ ┃ ┗ 📜window.svg
+ ┣ 📂scripts
+ ┃ ┗ 📜update-snapshot.js
+ ┣ 📂src
+ ┃ ┣ 📂app
+ ┃ ┃ ┣ 📂api
+ ┃ ┃ ┃ ┗ 📂games
+ ┃ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┣ 📂explore
+ ┃ ┃ ┃ ┗ 📜page.js
+ ┃ ┃ ┣ 📂view
+ ┃ ┃ ┃ ┗ 📂[slug]
+ ┃ ┃ ┃ ┃ ┗ 📜page.js
+ ┃ ┃ ┣ 📜favicon.ico
+ ┃ ┃ ┣ 📜globals.css
+ ┃ ┃ ┣ 📜layout.js
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂components
+ ┃ ┃ ┣ 📂store
+ ┃ ┃ ┃ ┣ 📜DownloadCallout.jsx
+ ┃ ┃ ┃ ┣ 📜GameCard.jsx
+ ┃ ┃ ┃ ┣ 📜GameContent.jsx
+ ┃ ┃ ┃ ┣ 📜GameHero.jsx
+ ┃ ┃ ┃ ┣ 📜GameMedia.jsx
+ ┃ ┃ ┃ ┣ 📜GameSidebar.jsx
+ ┃ ┃ ┃ ┗ 📜SimilarGames.jsx
+ ┃ ┃ ┗ 📂ui
+ ┃ ┃ ┃ ┣ 📜AboutSection.js
+ ┃ ┃ ┃ ┣ 📜BackgroundEffects.js
+ ┃ ┃ ┃ ┣ 📜FeatureTriangles.js
+ ┃ ┃ ┃ ┣ 📜Footer.js
+ ┃ ┃ ┃ ┣ 📜GameModal.js
+ ┃ ┃ ┃ ┣ 📜GameVault.js
+ ┃ ┃ ┃ ┣ 📜GiantRuby.js
+ ┃ ┃ ┃ ┣ 📜Hero.js
+ ┃ ┃ ┃ ┗ 📜Navbar.js
+ ┃ ┗ 📂lib
+ ┃ ┃ ┣ 📜backup-data.json
+ ┃ ┃ ┣ 📜blogger.js
+ ┃ ┃ ┗ 📜game-utils.js
+ ┣ 📜.gitignore
+ ┣ 📜eslint.config.mjs
+ ┣ 📜jsconfig.json
+ ┣ 📜netlify.toml
+ ┣ 📜next.config.mjs
+ ┣ 📜package-lock.json
+ ┣ 📜package.json
+ ┣ 📜postcss.config.mjs
+ ┗ 📜README.md
+
+ Perfect! Your final blogger.js is solid! 🎉
+
+Here's a clean summary of what your parser now handles:
+
+✅ Features Successfully Implemented:
+1. Content Extraction:
+✅ Descriptions - Properly reconstructed paragraphs with smart sentence detection
+✅ Features - List parsing with duplicate removal
+✅ System Requirements - Platform-specific requirements
+✅ Controls - Keyboard/mouse/gamepad mappings
+✅ Content Warnings - Age ratings and content advisories
+✅ Social Links - Patreon, Discord, YouTube, etc.
+2. Metadata Detection:
+✅ Developer extraction from structured metadata
+✅ Build Platform detection (Windows, Mac, Linux, Android, iOS, Web)
+✅ App vs Game classification based on tags
+✅ Tags from Blogger categories
+3. Media Handling:
+✅ Main Cover Image with fallback placeholder
+✅ Screenshots (up to 6, excludes cover and download buttons)
+✅ Videos (YouTube, Vimeo, etc.)
+✅ Game Embeds (Itch.io, Newgrounds, etc.)
+4. Download Links:
+✅ Platform Detection from image filenames and alt text
+✅ Duplicate Removal and URL normalization
+✅ Smart Sorting (Windows, Mac, Linux, Android, iOS, Web)
+5. Robust Parsing:
+✅ HTML Cleaning - Removes hidden elements, scripts, styles
+✅ Attribute Filtering - Skips HTML remnants
+✅ Smart Paragraph Reconstruction - Merges broken lines
+✅ Metadata Exit Detection - Prevents data leakage between sections
+📋 Quick Tips for Blog Post Structure:
+For best results, structure your Blogger posts like this:
+
+HTML
+
+<!-- 1. Cover Image -->
+<div class="separator">
+    <img src="..." alt="Cover" />
+</div>
+
+<!-- 2. Description -->
+<div>
+    <p>First paragraph...</p>
+    <p>Second paragraph...</p>
+</div>
+
+<!-- 3. Content Warning (BEFORE metadata!) -->
+<h3>Content Warning:</h3>
+<ul>
+    <li>Warning 1</li>
+    <li>Warning 2</li>
+</ul>
+
+<!-- 4. Metadata -->
+<div>
+    Developer – <a href="...">Name</a>
+    Version – 1.0
+    Build – Windows, Mac, Linux
+</div>
+
+<!-- 5. Features -->
+<h3>Features:</h3>
+<ul>
+    <li>Feature 1</li>
+    <li>Feature 2</li>
+</ul>
+
+<!-- 6. Screenshots -->
+<h3>Screenshots:</h3>
+<img src="..." />
+
+<!-- 7. Video -->
+<h3>Gameplay Video:</h3>
+<iframe src="youtube..."></iframe>
+
+<!-- 8. Download -->
+<h3>Download:</h3>
+<a href="..."><img src="download-button.png" /></a>
+
+
+💎 RUBIES UNLEASHED - Master Project Prompt (v12.0 - Universal & Immersive)
+📋 Project Overview
+Name: Rubies Unleashed
+Type: Universal Digital Marketplace (Games, Apps, Tools, Assets)
+Tech Stack: Next.js 15+ (App Router), React, Tailwind CSS v4, Lucide React Icons
+Data Source: Blogger API Bridge (Headless CMS via rubyapks.blogspot.com)
+🎨 Visual Design System (Strict Tailwind v4)
+Theme: "Hyper-Professional Cinematic Dark Mode"
+Base: Deep Slate (bg-[#0b0f19]).
+Accent: Ruby Rose (#E0115F) for Games/Primary.
+Secondary: Cyan/Teal for Apps/Tools.
+Effects: Glassmorphism (backdrop-blur-xl), Ambient Glows, Parallax Backgrounds.
+Mobile Experience: "Native App Feel" -> Hidden Global Navbar on Details, Floating Action Bars, Swipe-friendly.
+⚠️ CODING RULES (CRITICAL):
+Z-Index Stratification:
+z-50: Modals, Overlays.
+z-40: Mobile Floating Action Bars (must sit below Modals/Menus).
+z-30: Sticky Headers, Floating Back Buttons.
+z-0 to z-20: Page Content.
+No Arbitrary Values: Use w-125, h-80. NOT w-[500px].
+Safety First: Validate all objects (game?.tags || []). Never crash on missing data.
+Navigation Hygiene: On Mobile Details Page (/view/[slug]), HIDE the global Navbar to prevent "Double Header" clutter. Use the Hero's internal navigation instead.
+🔌 Data Architecture
+1. The Bridge (src/lib/blogger.js)
+Context-Aware Parsing:
+Extracts Content Warnings (<h3>Warning:</h3>).
+Extracts Social Links (Discord, Patreon).
+Detects Platform via Image Alt Text & Filenames.
+Fail-Safe: Returns backup-data.json if API fails.
+2. Logic Brain (src/lib/game-utils.js)
+Smart Classification:
+isApp: Checks tags for "App", "Tool", "Software".
+Visuals: Swaps Gamepad2 (Game) for Box (App).
+Colors: Apps get Blue/Teal accents; Games get Ruby.
+🗺️ Core Page Structure
+1. Explore Vault (/explore)
+Features: Deep Linking (?q=), Dynamic Tag Ribbon (Auto-Centers Active Tag), Smart Search (Title + Tag + Developer).
+UX: Sticky Filter Header, Auto-scroll to Vault on interaction.
+2. Item Details (/view/[slug])
+Hybrid Layout:
+Mobile: Immersive "App" Mode. Global Navbar Hidden. Floating Back Button (Top Left). Floating Action Bar (Bottom Fixed).
+Desktop: Cinematic Widescreen Mode. Standard Sidebar Layout.
+Scroll Targets: #download-section and #about-section for smooth navigation.
+Components:
+GameHero.jsx: Handles the Responsive Hybrid Layout + Share Logic (Native Sheet vs Clipboard).
+GameMedia.jsx: Cinematic Lightbox for screenshots.
+SimilarGames.jsx: Priority Engine -> Developer Matches (Shuffle) > Tag Matches (Shuffle).
+📂 Critical Logic References
+Mobile Floating Bar Logic (src/components/store/GameHero.jsx)
+
+React
+
+// Auto-hide on scroll to prevent reading obstruction
+useEffect(() => {
+  const handleScroll = () => setShowFloatingBar(window.scrollY < 100);
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+Developer Priority Sorting (src/app/view/[slug]/page.js)
+
+JavaScript
+
+// 1. Priority A: Developer Matches (Exact match, ignore "Unknown")
+const devMatches = allGames.filter(g => g.developer === data.developer);
+// 2. Priority B: Tag Matches (Deduplicated)
+const tagMatches = allGames.filter(g => !devMatches.includes(g) && hasTagOverlap(g));
+// 3. Shuffle & Slice
+const final = [...shuffle(devMatches), ...shuffle(tagMatches)].slice(0, 4);
+🚀 Next Development Priorities (Phase 1)
+Wishlist Page (/wishlist):
+
+Goal: A dedicated page to view saved items.
+Tech: localStorage reading.
+UI: Grid layout using GameCard.
+Features: "Remove" button, Empty State illustration.
+SEO & Metadata:
+
+Dynamic generateMetadata for /view/[slug] to show Game Title/Image on Discord/Twitter embeds.
+Publisher Page (/publish):
+
+Static guide for submitting content.

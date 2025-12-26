@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
@@ -26,7 +26,6 @@ import GameCard from "@/components/store/GameCard";
 
 const FEATURED_TAG = "Featured";
 
-// Platform Definitions
 const PLATFORMS = [
   { id: "Windows", icon: Monitor, label: "PC" },
   { id: "Android", icon: Smartphone, label: "Mobile" },
@@ -36,7 +35,10 @@ const PLATFORMS = [
 
 function ExploreContent() {
   const searchParams = useSearchParams();
-  const initialQuery = searchParams.get("q") || "All";
+  const router = useRouter();
+  
+  const initialQuery = searchParams.get("q") || "";
+  const initialPlatform = searchParams.get("platform") || "All";
 
   // --- STATE ---
   const [games, setGames] = useState([]);
@@ -48,11 +50,11 @@ function ExploreContent() {
   const spotlightCount = 4;
 
   // Vault State
-  const [selectedGenre, setSelectedGenre] = useState(initialQuery);
-  const [selectedPlatform, setSelectedPlatform] = useState("All"); // ✅ NEW: Platform Filter
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("All"); 
+  const [selectedPlatform, setSelectedPlatform] = useState(initialPlatform);
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [visibleCount, setVisibleCount] = useState(12);
-  const [isExpanded, setIsExpanded] = useState(false); // ✅ NEW: Grid Mode Toggle
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // --- 1. LOAD DATA ---
   useEffect(() => {
@@ -64,31 +66,45 @@ function ExploreContent() {
     load();
   }, []);
 
-  // --- 2. DEEP LINKING ---
+  // --- 2. DEEP LINKING & SYNC ---
   useEffect(() => {
-    const query = searchParams.get("q");
-    if (query) setSelectedGenre(query);
+    const q = searchParams.get("q") || "";
+    setSearchQuery(q);
   }, [searchParams]);
+
+  const handleSearch = (term) => {
+    setSearchQuery(term);
+    const params = new URLSearchParams(searchParams);
+    if (term) params.set("q", term);
+    else params.delete("q");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   // --- 3. AUTO-SCROLL UI ---
   useEffect(() => {
-    if (!loading && (selectedGenre !== "All" || selectedPlatform !== "All")) {
-      setTimeout(() => {
-        document
-          .getElementById("vault")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
+    if (!loading) {
+      // A. Scroll Page to Vault (if filter changed)
+      if (searchQuery || selectedPlatform !== "All") {
+        setTimeout(() => {
+          document.getElementById("vault")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
 
-      setTimeout(() => {
-        const activeBtn = document.getElementById(`tag-btn-${selectedGenre}`);
-        activeBtn?.scrollIntoView({
-          behavior: "smooth",
-          inline: "center",
-          block: "nearest",
-        });
-      }, 200);
+      // B. Scroll Ribbon Button to Center (Mobile Fix)
+      // Only runs if the grid is NOT expanded (i.e. we are in ribbon mode)
+      if (selectedGenre && !isExpanded) {
+        setTimeout(() => {
+          const activeBtn = document.getElementById(`tag-btn-${selectedGenre}`);
+          activeBtn?.scrollIntoView({
+            behavior: "smooth",
+            inline: "center", // This centers the button horizontally
+            block: "nearest",
+          });
+        }, 200);
+      }
     }
-  }, [selectedGenre, selectedPlatform, loading]);
+  }, [searchQuery, selectedPlatform, selectedGenre, loading, isExpanded]);
+
 
   // --- 4. SPOTLIGHT ROTATION ---
   useEffect(() => {
@@ -99,7 +115,6 @@ function ExploreContent() {
   }, [spotlightCount]);
 
   // --- 5. MEMOIZED DATA ---
-
   const spotlightItems = useMemo(() => {
     const featured = games.filter(
       (g) =>
@@ -113,7 +128,7 @@ function ExploreContent() {
 
   const activeSpotlight = spotlightItems[spotlightIndex];
 
-  // ✅ DYNAMIC TAGS: Popularity for Ribbon, A-Z for Grid
+  // ✅ DYNAMIC TAGS (Calculates Popularity)
   const { topTags, allTagsAz } = useMemo(() => {
     if (games.length === 0) return { topTags: [], allTagsAz: [] };
 
@@ -121,7 +136,6 @@ function ExploreContent() {
     games.forEach((g) => {
       if (g.tags) {
         g.tags.forEach((t) => {
-          // Filter out utility/platform tags from the Genre list
           if (
             t === "Featured" ||
             t === "Game" ||
@@ -135,22 +149,34 @@ function ExploreContent() {
     });
 
     const entries = Object.entries(counts);
-
-    // Top 10 for Ribbon
-    const top = entries
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map((e) => e[0]);
-
-    // All A-Z for Grid
-    const allAz = entries
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map((e) => e[0]);
+    const top = entries.sort((a, b) => b[1] - a[1]).slice(0, 10).map((e) => e[0]);
+    const allAz = entries.sort((a, b) => a[0].localeCompare(b[0])).map((e) => e[0]);
 
     return { topTags: ["All", ...top], allTagsAz: ["All", ...allAz] };
   }, [games]);
 
-  // ✅ MULTI-FILTER LOGIC (Platform + Genre + Search)
+  // ✅ RIBBON LOGIC: Inject searched tag if not in Top 10
+  const ribbonTags = useMemo(() => {
+    // 1. Determine what the "Active" tag is based on search or selection
+    let activeTag = selectedGenre;
+    
+    // If search query matches a known tag exactly, treat that as active
+    const searchMatch = allTagsAz.find(t => t.toLowerCase() === searchQuery.toLowerCase());
+    if (searchMatch) activeTag = searchMatch;
+
+    // 2. Start with default Top Tags
+    let displayList = [...topTags];
+
+    // 3. If active tag is valid, not "All", and NOT in the list -> Inject it at index 1
+    if (activeTag !== "All" && !displayList.includes(activeTag)) {
+        displayList.splice(1, 0, activeTag);
+    }
+
+    return displayList;
+  }, [topTags, allTagsAz, selectedGenre, searchQuery]);
+
+
+  // ✅ MULTI-FILTER LOGIC
   const vaultGames = useMemo(() => {
     let filtered = games;
 
@@ -165,28 +191,38 @@ function ExploreContent() {
       );
     }
 
-    // 2. Genre Filter
-    if (selectedGenre !== "All") {
-      filtered = filtered.filter((g) =>
-        g.tags.some(
-          (tag) =>
-            tag.toLowerCase().trim() === selectedGenre.toLowerCase().trim()
-        )
-      );
-    }
+    // 2. Genre/Search Logic
+    // If exact tag match found via Search or Click
+    const exactTagMatch = allTagsAz.find(t => t.toLowerCase() === searchQuery.toLowerCase()) || (selectedGenre !== "All" ? selectedGenre : null);
 
-    // 3. Search Filter (Title OR Tag)
-    if (searchQuery) {
+    if (exactTagMatch && searchQuery.toLowerCase() === exactTagMatch.toLowerCase()) {
+         // Strict Tag Filter
+         filtered = filtered.filter((g) =>
+            g.tags.some((tag) => tag.toLowerCase().trim() === exactTagMatch.toLowerCase().trim())
+        );
+    } 
+    else if (searchQuery) {
+      // Broad Search
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((g) =>
         g.title.toLowerCase().includes(query) ||
-        (g.tags && g.tags.some(t => t.toLowerCase().includes(query)))
+        (g.tags && g.tags.some(t => t.toLowerCase().includes(query))) ||
+        (g.developer && g.developer.toLowerCase().includes(query))
       );
     }
+
     return filtered;
-  }, [games, selectedGenre, selectedPlatform, searchQuery]);
+  }, [games, selectedGenre, selectedPlatform, searchQuery, allTagsAz]);
 
   const visibleGames = vaultGames.slice(0, visibleCount);
+
+  const handleGenreClick = (tag) => {
+      setSelectedGenre(tag);
+      if (tag === "All") handleSearch("");
+      else handleSearch(tag);
+      setVisibleCount(12);
+      setIsExpanded(false);
+  };
 
   // --- RENDER ---
   return (
@@ -201,7 +237,7 @@ function ExploreContent() {
           </div>
         ) : (
           <div className="flex flex-col gap-16 pt-20">
-            {/* SPOTLIGHT HERO (Unchanged) */}
+            {/* SPOTLIGHT HERO */}
             {spotlightItems.length > 0 && activeSpotlight && (
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-125">
                 <div className="lg:col-span-2 relative rounded-3xl overflow-hidden group shadow-2xl border border-white/5">
@@ -272,7 +308,7 @@ function ExploreContent() {
                 {/* THE VAULT */}
                 <section id="vault" className="flex flex-col gap-0 relative min-h-125">
                     
-                    {/* ✅ STICKY HEADER WRAPPER */}
+                    {/* STICKY HEADER WRAPPER */}
                     <div className="sticky md:relative top-0 z-30 bg-[#0b0f19]/95 backdrop-blur-xl border-b border-white/5 pb-4 pt-4 -mx-4 px-4 md:mx-0 md:px-0 transition-all shadow-xl shadow-black/20">
                         
                         {/* Header & Search */}
@@ -286,11 +322,16 @@ function ExploreContent() {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-ruby transition-colors" size={16} />
                                 <input 
                                     type="text" 
-                                    placeholder="Search titles, tags, or genres..." 
+                                    placeholder="Search titles, tags, or devs..." 
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => handleSearch(e.target.value)}
                                     className="w-full bg-surface/50 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-ruby transition-all"
                                 />
+                                {searchQuery && (
+                                    <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                                        <X size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -304,7 +345,7 @@ function ExploreContent() {
                              ))}
                         </div>
 
-                        {/* Genre Filter (Ribbon vs Grid) */}
+                        {/* Genre Filter */}
                         <div className="relative w-full">
                             <div className="flex justify-between items-center mb-3">
                                 <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -319,22 +360,23 @@ function ExploreContent() {
                                 <div className="relative border border-white/10 rounded-xl bg-black/40 p-2 animate-in fade-in zoom-in duration-300">
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                         {allTagsAz.map(tag => {
-                                            const isSelected = selectedGenre === tag;
+                                            const isSelected = selectedGenre === tag || searchQuery.toLowerCase() === tag.toLowerCase();
                                             let styleClass = getTagStyle(tag);
                                             if (isSelected && styleClass.includes("text-slate-300")) styleClass = "bg-white text-black border-white";
                                             else if (!isSelected) styleClass = "bg-surface text-slate-400 border-white/5 hover:border-white/20 hover:text-white";
-                                            return <button key={tag} onClick={() => { setSelectedGenre(tag); setVisibleCount(12); setIsExpanded(false); }} className={`px-3 py-2 rounded-md text-[10px] font-bold border transition-all truncate text-left ${styleClass}`}>{tag}</button>;
+                                            return <button key={tag} onClick={() => handleGenreClick(tag)} className={`px-3 py-2 rounded-md text-[10px] font-bold border transition-all truncate text-left ${styleClass}`}>{tag}</button>;
                                         })}
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex overflow-x-auto gap-2 pb-1 no-scrollbar">
-                                    {topTags.map(tag => {
-                                        const isSelected = selectedGenre === tag;
+                                // ✅ FIXED: Increased padding (py-2) to prevent button clipping
+                                <div className="flex overflow-x-auto gap-2 py-2 px-1 no-scrollbar">
+                                    {ribbonTags.map(tag => {
+                                        const isSelected = selectedGenre === tag || searchQuery.toLowerCase() === tag.toLowerCase();
                                         let styleClass = getTagStyle(tag);
                                         if (isSelected && styleClass.includes("text-slate-300")) styleClass = "bg-white text-black border-white shadow-lg";
                                         else if (!isSelected) styleClass = "bg-surface text-slate-400 border-white/5 hover:text-white";
-                                        return <button key={tag} id={`tag-btn-${tag}`} onClick={() => { setSelectedGenre(tag); setVisibleCount(12); }} className={`shrink-0 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border ${isSelected ? `${styleClass} scale-105` : styleClass}`}>{tag}</button>;
+                                        return <button key={tag} id={`tag-btn-${tag}`} onClick={() => handleGenreClick(tag)} className={`shrink-0 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border ${isSelected ? `${styleClass} scale-105` : styleClass}`}>{tag}</button>;
                                     })}
                                 </div>
                             )}
@@ -342,7 +384,7 @@ function ExploreContent() {
                         </div>
                     </div>
 
-                    {/* GAME GRID (Starts below sticky header) */}
+                    {/* GAME GRID */}
                     <div className="pt-6">
                         {visibleGames.length > 0 ? (
                             <>
@@ -362,7 +404,7 @@ function ExploreContent() {
                         ) : (
                             <div className="py-20 text-center text-slate-500 border border-dashed border-white/10 rounded-2xl">
                                 <p className="text-lg">No treasures found.</p>
-                                <button onClick={() => {setSelectedGenre('All'); setSelectedPlatform('All'); setSearchQuery('');}} className="text-ruby font-bold mt-2 hover:underline">Clear Filters</button>
+                                <button onClick={() => {handleSearch(''); setSelectedPlatform('All'); setSelectedGenre('All');}} className="text-ruby font-bold mt-2 hover:underline">Clear Filters</button>
                             </div>
                         )}
                     </div>

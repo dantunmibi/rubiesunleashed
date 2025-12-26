@@ -14,6 +14,7 @@ import GameSidebar from "@/components/store/GameSidebar";
 import DownloadCallout from "@/components/store/DownloadCallout";
 import SimilarGames from "@/components/store/SimilarGames";
 
+// Helper: Fisher-Yates Shuffle
 function shuffleArray(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -48,33 +49,40 @@ export default function GameDetails({ params }) {
           if (isMounted && data) {
             setGame(data);
 
-            // Wishlist
+            // Wishlist Check
             const saved = JSON.parse(
               localStorage.getItem("ruby_wishlist") || "[]"
             );
             setIsWishlisted(saved.some((g) => g.id === data.id));
 
-            // Similar Games
-            const allGames = await fetchGames(50);
+            // --- 🧠 SMART RECOMMENDATION LOGIC ---
+            const allGames = await fetchGames(50); // Fetch candidate pool
 
-            // Safe Filter
+            // 1. Priority A: Developer Matches (Exact match, ignore "Unknown")
+            const devMatches = allGames.filter((g) => 
+                g.id !== data.id &&
+                g.developer && 
+                data.developer && 
+                g.developer !== "Unknown" &&
+                g.developer.trim().toLowerCase() === data.developer.trim().toLowerCase()
+            );
+
+            // 2. Priority B: Tag Matches (Exclude if already found in Dev Matches)
             const currentTags = Array.isArray(data.tags) ? data.tags : [];
-            let related = allGames.filter((g) => {
-              // Ensure g and g.tags exist
-              if (!g || !Array.isArray(g.tags)) return false;
-              if (g.id === data.id) return false;
-              return g.tags.some((t) => currentTags.includes(t));
+            const tagMatches = allGames.filter((g) => {
+                if (g.id === data.id) return false;
+                if (devMatches.some(dm => dm.id === g.id)) return false; // Prevent duplicates
+                if (!Array.isArray(g.tags)) return false;
+                return g.tags.some(t => currentTags.includes(t));
             });
 
-            if (related.length < 4) {
-              const others = allGames.filter(
-                (g) => g && g.id !== data.id && !related.includes(g)
-              );
-              related = [...related, ...others];
-            }
+            // 3. Merge: Shuffled Devs first, then Shuffled Tags
+            const finalSelection = [
+                ...shuffleArray(devMatches),
+                ...shuffleArray(tagMatches)
+            ].slice(0, 4);
 
-            const shuffled = shuffleArray(related);
-            setSimilarGames(shuffled.slice(0, 4));
+            setSimilarGames(finalSelection);
           }
         }
       } catch (err) {
@@ -123,7 +131,9 @@ export default function GameDetails({ params }) {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans selection:bg-ruby/30">
-      <Navbar />
+      <div className="hidden md:block">
+        <Navbar />
+      </div>
       <GameHero
         game={game}
         isWishlisted={isWishlisted}

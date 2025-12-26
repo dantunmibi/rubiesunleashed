@@ -24,7 +24,7 @@ export default function SimilarGames({ games }) {
             const tagStyle = getTagStyle(smartTag);
 
             return (
-              <Link key={simGame.id} href={`/game/${simGame.slug}`} className="group relative block bg-[#161b2c] rounded-xl overflow-hidden border border-white/5 hover:border-ruby/50 transition-all hover:-translate-y-1 shadow-lg hover:shadow-ruby/20">
+              <Link key={simGame.id} href={`/view/${simGame.slug}`} className="group relative block bg-[#161b2c] rounded-xl overflow-hidden border border-white/5 hover:border-ruby/50 transition-all hover:-translate-y-1 shadow-lg hover:shadow-ruby/20">
                 <div className="aspect-3/4 overflow-hidden">
                   <img 
                     src={simGame.image} 

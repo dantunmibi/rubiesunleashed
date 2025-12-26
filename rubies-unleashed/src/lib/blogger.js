@@ -27,17 +27,36 @@ const cleanText = (str) => {
 
 const htmlToTextLines = (html) => {
     if (!html) return [];
-    const noCss = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
-    return noCss
+    
+    // ✅ REMOVE HIDDEN ELEMENTS BEFORE PROCESSING
+    let cleanHtml = html
+        // Remove elements with display:none or visibility:hidden
+        .replace(/<[^>]*style=["'][^"']*(?:display\s*:\s*none|visibility\s*:\s*hidden)[^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, '')
+        // Remove elements with common hidden classes
+        .replace(/<[^>]*class=["'][^"']*(?:hidden|hide|invisible|sr-only|screen-reader|alert|closebtn)[^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, '')
+        // Remove elements with itemprop
+        .replace(/<[^>]*itemprop=["'][^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, '')
+        // Remove comments
+        .replace(/<!--[\s\S]*?-->/g, '')
+        // Remove <style> tags
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+        // Remove <script> tags
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+        // Remove noscript
+        .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, "")
+        // ✅ NEW: Remove ALL img tags completely (self-closing and regular)
+        .replace(/<img[^>]*\/?>/gi, "");
+    
+    return cleanHtml
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<\/div>/gi, '\n')
         .replace(/<\/li>/gi, '\n')
         .replace(/<\/p>/gi, '\n')
+        .replace(/<\/h[1-6]>/gi, '\n')  // ✅ NEW: Headers create line breaks
         .split('\n')
         .map(l => cleanText(l))
         .filter(l => l.length > 0);
 };
-
 function cleanPlatformName(text) {
     const noParens = text.replace(/\([^)]*\)/g, '');
     const lower = noParens.toLowerCase();
@@ -93,13 +112,12 @@ function refineDownloadLinks(links) {
     return unique;
 }
 
-// ✅ UPDATED: Now accepts altText parameter
 function detectPlatformFromImage(imgUrl, altText = '') {
     const filename = imgUrl.toLowerCase();
     const alt = altText.toLowerCase();
     const parts = filename.split('/').pop().split('.')[0];
     
-    // ✅ PRIORITY 1: Check alt text (most explicit)
+    // PRIORITY 1: Check alt text (most explicit)
     if (alt.includes('windows') || alt.includes('win') || alt.includes('pc')) {
         return 'Windows';
     }
@@ -119,7 +137,7 @@ function detectPlatformFromImage(imgUrl, altText = '') {
         return 'Web';
     }
     
-    // ✅ PRIORITY 2: Check filename (existing logic)
+    // PRIORITY 2: Check filename
     if (/\b(web|browser|online|html5|html|webgl)\b/.test(parts)) return 'Web';
     if (/\b(mac|osx|apple|dmg|darwin)\b/.test(parts)) return 'Mac';
     if (/\b(windows|win64|win32|win|pc)\b/.test(parts)) return 'Windows';
@@ -134,14 +152,12 @@ function isDownloadButton(imgUrl, href = '') {
     const lowerImg = imgUrl.toLowerCase();
     const lowerHref = href.toLowerCase();
 
-    // 🛑 1. IGNORE IMAGE TARGETS
-    // If the link points to a .png/.jpg, it is a screenshot/lightbox, NOT a download.
+    // IGNORE IMAGE TARGETS
     if (lowerHref.match(/\.(jpg|jpeg|png|webp|gif|bmp|svg)$/)) {
         return false;
     }
 
-    // 🛑 2. IGNORE BLOGGER/GOOGLE IMAGE HOSTING
-    // Often these are just full-res views of the image
+    // IGNORE BLOGGER/GOOGLE IMAGE HOSTING
     if (lowerHref.includes('bp.blogspot.com') || lowerHref.includes('googleusercontent.com')) {
         return false;
     }
@@ -161,13 +177,28 @@ function isDownloadButton(imgUrl, href = '') {
     return hasDownloadKeyword && isNotScreenshot;
 }
 
+// ✅ NEW: Helper to truncate description at word boundary
+function truncateDescription(text, maxLength = 150) {
+    if (!text || text.length <= maxLength) return text;
+    const truncated = text.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + "...";
+}
+
 function normalizePost(post) {
   const title = post.title.$t || post.title; 
   let contentRaw = post.content ? (post.content.$t || post.content) : '';
   const idRaw = post.id.$t || post.id;
   const id = idRaw.includes('post-') ? idRaw.split('post-')[1] : idRaw;
 
-  // ✅ NEW: Remove JSON-LD schema blocks BEFORE processing
+  // ✅ DECODE HTML ENTITIES FIRST
+  contentRaw = contentRaw
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, "&");
+
+  // Remove JSON-LD schema blocks
   contentRaw = contentRaw.replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, '');
 
   let developer = "Indie Dev";
@@ -176,33 +207,33 @@ function normalizePost(post) {
   let requirements = [];
   let controls = [];
   let socialLinks = [];
+    // Add after the socialLinks declaration
+    let contentWarnings = [];
   let cleanDescriptionLines = [];
 
   const textLines = htmlToTextLines(contentRaw);
   let captureMode = null; 
 
-  // 🔍 DEBUG: Log text lines
-  console.log('📝 Processing:', title);
-  console.log('📄 Total text lines:', textLines.length);
-  console.log('📄 First 15 lines:', textLines.slice(0, 15));
-
   for (let i = 0; i < textLines.length; i++) {
       const line = textLines[i];
       const lowerLine = line.toLowerCase();
 
-      // Skip garbage
-        // Only skip lines that are JUST price info
-    if (lowerLine.startsWith('price:') || lowerLine === '0.00' || lowerLine === '$0.00') continue;
-    // Only skip if it's a standalone phrase (likely a link label)
-    if (lowerLine === 'play online' || lowerLine === 'play online:') continue;
-        // Only skip if it's a standalone line (metadata)
-    if (lowerLine === 'also available on' || lowerLine.startsWith('also available on:')) continue;
+    // ✅ NEW: Skip HTML attribute remnants
+    if (line.startsWith('<') || 
+        line.match(/^(src|alt|data-|width|height|border|class|style|id)=/i) ||
+        line.match(/^[a-z-]+="[^"]*"$/i)) {  // Matches: attribute="value"
+        continue;
+    }
+
+      // ✅ FIXED: More precise garbage skip conditions
+      if (lowerLine.startsWith('price:') || lowerLine === '0.00' || lowerLine === '$0.00') continue;
+      if (lowerLine === 'play online' || lowerLine === 'play online:') continue;
+      if (lowerLine === 'also available on' || lowerLine.startsWith('also available on:')) continue;
       if (lowerLine.includes('page link')) continue;
       if (line.trim() === ':') continue;
-    // Only skip if the ENTIRE line is just a URL
-    if (/^https?:\/\/[^\s]+$/.test(lowerLine)) continue;
+      if (/^https?:\/\/[^\s]+$/.test(lowerLine)) continue;
       
-      // ✅ ENHANCED: Skip JSON-LD remnants
+      // Skip JSON-LD remnants
       if (lowerLine.includes('@type') || 
           lowerLine.includes('@context') ||
           lowerLine.includes('"name"') ||
@@ -211,7 +242,6 @@ function normalizePost(post) {
           lowerLine.includes('operatingsystem') ||
           lowerLine.includes('softwareversion') ||
           lowerLine.includes('applicationcategory')) {
-          console.log('❌ Skipped JSON-LD:', line.substring(0, 50));
           continue;
       }
       
@@ -229,70 +259,154 @@ function normalizePost(post) {
           lowerLine.includes('.src =') ||
           lowerLine.includes('script.')) continue;
       
-      // Skip tag lists (but allow long descriptive paragraphs)
+      // Skip tag lists
       const commaCount = (line.match(/,/g) || []).length;
       if (commaCount >= 5 && line.length < 100) continue;
-      
       if (line === line.toUpperCase() && line.length > 10 && line.includes(',')) continue;
 
-      // Metadata headers
-      if (lowerLine.startsWith('developer') || lowerLine.startsWith('studio')) {
-          const parts = line.split(/[:\-]/); 
-          if (parts.length > 1) developer = parts[1].trim();
-          captureMode = 'metadata';
-          console.log('🔄 Set metadata mode (developer)');
-          continue;
-      }
+if (lowerLine.startsWith('developer') || lowerLine.startsWith('studio')) {
+    const parts = line.split(/[:\-]/); 
+    let rawDev = '';
+    
+    if (parts.length > 1 && parts[1].trim().length > 0) {
+        // Developer name is on same line
+        rawDev = parts.slice(1).join('-').trim();
+    } else if (i + 1 < textLines.length) {
+        // ✅ Developer name is on NEXT line
+        rawDev = textLines[i + 1].trim();
+        i++; // Skip the next line since we just consumed it
+    }
+    
+    if (rawDev.length > 0) {
+        // Remove HTML tags
+        rawDev = rawDev.replace(/<[^>]*>/g, '');
+        
+        // Remove URLs
+        rawDev = rawDev.replace(/https?:\/\/[^\s]+/g, '');
+        
+        // Clean up extra whitespace
+        rawDev = rawDev.replace(/\s+/g, ' ').trim();
+        
+        if (rawDev.length > 0 && rawDev !== 'Unknown') {
+            developer = rawDev;
+        }
+    }
+    continue;
+}
       
       if (lowerLine.startsWith('version')) {
-          captureMode = 'metadata';
-          console.log('🔄 Set metadata mode (version)');
           continue;
       }
       
-      if (lowerLine.startsWith('build') || lowerLine.startsWith('platform')) {
-          const parts = line.split(/[:\-]/); 
-          const rawBuild = parts.slice(1).join(' ').trim();
-          if (rawBuild.length > 0) buildPlatform = cleanPlatformName(rawBuild);
-          captureMode = 'metadata';
-          console.log('🔄 Set metadata mode (build)');
-          continue;
-      }
+if (lowerLine.startsWith('build') || lowerLine.startsWith('platform')) {
+    const parts = line.split(/[:\-]/); 
+    let rawBuild = '';
+    
+    if (parts.length > 1 && parts[1].trim().length > 0) {
+        // Platform is on same line
+        rawBuild = parts.slice(1).join(' ').trim();
+    } else if (i + 1 < textLines.length) {
+        // ✅ Platform is on NEXT line
+        rawBuild = textLines[i + 1].trim();
+        i++; // Skip the next line
+    }
+    
+    if (rawBuild.length > 0) {
+        buildPlatform = cleanPlatformName(rawBuild);
+    }
+    continue;
+}
 
-        // Section headers - FEATURES
-        if (lowerLine.startsWith('features') || lowerLine === 'features:') { 
-            captureMode = 'features'; 
-            console.log('🔄 Set features mode');
-            continue; 
-        }
+// ✅ FIXED: Exact match for section headers
+const featureHeaders = [
+    'features:',
+    'features',
+    'game features:',
+    'game features',
+    'key features:',
+    'key features'
+];
 
-        // Section headers - REQUIREMENTS
-        if (lowerLine.startsWith('requirements') || lowerLine.startsWith('system requirements')) { 
-            captureMode = 'requirements'; 
-            console.log('🔄 Set requirements mode');
-            continue; 
-        } 
+// ✅ Check for combined "Features:Keyboard" pattern first
+if (lowerLine.startsWith('features:') && lowerLine.length > 10) {
+    const afterFeatures = line.substring(9).trim();
+    
+    const controlHeadersLower = [
+        'keyboard and mouse input:',
+        'keyboard & mouse input:',
+        'keyboard and mouse controls',
+        'keyboard & mouse controls',
+        'controls:',
+        'controls'
+    ];
+    
+    if (controlHeadersLower.some(h => afterFeatures.toLowerCase().startsWith(h))) {
+        captureMode = 'controls';
+        continue;
+    }
+    
+    captureMode = 'features';
+    continue;
+}
 
-        // Section headers - CONTROLS (exact match only)
-        const controlHeaders = [
-            'controls:',
-            'controls',
-            'how to play:',
-            'how to play',
-            'keyboard & mouse controls',
-            'keyboard and mouse controls',
-            'gamepad controls',
-            'controller layout',
-            'button mapping'
-        ];
+if (featureHeaders.includes(lowerLine)) { 
+    captureMode = 'features'; 
+    continue; 
+}
 
-        if (controlHeaders.includes(lowerLine)) {
-            captureMode = 'controls'; 
-            console.log('🔄 Set CONTROLS mode');
-            continue; 
-        }
-      // Socials
-      if (lowerLine.includes('support this project') || lowerLine.includes('follow') || lowerLine.includes('contact') || lowerLine.startsWith('music -')) {
+const requirementHeaders = [
+    'requirements:',
+    'requirements',
+    'system requirements:',
+    'system requirements',
+    'minimum requirements:',
+    'minimum requirements',
+    'recommended requirements:',
+    'recommended requirements'
+];
+if (requirementHeaders.includes(lowerLine)) { 
+    captureMode = 'requirements'; 
+    continue; 
+} 
+
+const controlHeaders = [
+    'controls:',
+    'controls',
+    'how to play:',
+    'how to play',
+    'keyboard & mouse controls',
+    'keyboard and mouse controls',
+    'keyboard & mouse controls:',
+    'keyboard and mouse controls:',
+    'keyboard and mouse input',      // ✅ NEW
+    'keyboard and mouse input:',     // ✅ NEW
+    'keyboard & mouse input',        
+    'keyboard & mouse input:',       
+    'gamepad controls',
+    'gamepad controls:',
+    'controller layout',
+    'controller layout:',
+    'button mapping',
+    'button mapping:'
+];
+
+if (controlHeaders.includes(lowerLine)) {
+    captureMode = 'controls'; 
+    continue; 
+}
+
+      // ✅ FIXED: More strict social headers
+      const socialHeaders = [
+          'support this project:',
+          'support this project',
+          'follow us:',
+          'follow us',
+          'contact:',
+          'contact us:',
+          'social links:',
+          'links:'
+      ];
+      if (socialHeaders.includes(lowerLine) || lowerLine.startsWith('music -')) {
           captureMode = 'socials';
           if (lowerLine.startsWith('music -')) {
                const url = line.match(/https?:\/\/[^\s]+/);
@@ -301,7 +415,27 @@ function normalizePost(post) {
           continue; 
       }
 
-      // Stop sections
+const warningHeaders = [
+    'content warning:',
+    'content warnings:',
+    'content warning',      // ✅ ADD THIS
+    'content warnings',     // ✅ ADD THIS
+    'warning:',
+    'warnings:',
+    'warning',              // ✅ ADD THIS
+    'warnings',             // ✅ ADD THIS
+    'age rating:',
+    'age rating',           // ✅ ADD THIS
+    'rated:',
+    'rated'                 // ✅ ADD THIS
+];
+
+if (warningHeaders.includes(lowerLine)) {
+    captureMode = 'warnings';
+    continue;
+}
+
+      // ✅ FIXED: Stop parsing completely at media sections
       if (lowerLine === 'screenshots:' ||
           lowerLine === 'download:' || 
           lowerLine === 'trailer:' ||
@@ -309,16 +443,13 @@ function normalizePost(post) {
           lowerLine === 'media:' ||
           lowerLine === 'tags:' ||
           lowerLine === 'categories:') {
-          captureMode = 'ignore'; 
-          console.log('🔄 Set ignore mode');
-          continue; 
+          break;
       }
 
       // Capture logic
       if (captureMode === 'features') {
           const clean = line.replace(/^[-•*]\s*|^\d+\.\s*/, '');
-          if (clean.length > 2 && clean.length < 1500 && !clean.includes('http')) {
-              console.log('✅ Feature added:', clean.substring(0, 50));
+          if (clean.length > 2 && clean.length < 500 && !clean.includes('http')) {
               features.push(clean);
           }
       }
@@ -328,21 +459,24 @@ function normalizePost(post) {
                requirements.push(clean);
            }
       }
-      else if (captureMode === 'controls') {
-           const clean = line.replace(/^[-•*]\s*/, '');
-           
-           console.log(`🎮 Checking control line: "${clean.substring(0, 60)}..."`);
-           
-            const hasControlPattern = clean.includes(':') || 
-                                    /^[A-Z][\w\/\s]+:/.test(clean) || 
-                                    /^[A-Z][\w\/\s]*\/[A-Z][\w\/\s]*:/.test(clean);
+        else if (captureMode === 'controls') {
+            const clean = line.replace(/^[-•*]\s*/, '').trim();
+            
+            if (clean.length < 2 || clean.includes('http')) continue;
+            
+            // ✅ ENHANCED: More flexible control pattern detection
+            const hasControlPattern = 
+                clean.includes(':') ||                                    // Any line with colon
+                /^[A-Z][\w\/\s]+:/.test(clean) ||                        // Uppercase start: "WASD: Move"
+                /^[A-Z][\w\/\s]*\/[A-Z][\w\/\s]*:/.test(clean) ||       // "W/A/S/D: Move"
+                /^[a-z]+\s*:/.test(clean) ||                            // ✅ NEW: Lowercase key: "p: weapon"
+                /^(alpha|ctrl|shift|space|enter|tab|esc)\s*\d*\s*:/i.test(clean) || // ✅ NEW: Special keys
+                /^(left|right|middle)\s+(mouse|click)/i.test(clean);    // ✅ NEW: Mouse buttons
 
-            if (clean.length > 2 && hasControlPattern && !clean.includes('http')) {
+            if (hasControlPattern && clean.length < 200) {  // ✅ Added max length check
                 controls.push(clean);
-            } else {
-               console.log('❌ Control rejected (length:', clean.length, 'hasPattern:', hasControlPattern + ')');
-           }
-      }
+            }
+        }
       else if (captureMode === 'socials') {
           const urlMatch = line.match(/https?:\/\/[^\s]+/);
           if (urlMatch) {
@@ -356,14 +490,42 @@ function normalizePost(post) {
               if (!socialLinks.some(s => s.url === urlMatch[0])) socialLinks.push({ label, url: urlMatch[0] });
           }
       }
-      else if (captureMode === 'metadata' || captureMode === 'ignore') {
-          continue;
-      }
+else if (captureMode === 'warnings') {
+    const clean = line.replace(/^[-•*]\s*/, '').trim();
+    
+    // ✅ Check if this line looks like metadata (has specific patterns)
+    const isMetadata = clean.toLowerCase().includes('developer') ||
+                      clean.toLowerCase().includes('version') ||
+                      clean.toLowerCase().includes('build') ||
+                      clean.toLowerCase().includes('studio') ||
+                      /^[A-Z][a-z]+ [A-Z][a-z]+/.test(clean) || // "Rubber Duck" pattern
+                      clean.includes('–') || // Em dash often in metadata
+                      clean.includes(' - '); // Regular dash in metadata
+    
+    if (isMetadata) {
+        captureMode = null; // Exit warning mode
+        continue;
+    }
+    
+    // Skip garbage
+    if (clean.length < 5 || 
+        clean.includes('http') || 
+        clean === '×' || 
+        clean === '⚠️' ||
+        clean.toLowerCase() === 'content warning' ||
+        clean.toLowerCase() === 'warning') {
+        continue;
+    }
+    
+    // Accept everything else under warning header
+    if (clean.length < 250) {
+        contentWarnings.push(clean);
+    }
+}
       else {
           // DEFAULT: Add to description
           let finalLine = line.replace(/^[:\-\s]+|[:\-\s]+$/g, '');
           
-          // ✅ ENHANCED: Skip JSON remnants in default mode too
           if (finalLine.includes('{') || 
               finalLine.includes('}') || 
               finalLine.includes(';') ||
@@ -375,24 +537,102 @@ function normalizePost(post) {
               continue;
           }
           
-          if (finalLine.length > 10 && finalLine.length < 1500) {
+          // ✅ FIXED: Removed max length limit
+          if (finalLine.length > 10) {
               cleanDescriptionLines.push(finalLine);
           }
       }
   }
 
-  const description = cleanDescriptionLines.join('\n\n');
-  
-  // 🔍 DEBUG: Final stats
-  console.log('\n📊 FINAL RESULTS:');
-  console.log('Description lines:', cleanDescriptionLines.length);
-  console.log('Features:', features.length);
-  console.log('Controls:', controls.length);
-  console.log('Requirements:', requirements.length);
-  console.log('Social links:', socialLinks.length);
-  console.log('\n🎮 Controls array:', controls);
+// ✅ ENHANCED: Deduplicate and clean arrays
+features = [...new Set(features)];
+requirements = [...new Set(requirements)];
+controls = [...new Set(controls)];
+contentWarnings = [...new Set(contentWarnings)]; // ✅ ADD THIS
 
-  // 2. DOWNLOAD LINKS (ENHANCED REGEX)
+// ✅ ENHANCED: Professional description cleaning with hidden text removal
+const cleanDescriptionForDisplay = (lines) => {
+    if (!lines || lines.length === 0) return "No description available.";
+    
+    const filtered = lines.filter(line => {
+        const lower = line.toLowerCase();
+        
+        // Skip common hidden/promotional text
+        if (lower.includes('click here') && lower.includes('download')) return false;
+        if (lower.includes('get it on') && lower.includes('store')) return false;
+        if (lower.includes('available on') && line.length < 40) return false;
+        if (lower.startsWith('download') && line.length < 30) return false;
+        if (lower.startsWith('play') && line.length < 20) return false;
+        if (/^(free|paid|premium|trial|version)/i.test(lower) && line.length < 30) return false;
+        
+        // Skip navigation/UI text
+        if (lower === 'read more' || lower === 'learn more' || lower === 'see more') return false;
+        if (lower.includes('share this') || lower.includes('tweet')) return false;
+        if (lower.includes('subscribe') && line.length < 30) return false;
+        
+        // Skip common hidden text patterns
+        if (lower.includes('hidden text') || lower.includes('hidden content')) return false;
+        if (lower.startsWith('seo:') || lower.startsWith('meta:')) return false;
+        if (lower.includes('for search engines only')) return false;
+        if (lower.includes('not visible')) return false;
+        
+        // ✅ NEW: Skip JavaScript code fragments
+        if (lower.includes('localstorage.') || lower.includes('setitem') || lower.includes('getitem')) return false;
+        if (lower.includes('function(') || lower.includes('=>')) return false;
+        if (lower.includes('fadein') || lower.includes('fadeout')) return false;
+        if (lower.includes('.click(') || lower.includes('$(')) return false;
+        
+        // ✅ NEW: Skip alert/warning elements
+        if (lower.includes('×') || lower === '×') return false; // Close button
+        if (lower.startsWith('warning!') && line.length < 100) return false;
+        if (lower.startsWith('strong>') || lower.startsWith('</strong')) return false;
+        
+        // ✅ NEW: Skip category lists from schema
+        if (lower.includes(',') && lower.match(/(sports|strategy|action|adventure|rpg|casual|games)/gi)?.length >= 2) return false;
+        
+        // Skip platform badges/buttons text
+        if (lower.match(/^(windows|mac|linux|android|ios|web)$/)) return false;
+        if (lower.includes('get on google play') && line.length < 30) return false;
+        if (lower.includes('app store') && line.length < 30) return false;
+        
+        // Skip very short fragments (likely UI elements)
+        if (line.length < 15 && !line.match(/[.!?]$/)) return false;
+        
+        // Skip lines that are just numbers or versions
+        if (/^v?\d+(\.\d+)*$/.test(line.trim())) return false;
+        
+        // Skip lines that are just call-to-action buttons
+        if (/^(download now|play now|get started|try it|install|buy now)$/i.test(lower)) return false;
+        
+        return true;
+    });
+    
+    // ✅ SMART: Merge lines until we hit a sentence-ending
+    const paragraphs = [];
+    let currentPara = '';
+    
+    filtered.forEach(line => {
+        const trimmed = line.trim();
+        
+        // Add to current paragraph
+        currentPara += (currentPara ? ' ' : '') + trimmed;
+        
+        // If line ends with period, question mark, or exclamation - end paragraph
+        if (/[.!?]$/.test(trimmed)) {
+            paragraphs.push(currentPara);
+            currentPara = '';
+        }
+    });
+    
+    // Add any remaining text
+    if (currentPara) paragraphs.push(currentPara);
+    
+    return paragraphs.join('\n\n');
+};
+
+const fullDescription = cleanDescriptionForDisplay(cleanDescriptionLines);
+
+  // 2. DOWNLOAD LINKS
   let rawLinks = [];
   const imgLinkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>[\s\S]*?<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi;
   let linkMatch;
@@ -407,7 +647,6 @@ function normalizePost(post) {
       const altMatch = fullImgTag.match(/alt=["']([^"']*)["']/i);
       const altText = altMatch ? altMatch[1] : '';
 
-      // ✅ FIX: Pass 'href' to the check
       if (isDownloadButton(imgSrc, href)) {
           let platform = detectPlatformFromImage(imgSrc, altText);
           
@@ -416,9 +655,10 @@ function normalizePost(post) {
               if (urlLower.includes('/html') || urlLower.includes('play-online') || (urlLower.includes('itch.io') && urlLower.includes('/html'))) {
                   platform = 'Web';
               }
-              else if (urlLower.includes('.apk')) platform = 'Android';
+              else if (urlLower.includes('.apk') || urlLower.includes('play.google.com')) platform = 'Android';
               else if (urlLower.includes('.exe') || urlLower.includes('win')) platform = 'Windows';
               else if (urlLower.includes('.dmg') || urlLower.includes('mac')) platform = 'Mac';
+              else if (urlLower.includes('apps.apple.com')) platform = 'iOS';
           }
           if (!platform) platform = 'Download';
           rawLinks.push({ platform, url: href });
@@ -426,52 +666,78 @@ function normalizePost(post) {
   }
 
   const downloadLinks = refineDownloadLinks(rawLinks);
-  const primaryDownload = downloadLinks.length > 0 ? downloadLinks[0].url : '#';
 
-  // 3. MEDIA EXTRACTION
-  let video = null;
-  let gameEmbed = null;
+  // ✅ FIXED: Better fallback for primary download
+  const primaryDownload = downloadLinks.length > 0 ? downloadLinks[0].url : null;
+
+  // 3. ✅ FIXED: ROBUST MEDIA EXTRACTION
+  let videos = [];
+  let gameEmbeds = [];
   
   const iframeRegex = /<iframe[^>]+src=["']([^"']+)["'][^>]*>/gi;
   let iframeMatch;
   
   while ((iframeMatch = iframeRegex.exec(contentRaw)) !== null) {
-      const iframeSrc = iframeMatch[1].replace('http:', 'https:');
+      const iframeSrc = iframeMatch[1].replace(/^http:/, 'https:');
       const lowerSrc = iframeSrc.toLowerCase();
       
-      const isItchEmbed = lowerSrc.includes('itch.io/embed');
-      const isItchZone = lowerSrc.includes('itch.zone');
-      const isHtml5 = lowerSrc.includes('html5game') || lowerSrc.includes('/html5');
-      const isWidgets = lowerSrc.includes('widgets.itch.io');
-      const isGamePath = lowerSrc.includes('/game/');
-      const isNewgrounds = lowerSrc.includes('newgrounds.com/portal');
-      const isKongregate = lowerSrc.includes('kongregate.com/games');
-      const isRubyApksOnline = lowerSrc.includes('rubyapks.netlify.app/online');
+      const isGameEmbed = lowerSrc.includes('itch.io/embed') ||
+                         lowerSrc.includes('itch.zone') ||
+                         lowerSrc.includes('html5game') ||
+                         lowerSrc.includes('/html5') ||
+                         lowerSrc.includes('widgets.itch.io') ||
+                         lowerSrc.includes('/game/') ||
+                         lowerSrc.includes('newgrounds.com/portal') ||
+                         lowerSrc.includes('kongregate.com/games') ||
+                         lowerSrc.includes('rubyapks.netlify.app/online');
       
-      if (isItchEmbed || isItchZone || isHtml5 || isWidgets || isGamePath || isNewgrounds || isKongregate || isRubyApksOnline) {
-          gameEmbed = iframeSrc;
-      }
-      else if (lowerSrc.includes('youtube.com/embed') || 
-               lowerSrc.includes('youtu.be') ||
-               lowerSrc.includes('vimeo.com')) {
-          video = iframeSrc;
+      const isVideo = lowerSrc.includes('youtube.com') ||
+                     lowerSrc.includes('youtu.be') ||
+                     lowerSrc.includes('youtube-nocookie.com') ||
+                     lowerSrc.includes('vimeo.com') ||
+                     lowerSrc.includes('dailymotion.com') ||
+                     lowerSrc.includes('twitch.tv');
+      
+      if (isGameEmbed) {
+          gameEmbeds.push(iframeSrc);
+      } else if (isVideo) {
+          videos.push(iframeSrc);
       }
   }
   
-  let allImages = [];
-  const imgRegex = /src="([^"]+?\.(?:jpg|jpeg|png|webp|gif))"/gi;
-  let match;
-  while ((match = imgRegex.exec(contentRaw)) !== null) {
-      const img = match[1];
-      if (!img.toLowerCase().includes('button') && !img.toLowerCase().includes('download')) allImages.push(img);
-  }
+// 4. ✅ FIXED: ROBUST IMAGE EXTRACTION
+let allImages = [];
+const imgRegex = /(?:src|data-src)=["']([^"']+?)["']/gi;
+let match;
+
+while ((match = imgRegex.exec(contentRaw)) !== null) {
+    const img = match[1];
+    
+    // Check if it's an image URL
+    const isImage = /\.(jpg|jpeg|png|webp|gif|avif|bmp|svg)(\?.*)?$/i.test(img) ||
+                   img.includes('googleusercontent.com') ||
+                   img.includes('bp.blogspot.com');
+    
+    if (!isImage) continue;
+    
+    const lowerImg = img.toLowerCase();
+    
+    // ✅ FIXED: Exclude any image with 'button' or 'download' in filename
+    const hasButtonInName = lowerImg.includes('button') || lowerImg.includes('btn');
+    const hasDownloadInName = lowerImg.includes('download');
+    const isDownloadBtn = hasDownloadInName || hasButtonInName;
+    
+    if (!isDownloadBtn) {
+        allImages.push(img);
+    }
+}
   
   const processImage = (url) => {
       if (!url) return null;
-      if (url.startsWith('http://')) url = url.replace('http://', 'https://');
+      url = url.replace(/^http:/, 'https:');
       if (url.includes('blogspot') || url.includes('googleusercontent')) {
-          url = url.replace(/\/s\d+(-c)?\//, '/w800/');
-          url = url.replace(/=s\d+(-c)?$/, '=w800');
+          url = url.replace(/\/s\d+(-c)?\//g, '/w800/');
+          url = url.replace(/=s\d+(-c)?$/g, '=w800');
       }
       return url;
   };
@@ -479,16 +745,21 @@ function normalizePost(post) {
   let mainImage = processImage(post.media$thumbnail?.url || allImages[0]);
   if (!mainImage) mainImage = "https://placehold.co/600x900/0b0f19/E0115F.png?text=No+Cover";
   
-  const screenshots = allImages.map(processImage).filter(img => img !== mainImage).slice(0, 6);
+  // ✅ FIXED: Normalize URLs for comparison
+  const normalizeUrl = (url) => url ? url.split('?')[0] : '';
+  const mainImageNormalized = normalizeUrl(mainImage);
+  
+  const screenshots = allImages
+      .map(processImage)
+      .filter(img => normalizeUrl(img) !== mainImageNormalized)
+      .slice(0, 6);
 
   const tags = post.category ? post.category.map(c => c.term) : ['Indie'];
 
   // ROBUST APP DETECTION
-  // Check for singular AND plural, uppercase AND lowercase
   const appKeywords = ['app', 'apps', 'application', 'tool', 'tools', 'utility', 'utilities', 'software', 'pwa', 'saas'];
-  
-  const isApp = tags.some(t => appKeywords.includes(t.toLowerCase()));
-  const itemType = isApp ? 'App' : 'Game';
+  const isApp = (tags || []).some(t => t && appKeywords.includes(t.toLowerCase()));
+  const itemType = isApp ? 'App' : 'Game'; 
 
   return { 
     id, 
@@ -496,8 +767,10 @@ function normalizePost(post) {
     title, 
     type: itemType,
     image: mainImage,
-    video,
-    gameEmbed,
+    video: videos[0] || null,
+    videos: videos,
+    gameEmbed: gameEmbeds[0] || null,
+    gameEmbeds: gameEmbeds,
     screenshots,
     downloadUrl: primaryDownload,
     downloadLinks, 
@@ -506,23 +779,24 @@ function normalizePost(post) {
     features,
     requirements, 
     controls, 
-    socialLinks, 
+    socialLinks,
+    contentWarnings, 
     tag: tags[0] || 'Game', 
     tags, 
-    description: description.length > 150 
-    ? description.substring(0, 150) + "..." 
-    : description,
-    fullDescription: description 
+    description: truncateDescription(fullDescription, 150),
+    fullDescription: fullDescription 
   };
 }
 
 function getBackupGames(limit) {
-    if (!BACKUP_DATA.feed || !BACKUP_DATA.feed.entry) return [];
-    // We run normalizePost on backup data too, so the structure matches perfectly
+    if (!BACKUP_DATA?.feed?.entry) return [];
     return BACKUP_DATA.feed.entry
         .slice(0, limit)
         .map(post => {
-             try { return normalizePost(post); } catch (e) { return null; }
+             try { return normalizePost(post); } catch (e) { 
+                 console.error('Error normalizing backup post:', e); 
+                 return null; 
+             }
         })
         .filter(g => g !== null);
 }
@@ -531,32 +805,32 @@ export async function fetchGames(limit = 12) {
   try {
     const res = await fetch(`/api/games?limit=${limit}`);
     
-    // If Network/API Fails -> Use Backup
     if (!res.ok) {
         console.warn(`⚠️ API Error (${res.status}). Using Snapshot.`);
-        return getBackupGames(limit);
+        const backup = getBackupGames(limit);
+        return backup;
     }
     
     const data = await res.json();
-    if (!data.feed || !data.feed.entry) return getBackupGames(limit);
+    if (!data.feed || !data.feed.entry) {
+        console.warn('⚠️ API returned no data. Using Snapshot.');
+        const backup = getBackupGames(limit);
+        return backup;
+    }
     
-    return data.feed.entry.map(post => normalizePost(post));
+    const games = data.feed.entry.map(post => normalizePost(post));
+    return games;
 
   } catch (error) { 
-    // If DNS/Offline -> Use Backup
-    console.warn("⚠️ Network Unreachable. Using Snapshot.");
-    return getBackupGames(limit);
+    console.warn("⚠️ Network Unreachable. Using Snapshot.", error.message);
+    const backup = getBackupGames(limit);
+    return backup;
   }
 }
 
-// 4. REPLACE fetchGameById WITH THIS ROBUST VERSION
+// ✅ FIXED: API-first approach with better slug matching
 export async function fetchGameById(id) {
-    // Check Backup First (Fastest)
-    const backupGames = getBackupGames(100);
-    const backupMatch = backupGames.find(g => g.id === id || g.slug.includes(id));
-    if (backupMatch) return backupMatch;
-
-    // Try Real API (If not in backup)
+    // Try API First
     try {
         const url = `${BASE_URL}/${BLOG_ID}/posts/${id}?key=${API_KEY}`;
         const res = await fetch(url);
@@ -564,7 +838,15 @@ export async function fetchGameById(id) {
             const post = await res.json();
             return normalizePost(post);
         }
-    } catch (error) {}
-    
-    return null;
+    } catch (error) {
+        console.warn('⚠️ API failed, checking backup...');
+    }
+
+    // Fallback to Backup
+    const backupGames = getBackupGames(100);
+    return backupGames.find(g => 
+        g.id === id || 
+        g.slug === id || 
+        g.slug.endsWith(`-${id}`)
+    ) || null;
 }
