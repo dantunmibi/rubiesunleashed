@@ -27,7 +27,7 @@ export default function Hero() {
               Explore Vault <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             
-            <Link href="https://forms.gle/i7X2sUJ5cnqsUciA6" className="bg-white/5 backdrop-blur-md border border-white/10 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+            <Link href="https://forms.gle/i7X2sUJ5cnqsUciA6" target="_blank" className="bg-white/5 backdrop-blur-md border border-white/10 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-white/10 transition-all flex items-center justify-center gap-2">
               Start Publishing
             </Link>
           </div>

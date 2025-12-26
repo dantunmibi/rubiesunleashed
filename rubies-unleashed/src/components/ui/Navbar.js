@@ -11,7 +11,7 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "Vault", href: "/explore" },
     { name: "About", href: "/#about" },
-    { name: "Publish", href: "https://forms.gle/i7X2sUJ5cnqsUciA6" },
+    { name: "Publish", href: "https://forms.gle/i7X2sUJ5cnqsUciA6", target: "_blank" },
   ];
 
   return (
@@ -53,6 +53,8 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
+                target={item.target}
+                rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
                 className="text-sm font-bold uppercase tracking-widest text-slate-300 hover:text-white transition-colors relative py-2 group"
               >
                 {item.name}
@@ -104,6 +106,8 @@ export default function Navbar() {
             <Link
               key={item.name}
               href={item.href}
+              target={item.target}
+              rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
               onClick={() => setMenuOpen(false)}
               style={{ transitionDelay: `${idx * 75}ms` }}
               className={`text-5xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-slate-500 uppercase tracking-tighter hover:to-ruby transition-all transform ${
