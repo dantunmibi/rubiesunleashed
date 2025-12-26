@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- CUSTOM COLORS --- */
+  --color-ruby: #E0115F;
+  --color-ruby-dark: #9b0c42;
+  --color-ruby-light: #ff4d88;
+  --color-ruby-muted: #701a3c;
+
+  /* Background Colors */
+  --color-background: #020617;
+  --color-surface: #0f172a;
+
+  /* --- CUSTOM SPACING --- */
+  --spacing-19: 4.75rem;
+  --spacing-104: 26rem;
+  --spacing-125: 31.25rem;
+  --spacing-150: 37.5rem;
+  --spacing-200: 50rem;
+  --spacing-250: 62.5rem;
+
+  /* --- CUSTOM ANIMATIONS --- */
+  --animate-progress: progress 5s linear infinite;
+  --animate-float: float 6s ease-in-out infinite; /* ✅ NEW FLOAT ANIMATION */
+
+  @keyframes progress {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+
+  @keyframes float { /* ✅ NEW KEYFRAMES */
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+  }
+}
+
+/* Custom Scrollbar for Modal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(224, 17, 95, 0.5);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(224, 17, 95, 0.8);
+}
