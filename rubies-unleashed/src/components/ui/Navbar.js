@@ -432,11 +432,11 @@ useEffect(() => {
                         <div className="h-px bg-white/10 my-1" />
 
                         <DropdownItem 
-                          icon={<Contact size={16} />} 
-                          label="Contact Us" 
+                          icon={<Settings size={16} />} 
+                          label="Settings" 
                           onClick={() => {
                             setUserDropdownOpen(false);
-                            router.push("/contact");
+                            router.push("/settings");
                           }}
                         />
                         <DropdownItem 
@@ -580,9 +580,9 @@ useEffect(() => {
           {/* Bottom Section */}
           <div className="mt-auto pt-6 flex flex-col gap-2">
             <SidebarLink 
-              href="/settings" 
-              icon={<Settings size={18} />} 
-              label="Settings" 
+              href="/contact" 
+              icon={<Contact size={18} />} 
+              label="Contact Us" 
               onClick={() => setMenuOpen(false)} 
             />
             <SidebarLink 
