@@ -8,7 +8,7 @@ import {
 import { getDownloadIcon } from "@/lib/game-utils";
 import { useState, useEffect } from "react";
 
-export default function GameHero({ game, isWishlisted, toggleWishlist }) {
+export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
   const [copied, setCopied] = useState(false);
   const [showFloatingBar, setShowFloatingBar] = useState(true);
 
@@ -133,7 +133,7 @@ export default function GameHero({ game, isWishlisted, toggleWishlist }) {
                )}
              </button>
              <button 
-               onClick={toggleWishlist}
+               onClick={onToggleWishlist}
                className={`p-3 rounded-full border backdrop-blur-xl transition-all shadow-xl ${
                  isWishlisted ? 'bg-ruby border-ruby text-white' : 'bg-black/40 border-white/10 text-white'
                }`}
@@ -206,7 +206,7 @@ export default function GameHero({ game, isWishlisted, toggleWishlist }) {
                     )}
 
                     <button 
-                        onClick={toggleWishlist} 
+                        onClick={onToggleWishlist} 
                         className={`p-4 rounded-2xl border-2 font-bold transition-all ${isWishlisted ? "bg-white text-ruby border-white shadow-lg" : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 text-white"}`}
                     >
                         <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />

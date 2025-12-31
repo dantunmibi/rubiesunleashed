@@ -28,7 +28,7 @@ export default function GameCard({ game, onClick, priority = false }) {
       {/* Text Content Layer */}
       <div className="absolute bottom-0 left-0 w-full p-4 flex flex-col justify-end z-10">
         <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded w-fit mb-2 border backdrop-blur-md ${tagStyle}`}>
-          {smartTag}
+          {game.type === 'App' ? "SOFTWARE" : "GAME"}
         </span>
         <h4 className="text-white font-bold text-sm leading-tight line-clamp-2 drop-shadow-md group-hover:text-ruby-light transition-colors">
           {game.title}

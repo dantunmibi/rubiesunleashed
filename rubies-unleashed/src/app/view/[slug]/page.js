@@ -6,6 +6,8 @@ import Footer from "@/components/ui/Footer";
 import { fetchGameById, fetchGames } from "@/lib/blogger";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useWishlist } from "@/hooks/useWishlist";
+import AuthModal from "@/components/auth/AuthModal";
 
 import GameHero from "@/components/store/GameHero";
 import GameMedia from "@/components/store/GameMedia";
@@ -13,6 +15,7 @@ import GameContent from "@/components/store/GameContent";
 import GameSidebar from "@/components/store/GameSidebar";
 import DownloadCallout from "@/components/store/DownloadCallout";
 import SimilarGames from "@/components/store/SimilarGames";
+import ContentWarningModal from "@/components/store/ContentWarningModal"; // ✅ NEW
 
 // Helper: Fisher-Yates Shuffle
 function shuffleArray(array) {
@@ -31,13 +34,21 @@ export default function GameDetails({ params }) {
   const [game, setGame] = useState(null);
   const [similarGames, setSimilarGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+
+const { 
+  isWishlisted, 
+  toggleWishlist, 
+  showAuthModal, 
+  closeAuthModal, 
+  handleContinueAsGuest 
+} = useWishlist(game?.id);
 
   useEffect(() => {
     let isMounted = true;
 
     async function load() {
       try {
+      console.log('🔍 FULL SLUG:', slug);
         let gameId = null;
         if (slug) {
           const parts = slug.split("-");
@@ -49,14 +60,8 @@ export default function GameDetails({ params }) {
           if (isMounted && data) {
             setGame(data);
 
-            // Wishlist Check
-            const saved = JSON.parse(
-              localStorage.getItem("ruby_wishlist") || "[]"
-            );
-            setIsWishlisted(saved.some((g) => g.id === data.id));
-
             // --- 🧠 SMART RECOMMENDATION LOGIC ---
-            const allGames = await fetchGames(50); // Fetch candidate pool
+            const allGames = await fetchGames(1000); // Fetch candidate pool
 
             // 1. Priority A: Developer Matches (Exact match, ignore "Unknown")
             const devMatches = allGames.filter((g) => 
@@ -75,8 +80,7 @@ export default function GameDetails({ params }) {
                 if (!Array.isArray(g.tags)) return false;
                 return g.tags.some(t => currentTags.includes(t));
             });
-
-            // 3. Merge: Shuffled Devs first, then Shuffled Tags
+              // 3. Merge: Shuffled Devs first, then Shuffled Tags
             const finalSelection = [
                 ...shuffleArray(devMatches),
                 ...shuffleArray(tagMatches)
@@ -98,20 +102,6 @@ export default function GameDetails({ params }) {
     };
   }, [slug]);
 
-  const toggleWishlist = () => {
-    if (!game) return;
-    const saved = JSON.parse(localStorage.getItem("ruby_wishlist") || "[]");
-    if (isWishlisted) {
-      const filtered = saved.filter((g) => g.id !== game.id);
-      localStorage.setItem("ruby_wishlist", JSON.stringify(filtered));
-      setIsWishlisted(false);
-    } else {
-      saved.push(game);
-      localStorage.setItem("ruby_wishlist", JSON.stringify(saved));
-      setIsWishlisted(true);
-    }
-  };
-
   if (loading)
     return (
       <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center">
@@ -131,13 +121,18 @@ export default function GameDetails({ params }) {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans selection:bg-ruby/30">
+      {/* ✅ Content Warning Modal - Shows BEFORE any content */}
+      {game.contentWarnings && game.contentWarnings.length > 0 && (
+        <ContentWarningModal warnings={game.contentWarnings} gameId={game.id} />
+      )}
+
       <div className="hidden md:block">
         <Navbar />
       </div>
       <GameHero
         game={game}
         isWishlisted={isWishlisted}
-        toggleWishlist={toggleWishlist}
+        onToggleWishlist={() => toggleWishlist(game)}
       />
 
       <main className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -147,11 +142,18 @@ export default function GameDetails({ params }) {
           <DownloadCallout game={game} />
         </div>
 
-        {/* Only render sidebar if game is valid object */}
         {game && typeof game === "object" && <GameSidebar game={game} />}
       </main>
 
+      {/* Only render sidebar if game is valid object */}
+
       <SimilarGames games={similarGames} />
+    {/* ✅ ADD THIS: Auth Modal */}
+    <AuthModal
+      isOpen={showAuthModal}
+      onClose={closeAuthModal}
+      onContinueAsGuest={handleContinueAsGuest}
+    />
       <Footer />
     </div>
   );

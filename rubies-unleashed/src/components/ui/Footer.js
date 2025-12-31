@@ -25,8 +25,8 @@ export default function Footer() {
               <Map size={20} className="text-ruby" /> Treasure Map
             </h5>
             <ul className="space-y-4 font-medium text-slate-400">
-              <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">🗺️ Marketplace</a></li>
-              <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">📜 Publishing</a></li>
+              <li><a href="/explore" className="hover:text-ruby-light transition-colors flex items-center gap-3">🗺️ Marketplace</a></li>
+              <li><a href="https://forms.gle/i7X2sUJ5cnqsUciA6" className="hover:text-ruby-light transition-colors flex items-center gap-3">📜 Publishing</a></li>
               <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">🏆 Competitions</a></li>
               <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">💰 Earn Rubies</a></li>
             </ul>
@@ -37,10 +37,10 @@ export default function Footer() {
               <Shield size={20} className="text-ruby" /> Guild Hall
             </h5>
             <ul className="space-y-4 font-medium text-slate-400">
-              <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">⚔️ Developers</a></li>
-              <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">📖 Terms</a></li>
-              <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">🛡️ Privacy</a></li>
-              <li><a href="#" className="hover:text-ruby-light transition-colors flex items-center gap-3">📬 Contact</a></li>
+              <li><a href="/developers" className="hover:text-ruby-light transition-colors flex items-center gap-3">⚔️ Developers</a></li>
+              <li><a href="/contact" className="hover:text-ruby-light transition-colors flex items-center gap-3">📬 Contact</a></li>
+              <li><a href="/privacy" className="hover:text-ruby-light transition-colors flex items-center gap-3">🛡️ Privacy</a></li>
+              <li><a href="/terms" className="hover:text-ruby-light transition-colors flex items-center gap-3">📖 Terms</a></li>
             </ul>
           </div>
         </div>

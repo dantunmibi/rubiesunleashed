@@ -1,4 +1,4 @@
-import { Star, Cpu, Keyboard, Box, Gamepad2, AlertTriangle } from "lucide-react";
+import { Star, Cpu, Keyboard, Box, Gamepad2, AlertTriangle, Lightbulb } from "lucide-react";
 
 export default function GameContent({ game }) {
   // ROBUST CHECK: Handle plural/singular and case
@@ -15,39 +15,25 @@ export default function GameContent({ game }) {
             {isApp ? "About The Software" : "About The Game"}
         </h3>
         
-<div className="prose prose-invert prose-lg max-w-none text-slate-300 mb-8">
-  {game.fullDescription ? (
-    game.fullDescription.split("\n\n").map((paragraph, idx) => (
-      paragraph.trim() ? (
-        <p key={idx} className="mb-6 leading-relaxed">{paragraph}</p>
-      ) : null
-    ))
-  ) : (
-    <p>No description available.</p>
-  )}
-</div>
+        <div className="prose prose-invert prose-lg max-w-none text-slate-300 mb-8">
+          {game.fullDescription ? (
+            game.fullDescription.split("\n\n").map((paragraph, idx) => (
+              paragraph.trim() ? (
+                <p key={idx} className="mb-6 leading-relaxed">{paragraph}</p>
+              ) : null
+            ))
+          ) : (
+            <p>No description available.</p>
+          )}
+        </div>
       </div>
-
-{/* ✅ NEW: Content Warnings Section */}
-{game.contentWarnings && game.contentWarnings.length > 0 && (
-  <div className="bg-red-950/20 border border-red-500/20 p-6 rounded-2xl">
-    <h4 className="flex items-center gap-2 text-lg font-bold text-red-400 mb-4">
-      <AlertTriangle size={18} /> Content Warning
-    </h4>
-    <ul className="list-disc list-inside space-y-1 text-sm text-red-200/80">
-      {game.contentWarnings.map((warning, i) => (
-        <li key={i}>{warning}</li>
-      ))}
-    </ul>
-  </div>
-)}
 
       {game.features && game.features.length > 0 && (
         <div className="bg-[#161b2c] p-6 rounded-2xl border border-white/5">
-        <h4 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+          <h4 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
             {isApp ? <Box size={18} className="text-ruby" /> : <Star size={18} className="text-ruby" />} 
             Key Features
-        </h4>
+          </h4>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {game.features.map((feature, i) => <li key={i} className="flex items-start gap-3 text-sm text-slate-300"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-ruby shrink-0" />{feature}</li>)}
           </ul>
@@ -63,7 +49,32 @@ export default function GameContent({ game }) {
         </div>
       )}
 
-      {/* Hide Controls for Apps */}
+{/* ✅ How It Works / How to Play - Show for both apps and games */}
+{game.howItWorks && game.howItWorks.length > 0 && (
+  <div className="bg-[#161b2c] p-6 rounded-2xl border border-white/5">
+    <h4 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+      <Lightbulb size={18} className="text-ruby" /> 
+      {isApp ? "How It Works" : "How to Play"}
+    </h4>
+    <ul className="space-y-3">
+      {game.howItWorks
+        .flatMap(step => {
+          const sentences = step.split(/(?<=[.!?])\s+/);
+          return sentences.filter(s => s.trim().length > 0);
+        })
+        .map((sentence, i) => (
+          <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-ruby/20 text-ruby font-bold text-xs shrink-0">
+              {i + 1}
+            </span>
+            {sentence.trim()}
+          </li>
+        ))}
+    </ul>
+  </div>
+)}
+
+      {/* Controls - Hide for Apps */}
       {!isApp && game.controls && game.controls.length > 0 && (
         <div className="bg-[#161b2c] p-6 rounded-2xl border border-white/5">
           <h4 className="flex items-center gap-2 text-lg font-bold text-white mb-4"><Keyboard size={18} className="text-ruby" /> Controls</h4>

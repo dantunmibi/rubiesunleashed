@@ -1,9 +1,11 @@
-📝 Updated Blogger Template
-Now you can use the same button image with different alt text:
+```html
+<!-- 📝 COMPLETE BLOGGER POST TEMPLATE -->
+<!-- ✅ Optimized for your Next.js parser -->
+<!-- 🎯 All metadata properly structured for extraction -->
 
-HTML
-
-<!-- COVER IMAGE -->
+<!-- ========================================== -->
+<!-- 1. COVER IMAGE -->
+<!-- ========================================== -->
 <div class="separator" style="clear: both; text-align: center;">
     <img border="0" 
          data-original-height="900" 
@@ -14,7 +16,9 @@ HTML
 
 <br />
 
-<!-- GAME DESCRIPTION (Must come BEFORE metadata) -->
+<!-- ========================================== -->
+<!-- 2. GAME DESCRIPTION (MUST COME FIRST!) -->
+<!-- ========================================== -->
 <div style="text-align: left;">
     <p style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px; line-height: 1.6;">
         <strong>Your Game Title</strong> is an epic fantasy adventure where you embark on a quest 
@@ -29,19 +33,11 @@ HTML
     </p>
 </div>
 
-<!-- CONTENT WARNING (OPTIONAL) -->
-<div class="content-warning-box" id="contentWarning" style="display: none;">
-    <div class="warning-header">
-        <span class="warning-icon">⚠️</span>
-        <strong>Content Warning</strong>
-        <span class="close-warning" onclick="closeWarning()">×</span>
-    </div>
-    <div class="warning-content">
-        <p id="warningText"></p>
-    </div>
-</div>
+<br />
 
-<!-- METADATA -->
+<!-- ========================================== -->
+<!-- 3. METADATA BOX -->
+<!-- ========================================== -->
 <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
     <div style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px; text-align: left;">
         <span style="color: #404040;">Developer - <a href="https://yourstudio.com" target="_blank">Your Studio Name</a></span>
@@ -50,104 +46,49 @@ HTML
         <span style="color: #404040;">Version - 1.0.0</span>
     </div>
     <div style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px; text-align: left;">
-        <span style="color: #404040;">Build - Windows, Mac, Linux, Android</span>
+        <span style="color: #404040;">Build - Windows, Mac, Linux, Android, HTML5</span>
+    </div>
+    <div style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px; text-align: left;">
+        <span style="color: #404040;">Audience - 13+</span>
     </div>
 </div>
 
-<style>
-.content-warning-box {
-    background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin: 20px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    position: relative;
-    animation: slideDown 0.3s ease-out;
-}
+<br />
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+<!-- ========================================== -->
+<!-- 4. CONTENT WARNING (OPTIONAL) -->
+<!-- ========================================== -->
+<h3 style="text-align: center; color: #E0115F;">
+    <span style="font-family: 'Georgia', 'Times New Roman', serif;">
+        <u>Content Warning:</u>
+    </span>
+</h3>
 
-.warning-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 18px;
-}
+<div style="background-color: white;">
+    <ul style="line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;">
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                This game contains cartoon violence and combat
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Mild language and fantasy themes
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Jump scares and dark imagery
+            </span>
+        </li>
+    </ul>
+</div>
 
-.warning-icon {
-    font-size: 24px;
-}
+<br />
 
-.close-warning {
-    margin-left: auto;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 20px;
-    transition: transform 0.2s;
-}
-
-.close-warning:hover {
-    transform: scale(1.2);
-}
-
-.warning-content {
-    font-size: 14px;
-    line-height: 1.6;
-}
-
-.warning-content ul {
-    margin: 10px 0;
-    padding-left: 20px;
-}
-
-.warning-content li {
-    margin: 5px 0;
-}
-</style>
-
-<script>
-function closeWarning() {
-    const warningBox = document.getElementById('contentWarning');
-    warningBox.style.animation = 'fadeOut 0.3s ease-out';
-    setTimeout(() => {
-        warningBox.style.display = 'none';
-        localStorage.setItem('warning_dismissed_{{POST_ID}}', 'true');
-    }, 300);
-}
-
-// Show warning on page load if not dismissed
-window.addEventListener('DOMContentLoaded', function() {
-    const warningBox = document.getElementById('contentWarning');
-    const warningText = document.getElementById('warningText');
-    
-    // Check if already dismissed
-    const dismissed = localStorage.getItem('warning_dismissed_{{POST_ID}}');
-    
-    if (!dismissed && warningText.textContent.trim() !== '') {
-        warningBox.style.display = 'block';
-    }
-});
-</script>
-
-<!-- Warning: Violence -->
-Content Warning:
-- This game contains cartoon violence and combat
-- Recommended for ages 13+
-- Mild language and fantasy themes
-
-<!-- FEATURES -->
+<!-- ========================================== -->
+<!-- 5. FEATURES -->
+<!-- ========================================== -->
 <h3 style="text-align: center; color: #E0115F;">
     <span style="font-family: 'Georgia', 'Times New Roman', serif;">
         <u>Features:</u>
@@ -196,7 +137,9 @@ Content Warning:
 
 <br />
 
-<!-- SYSTEM REQUIREMENTS (Optional) -->
+<!-- ========================================== -->
+<!-- 6. SYSTEM REQUIREMENTS (OPTIONAL) -->
+<!-- ========================================== -->
 <h3 style="text-align: center; color: #E0115F;">
     <span style="font-family: 'Georgia', 'Times New Roman', serif;">
         <u>System Requirements:</u>
@@ -207,7 +150,7 @@ Content Warning:
     <ul style="line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;">
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                OS: Windows 10 or later, macOS 10.14+
+                OS: Windows 10 or later, macOS 10.14+, Ubuntu 20.04+
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
@@ -222,7 +165,7 @@ Content Warning:
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                Graphics: DirectX 11 compatible GPU
+                Graphics: DirectX 11 compatible GPU with 1GB VRAM
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
@@ -230,12 +173,19 @@ Content Warning:
                 Storage: 500 MB available space
             </span>
         </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Internet: Broadband connection (for online features)
+            </span>
+        </li>
     </ul>
 </div>
 
 <br />
 
-<!-- CONTROLS -->
+<!-- ========================================== -->
+<!-- 7. CONTROLS (FOR GAMES) -->
+<!-- ========================================== -->
 <h3 style="text-align: center; color: #E0115F;">
     <span style="font-family: 'Georgia', 'Times New Roman', serif;">
         <u>Controls:</u>
@@ -257,12 +207,12 @@ Content Warning:
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                <strong>Left Mouse Button:</strong> Attack/Interact/Confirm
+                <strong>Left Mouse Button:</strong> Attack / Interact / Confirm
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                <strong>Right Mouse Button:</strong> Block/Aim
+                <strong>Right Mouse Button:</strong> Block / Aim
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
@@ -272,17 +222,17 @@ Content Warning:
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                <strong>Space:</strong> Jump/Next dialogue
+                <strong>Space:</strong> Jump / Next dialogue
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                <strong>Shift:</strong> Sprint/Run
+                <strong>Shift:</strong> Sprint / Run
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
             <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
-                <strong>E:</strong> Interact/Use item
+                <strong>E:</strong> Interact / Use item
             </span>
         </li>
         <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
@@ -301,11 +251,121 @@ Content Warning:
             </span>
         </li>
     </ul>
+
+    <br />
+
+    <p style="text-align: center;">
+        <strong style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+            Gamepad Controls
+        </strong>
+    </p>
+
+    <ul style="line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em; list-style: none;">
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>Left Stick:</strong> Move character
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>Right Stick:</strong> Camera control
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>A Button:</strong> Jump / Confirm
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>B Button:</strong> Cancel / Back
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>X Button:</strong> Attack / Interact
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>Y Button:</strong> Special action
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>LB / RB:</strong> Cycle weapons / abilities
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>LT / RT:</strong> Aim / Block / Attack
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>D-Pad:</strong> Quick menu navigation
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>Start Button:</strong> Pause menu
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                <strong>Select Button:</strong> Map / Inventory
+            </span>
+        </li>
+    </ul>
 </div>
 
 <br />
 
-<!-- SOCIAL LINKS (Optional) -->
+<!-- ========================================== -->
+<!-- 8. HOW IT WORKS (FOR APPS) -->
+<!-- ========================================== -->
+<!-- ⚠️ USE THIS INSTEAD OF "CONTROLS" FOR APPS -->
+<h3 style="text-align: center; color: #E0115F;">
+    <span style="font-family: 'Georgia', 'Times New Roman', serif;">
+        <u>How It Works:</u>
+    </span>
+</h3>
+
+<div style="background-color: white;">
+    <ul style="line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;">
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Download and install the application on your device
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Launch the app and complete the initial setup wizard
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Connect your account or create a new one (optional)
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Configure your preferences in the settings menu
+            </span>
+        </li>
+        <li style="margin: 0px 0px 0.5em; padding: 0px; text-align: left;">
+            <span style="color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;">
+                Start using the app - your data syncs automatically
+            </span>
+        </li>
+    </ul>
+</div>
+
+<br />
+
+<!-- ========================================== -->
+<!-- 9. SOCIAL LINKS (OPTIONAL) -->
+<!-- ========================================== -->
 <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
     <h4 style="text-align: center; color: #E0115F; margin-top: 0;">
         <span style="font-family: 'Georgia', 'Times New Roman', serif;">
@@ -317,7 +377,9 @@ Content Warning:
             <a href="https://patreon.com/yourstudio" target="_blank">Patreon</a> - 
             <a href="https://ko-fi.com/yourstudio" target="_blank">Ko-Fi</a> - 
             <a href="https://discord.gg/yourinvite" target="_blank">Discord</a> - 
-            <a href="https://twitter.com/yourstudio" target="_blank">Twitter</a>
+            <a href="https://twitter.com/yourstudio" target="_blank">Twitter</a> - 
+            <a href="https://youtube.com/yourchannel" target="_blank">YouTube</a> - 
+            <a href="https://yourstudio.itch.io" target="_blank">Itch.io</a>
         </span>
     </div>
     <div style="text-align: center; margin-top: 10px;">
@@ -329,52 +391,9 @@ Content Warning:
 
 <br />
 
-<!-- SCREENSHOTS -->
-<h3 style="text-align: center; color: #E0115F;">
-    <span style="font-family: 'Georgia', 'Times New Roman', serif;">
-        <u>Screenshots:</u>
-    </span>
-</h3>
-
-<div class="separator" style="clear: both; text-align: center;">
-    <img border="0" 
-         data-original-height="1080" 
-         data-original-width="1920" 
-         src="YOUR_SCREENSHOT_1.jpg" 
-         alt="Screenshot 1" 
-         style="margin: 10px;" />
-</div>
-
-<div class="separator" style="clear: both; text-align: center;">
-    <img border="0" 
-         data-original-height="1080" 
-         data-original-width="1920" 
-         src="YOUR_SCREENSHOT_2.jpg" 
-         alt="Screenshot 2" 
-         style="margin: 10px;" />
-</div>
-
-<div class="separator" style="clear: both; text-align: center;">
-    <img border="0" 
-         data-original-height="1080" 
-         data-original-width="1920" 
-         src="YOUR_SCREENSHOT_3.jpg" 
-         alt="Screenshot 3" 
-         style="margin: 10px;" />
-</div>
-
-<div class="separator" style="clear: both; text-align: center;">
-    <img border="0" 
-         data-original-height="1080" 
-         data-original-width="1920" 
-         src="YOUR_SCREENSHOT_4.jpg" 
-         alt="Screenshot 4" 
-         style="margin: 10px;" />
-</div>
-
-<br />
-
-<!-- TRAILER (Optional) -->
+<!-- ========================================== -->
+<!-- 10. TRAILER (OPTIONAL) -->
+<!-- ========================================== -->
 <h3 style="text-align: center; color: #E0115F;">
     <span style="font-family: 'Georgia', 'Times New Roman', serif;">
         <u>Trailer:</u>
@@ -386,23 +405,72 @@ Content Warning:
             height="315" 
             src="https://www.youtube.com/embed/YOUR_VIDEO_ID" 
             frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen>
     </iframe>
 </div>
 
 <br />
 
-<!-- DOWNLOAD SECTION -->
+<!-- ========================================== -->
+<!-- 11. SCREENSHOTS -->
+<!-- ========================================== -->
+<h3 style="text-align: center; color: #E0115F;">
+    <span style="font-family: 'Georgia', 'Times New Roman', serif;">
+        <u>Screenshots:</u>
+    </span>
+</h3>
+
+<div class="separator" style="clear: both; text-align: center;">
+    <img border="0" 
+         data-original-height="1080" 
+         data-original-width="1920" 
+         src="YOUR_SCREENSHOT_1.jpg" 
+         alt="Gameplay Screenshot 1" 
+         style="margin: 10px;" />
+</div>
+
+<div class="separator" style="clear: both; text-align: center;">
+    <img border="0" 
+         data-original-height="1080" 
+         data-original-width="1920" 
+         src="YOUR_SCREENSHOT_2.jpg" 
+         alt="Gameplay Screenshot 2" 
+         style="margin: 10px;" />
+</div>
+
+<div class="separator" style="clear: both; text-align: center;">
+    <img border="0" 
+         data-original-height="1080" 
+         data-original-width="1920" 
+         src="YOUR_SCREENSHOT_3.jpg" 
+         alt="Gameplay Screenshot 3" 
+         style="margin: 10px;" />
+</div>
+
+<div class="separator" style="clear: both; text-align: center;">
+    <img border="0" 
+         data-original-height="1080" 
+         data-original-width="1920" 
+         src="YOUR_SCREENSHOT_4.jpg" 
+         alt="Gameplay Screenshot 4" 
+         style="margin: 10px;" />
+</div>
+
+<br />
+
+<!-- ========================================== -->
+<!-- 12. DOWNLOAD SECTION -->
+<!-- ========================================== -->
 <h3 style="text-align: center; color: #E0115F;">
     <span style="font-family: 'Georgia', 'Times New Roman', serif;">
         <u><b>Download:</b></u>
     </span>
 </h3>
 
-<!-- Windows -->
+<!-- ✅ WINDOWS DOWNLOAD -->
 <div class="separator" style="clear: both; text-align: center;">
-    <a href="https://yourgame.itch.io/game" 
-       itemprop="downloadUrl" 
+    <a href="https://yourgame.itch.io/game/windows" 
        target="_blank">
         <img border="0" 
              data-original-height="150" 
@@ -415,10 +483,9 @@ Content Warning:
 
 <br />
 
-<!-- Mac -->
+<!-- ✅ MAC DOWNLOAD -->
 <div class="separator" style="clear: both; text-align: center;">
-    <a href="https://yourgame.itch.io/game" 
-       itemprop="downloadUrl" 
+    <a href="https://yourgame.itch.io/game/mac" 
        target="_blank">
         <img border="0" 
              data-original-height="150" 
@@ -431,10 +498,9 @@ Content Warning:
 
 <br />
 
-<!-- Linux -->
+<!-- ✅ LINUX DOWNLOAD -->
 <div class="separator" style="clear: both; text-align: center;">
-    <a href="https://yourgame.itch.io/game" 
-       itemprop="downloadUrl" 
+    <a href="https://yourgame.itch.io/game/linux" 
        target="_blank">
         <img border="0" 
              data-original-height="150" 
@@ -447,10 +513,9 @@ Content Warning:
 
 <br />
 
-<!-- Android -->
+<!-- ✅ ANDROID DOWNLOAD -->
 <div class="separator" style="clear: both; text-align: center;">
     <a href="https://play.google.com/store/apps/details?id=com.yourstudio.game" 
-       itemprop="downloadUrl" 
        target="_blank">
         <img border="0" 
              data-original-height="150" 
@@ -463,10 +528,9 @@ Content Warning:
 
 <br />
 
-<!-- iOS -->
+<!-- ✅ iOS DOWNLOAD -->
 <div class="separator" style="clear: both; text-align: center;">
     <a href="https://apps.apple.com/app/your-app-id" 
-       itemprop="downloadUrl" 
        target="_blank">
         <img border="0" 
              data-original-height="150" 
@@ -479,10 +543,9 @@ Content Warning:
 
 <br />
 
-<!-- Web/Browser -->
+<!-- ✅ WEB/HTML5 PLAY BUTTON -->
 <div class="separator" style="clear: both; text-align: center;">
     <a href="https://yourgame.itch.io/game/html" 
-       itemprop="downloadUrl" 
        target="_blank">
         <img border="0" 
              data-original-height="150" 
@@ -495,7 +558,7 @@ Content Warning:
 
 <br />
 
-<!-- Itch.io Widget (Optional) -->
+<!-- ✅ ITCH.IO WIDGET (OPTIONAL) -->
 <div class="separator" style="clear: both; text-align: center;">
     <iframe src="https://itch.io/embed/YOUR_GAME_ID?bg_color=0b0f19&fg_color=ffffff&link_color=E0115F&border_color=333333" 
             width="552" 
@@ -505,18 +568,92 @@ Content Warning:
 </div>
 
 <br />
+```
 
-✅ What Changed:
-detectPlatformFromImage() now accepts altText parameter
-Alt text is checked FIRST before filename
-Enhanced regex captures alt text from img tags
-Added detailed logging to debug platform detection
-Fallback chain: Alt text → Filename → URL → "Download"
-🎯 How It Works:
-text
+---
 
-1. Parser finds: <img src="button.webp" alt="Download for Windows" />
-2. detectPlatformFromImage("button.webp", "Download for Windows")
-3. Checks alt text: "windows" found ✅
-4. Returns: "Windows"
-5. Creates download link: { platform: "Windows", url: "..." }
+## **✅ KEY FEATURES OF THIS TEMPLATE:**
+
+### **1. Parser-Optimized Structure**
+- ✅ Description comes BEFORE metadata (won't be filtered out)
+- ✅ Metadata in clean box format (easy to parse)
+- ✅ All sections have proper headers
+- ✅ No `itemprop` on content elements (fixed your issue)
+
+### **2. Properly Extracted Fields**
+- ✅ **Developer** - Parsed from metadata box
+- ✅ **Version** - Parsed from metadata box  
+- ✅ **Build** - Supports: `Windows, Mac, Linux, Android, HTML5`
+- ✅ **Audience** - Parsed as `ageRating` field
+- ✅ **Content Warning** - Bullet list format
+- ✅ **Features** - Bullet list format
+- ✅ **Requirements** - Bullet list format
+- ✅ **Controls** - Supports keyboard + gamepad
+- ✅ **How It Works** - For apps (alternative to controls)
+- ✅ **Social Links** - All major platforms
+
+### **3. Download Button Detection**
+- ✅ Uses **alt text** for platform detection
+- ✅ Same image, different alt text works perfectly
+- ✅ Supports: Windows, Mac, Linux, Android, iOS, Web
+
+### **4. Media Support**
+- ✅ Cover image at top
+- ✅ Multiple screenshots
+- ✅ YouTube trailer embed
+- ✅ Itch.io game widget
+
+---
+
+## **📋 QUICK CUSTOMIZATION CHECKLIST:**
+
+```markdown
+[ ] Replace YOUR_COVER_IMAGE_URL.jpg
+[ ] Update game title and description
+[ ] Set Developer name and link
+[ ] Set Version number
+[ ] Set Build platforms (e.g., "Windows, Mac, HTML5")
+[ ] Set Audience rating (e.g., "13+", "Teen", "E10+")
+[ ] Add/remove Content Warnings
+[ ] Customize Features list
+[ ] Add System Requirements (or remove section)
+[ ] Set Controls (for games) OR How It Works (for apps)
+[ ] Add Social Links (or remove section)
+[ ] Replace YOUR_VIDEO_ID in trailer
+[ ] Replace screenshot URLs (4 images)
+[ ] Update download button URLs
+[ ] Update download button alt text to match platforms
+[ ] Update Itch.io widget ID (or remove)
+```
+
+---
+
+## **🎯 PLATFORM VALUES REFERENCE:**
+
+Use these exact values in the **"Build -"** line:
+
+```
+Windows          → "Windows"
+Mac              → "Mac"  
+Linux            → "Linux"
+HTML5            → "Web"
+Android          → "Android"
+iOS              → "iOS"
+SteamOS          → "SteamOS"
+ChromeOS         → "ChromeOS"
+Nintendo Switch  → "Nintendo Switch"
+Xbox             → "Xbox"
+PlayStation      → "PlayStation"
+```
+
+**Examples:**
+```
+Build - HTML5
+Build - Windows, Mac, Linux
+Build - Android, HTML5
+Build - Windows, Linux, Android and Browser
+```
+
+---
+
+**This template is production-ready and fully compatible with your parser!** 🚀

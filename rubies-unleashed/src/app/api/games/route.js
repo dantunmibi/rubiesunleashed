@@ -3,21 +3,29 @@ import { NextResponse } from 'next/server';
 export async function GET(request) {
   const BLOG_ID = 'rubyapks.blogspot.com';
   
-  // Parse the query parameter "limit" from the URL
   const { searchParams } = new URL(request.url);
-  // Default to 8 (Homepage size) if not specified, but allow up to 50
-  const limit = searchParams.get('limit') || '8';
+  const limit = parseInt(searchParams.get('limit') || '500', 10);
   
   try {
-    const res = await fetch(`https://${BLOG_ID}/feeds/posts/default?alt=json&max-results=${limit}`, {
-        next: { revalidate: 3600 } // Cache for 1 hour
-    });
+    // ✅ FIX: Use actual limit, remove cache, add timestamp
+    const timestamp = Date.now();
+    const res = await fetch(
+      `https://${BLOG_ID}/feeds/posts/default?alt=json&max-results=${limit}&_t=${timestamp}`,
+      { 
+        cache: 'no-store', // ✅ Disable Next.js cache
+        next: { revalidate: 0 } // ✅ Disable ISR cache
+      }
+    );
 
     if (!res.ok) {
-        throw new Error(`Blogger API responded with ${res.status}`);
+      throw new Error(`Blogger API responded with ${res.status}`);
     }
 
     const data = await res.json();
+    
+    // ✅ DEBUG: Log how many posts were actually fetched
+    console.log(`✅ API Route: Fetched ${data.feed?.entry?.length || 0} posts (requested: ${limit})`);
+    
     return NextResponse.json(data);
     
   } catch (error) {
