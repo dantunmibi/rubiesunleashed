@@ -36,7 +36,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   Menu, X, User, Heart, Upload, Settings, 
   HelpCircle, LogOut, Sparkles, Activity, LayoutDashboard,
-  Bell, Users, Search, ChevronDown
+  Bell, Users, Search, ChevronDown, Contact
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/userManager";
 
@@ -432,11 +432,11 @@ useEffect(() => {
                         <div className="h-px bg-white/10 my-1" />
 
                         <DropdownItem 
-                          icon={<Settings size={16} />} 
-                          label="Settings" 
+                          icon={<Contact size={16} />} 
+                          label="Contact Us" 
                           onClick={() => {
                             setUserDropdownOpen(false);
-                            router.push("/settings");
+                            router.push("/contact");
                           }}
                         />
                         <DropdownItem 
