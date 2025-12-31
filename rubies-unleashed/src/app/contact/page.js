@@ -54,14 +54,6 @@ export default function ContactPage() {
       <BackgroundEffects />
       <Navbar />
 
-      {/* Hidden form for Netlify */}
-      <form name="contact" netlify="true" hidden>
-        <input type="text" name="name" />
-        <input type="email" name="email" />
-        <input type="text" name="subject" />
-        <textarea name="message"></textarea>
-      </form>
-
       <main className="relative z-10 pt-32 pb-24 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
