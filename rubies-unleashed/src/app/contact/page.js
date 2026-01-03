@@ -1,4 +1,17 @@
-// app/contact/page.js
+/**
+ * ================================================================
+ * CONTACT PAGE
+ * ================================================================
+ * 
+ * Purpose:
+ * - Allows users to send messages via Netlify Forms
+ * - Provides direct contact info and social links
+ * 
+ * Fix applied:
+ * - Targets /__forms.html for submission to bypass Next.js App Router
+ * ================================================================
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -22,7 +35,10 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/", {
+      // ⚠️ CRITICAL FIX: We post to /__forms.html instead of /
+      // This bypasses the Next.js App Router which would otherwise
+      // intercept the POST request and cause a 405 error.
+      const response = await fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -36,9 +52,11 @@ export default function ContactPage() {
         setFormData({ name: "", email: "", subject: "", message: "" });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
+        console.error("Form submission failed:", response.statusText);
         setStatus("error");
       }
     } catch (error) {
+      console.error("Network error:", error);
       setStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -82,7 +100,12 @@ export default function ContactPage() {
                 <h2 className="text-3xl font-black text-white">Send Message</h2>
               </div>
 
-              <form onSubmit={handleSubmit} name="contact" method="POST" data-netlify="true" className="space-y-6">
+              {/* 
+                  NOTE: The <form> tag here handles the visual UI.
+                  The actual submission logic is handled by handleSubmit() above.
+                  The hidden input below ensures React hydration matches expectation if needed.
+              */}
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <input type="hidden" name="form-name" value="contact" />
                 
                 <div className="grid md:grid-cols-2 gap-6">
