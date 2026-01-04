@@ -59,12 +59,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/explore?filter=games" className="hover:text-ruby-light transition-colors flex items-center gap-3">
+                <Link href="/explore?q=Games" className="hover:text-ruby-light transition-colors flex items-center gap-3">
                   <span>🎮</span> Indie Games
                 </Link>
               </li>
               <li>
-                <Link href="/explore?filter=apps" className="hover:text-ruby-light transition-colors flex items-center gap-3">
+                <Link href="/explore?q=Apps" className="hover:text-ruby-light transition-colors flex items-center gap-3">
                   <span>📱</span> Apps & Tools
                 </Link>
               </li>
