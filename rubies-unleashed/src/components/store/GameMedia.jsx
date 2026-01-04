@@ -1,11 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Gamepad2, ExternalLink, ImageIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Gamepad2, ExternalLink, ImageIcon, X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 export default function GameMedia({ game }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const screenshots = game?.screenshots || [];
+
+  // Helper: Detect if video needs an Iframe (YouTube/Vimeo) or Native Player
+  const isEmbed = (url) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.includes('youtube') || 
+           lower.includes('youtu.be') || 
+           lower.includes('vimeo') || 
+           lower.includes('dailymotion') || 
+           lower.includes('twitch') ||
+           lower.includes('itch.io/embed') ||
+                      lower.includes('blogger.com/video');// Explicit embeds
+  };
 
   // Keyboard Navigation & Scroll Lock
   useEffect(() => {
@@ -77,16 +90,34 @@ export default function GameMedia({ game }) {
       {game.video && (
         <section className="space-y-4">
           <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
-            <ImageIcon size={16} /> {game.gameEmbed ? 'Gameplay Trailer' : 'Trailer'}
+            <Play size={16} /> {game.gameEmbed ? 'Gameplay Trailer' : 'Trailer'}
           </h3>
-          <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-            <iframe 
-              src={game.video} 
-              className="w-full h-full" 
-              allowFullScreen 
-              title="Trailer" 
-              loading="lazy"
-            />
+          <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
+            
+            {isEmbed(game.video) ? (
+                // 🅰️ YouTube / Vimeo / Embeds
+                <iframe 
+                  src={game.video} 
+                  className="w-full h-full" 
+                  allowFullScreen 
+                  title="Trailer" 
+                  loading="lazy"
+                />
+            ) : (
+                // 🅱️ Native Videos (Blogger/MP4)
+                <video 
+                    controls 
+                    preload="metadata"
+                    className="w-full h-full object-contain"
+                    poster={game.image} // Use Game Cover as poster
+                >
+                    <source src={game.video} type="video/mp4" />
+                    {/* Fallback for other formats if necessary */}
+                    <source src={game.video} type="video/webm" />
+                    Your browser does not support the video tag.
+                </video>
+            )}
+
           </div>
         </section>
       )}

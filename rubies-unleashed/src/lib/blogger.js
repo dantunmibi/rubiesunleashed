@@ -1221,6 +1221,7 @@ if (!platform) {
   let videos = [];
   let gameEmbeds = [];
   
+  // A. Try extracting from HTML (Iframes/YouTube)
   const iframeRegex = /<iframe[^>]+src=["']([^"']+)["'][^>]*>/gi;
   let iframeMatch;
   
@@ -1251,7 +1252,49 @@ if (!platform) {
           videos.push(iframeSrc);
       }
   }
-  
+
+  // ✅ B. NEW: Specific Extractor for the "video.g?token" link you found
+  // This looks for the link anywhere in the text (href, src, or just plain text)
+  const tokenVideoRegex = /https:\/\/www\.blogger\.com\/video\.g\?token=[A-Za-z0-9_\-]+/g;
+  let tokenMatch;
+  while ((tokenMatch = tokenVideoRegex.exec(contentRaw)) !== null) {
+      const foundUrl = tokenMatch[0];
+      if (!videos.includes(foundUrl)) {
+          console.log('🎥 Found Direct Token Video:', foundUrl);
+          // Add to START of array so it takes priority
+          videos.unshift(foundUrl);
+      }
+  }
+
+  // C. Fallback: Legacy Object tags (contentid)
+  const contentIdRegex = /\bcontent[Ii]d\s*=\s*["']?([a-zA-Z0-9]+)["']?/gi;
+  let cidMatch;
+  while ((cidMatch = contentIdRegex.exec(contentRaw)) !== null) {
+      const id = cidMatch[1];
+      if (id && id.length > 5) { 
+          // We add this as a backup, but the Token URL above is preferred
+          const videoUrl = `https://www.blogger.com/video-play.mp4?contentId=${id}`;
+          if (!videos.includes(videoUrl)) {
+              videos.push(videoUrl);
+          }
+      }
+  }
+
+  // D. Extract Native Blogger Videos from API Metadata
+  if (post.media$group && post.media$group.media$content) {
+      const mediaList = Array.isArray(post.media$group.media$content) 
+          ? post.media$group.media$content 
+          : [post.media$group.media$content];
+          
+      mediaList.forEach(item => {
+          if (item.medium === 'video' && item.url) {
+              const secureUrl = item.url.replace(/^http:/, 'https:');
+              if (!videos.includes(secureUrl)) {
+                  videos.push(secureUrl);
+              }
+          }
+      });
+  }
 // 4. IMAGE EXTRACTION
 let allImages = [];
 const imgRegex = /(?:src|data-src)=["']([^"']+?)["']/gi;
@@ -1467,90 +1510,41 @@ export async function fetchGameById(id) {
     // 1️⃣ FAST PATH: Check snapshot first
     const backupGames = getBackupGames(500);
     
-    let game = backupGames.find(g => g.id === id);
+    // Helper to find match
+    const findMatch = (list) => {
+        return list.find(g => 
+            g.id === id || 
+            g.slug === id || 
+            g.slug.endsWith(`-${id}`) ||
+            g.slug.includes(id) // Broadest match last
+        );
+    };
+
+    let game = findMatch(backupGames);
     if (game) {
-        console.log('✅ Found in snapshot (ID):', id);
+        console.log('✅ Found in snapshot:', game.title);
         return game;
     }
     
-    game = backupGames.find(g => g.slug === id);
-    if (game) {
-        console.log('✅ Found in snapshot (slug):', id);
-        return game;
-    }
-    
-    game = backupGames.find(g => g.slug.endsWith(`-${id}`));
-    if (game) {
-        console.log('✅ Found in snapshot (slug suffix):', id);
-        return game;
-    }
-    
-    game = backupGames.find(g => g.slug.includes(id));
-    if (game) {
-        console.log('✅ Found in snapshot (slug contains):', id);
-        return game;
-    }
-    
-    // 2️⃣ SLOW PATH: Not in snapshot → Fetch recent posts from RSS feed
-    console.log('🌐 Not in snapshot, fetching recent posts from Blogger RSS...');
+    // 2️⃣ LIVE PATH: Use the working fetchGames logic
+    // We fetch the latest 100 posts via the API proxy that Explore uses
+    console.log('🌐 Not in snapshot, fetching fresh data via fetchGames...');
     
     try {
-        const BLOG_ID = 'rubyapks.blogspot.com'; // Hardcoded since you don't use env vars
-        const timestamp = Date.now();
+        const freshGames = await fetchGames(500);
         
-        // Fetch the 100 most recent posts via RSS (public, no API key needed)
-        const feedUrl = `https://${BLOG_ID}/feeds/posts/default?alt=json&max-results=500&_t=${timestamp}`;
+        game = findMatch(freshGames);
         
-        console.log('📡 Fetching:', feedUrl);
-        
-        const res = await fetch(feedUrl, { 
-            cache: 'no-store',
-            next: { revalidate: 0 }
-        });
-        
-        if (!res.ok) {
-            console.error(`❌ RSS feed returned ${res.status}`);
-            return null;
+        if (game) {
+            console.log('✅ Found in live data:', game.title);
+            return game;
         }
         
-        const data = await res.json();
-        const entries = data.feed?.entry || [];
-        
-        console.log(`✅ Fetched ${entries.length} recent posts from RSS`);
-        
-        // Search through recent posts
-        for (const post of entries) {
-            const normalized = safeNormalizePost(post);
-            
-            // Try multiple matching strategies
-            if (normalized.id === id) {
-                console.log('✅ NEW POST FOUND (ID match):', normalized.title);
-                return normalized;
-            }
-            
-            if (normalized.slug === id) {
-                console.log('✅ NEW POST FOUND (slug match):', normalized.title);
-                return normalized;
-            }
-            
-            if (normalized.slug.endsWith(`-${id}`)) {
-                console.log('✅ NEW POST FOUND (slug suffix):', normalized.title);
-                return normalized;
-            }
-            
-            if (normalized.slug.includes(id)) {
-                console.log('✅ NEW POST FOUND (slug contains):', normalized.title);
-                return normalized;
-            }
-        }
-        
-        console.warn('⚠️ Post not found in recent 100 posts');
+        console.warn('⚠️ Post not found in snapshot or live data.');
         
     } catch (error) {
-        console.error('❌ RSS fetch failed:', error.message);
+        console.error('❌ Live fetch failed:', error.message);
     }
     
-    // 3️⃣ NOT FOUND ANYWHERE
-    console.error('❌ Post not found in snapshot or recent RSS feed:', id);
     return null;
 }
