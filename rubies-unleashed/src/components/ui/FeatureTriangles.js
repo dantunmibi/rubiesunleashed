@@ -4,7 +4,7 @@ import { Cpu, Shield, Gamepad2 } from "lucide-react";
 export default function FeatureTriangles() {
   const features = [
     { icon: <Cpu />, title: "High Performance", desc: "Optimized delivery network ensures your downloads are lightning fast.", color: "text-ruby bg-ruby/10" },
-    { icon: <Shield />, title: "Secure & Verified", desc: "Every gem in the vault is verified safe. No malware, just pure gaming.", color: "text-blue-400 bg-blue-500/10" },
+    { icon: <Shield />, title: "Secure & Verified", desc: "Every gem in the vault is security-checked and verified safe. No malware, only clean, quality content.", color: "text-blue-400 bg-blue-500/10" },
     { icon: <Gamepad2 />, title: "Indie First", desc: "Built to spotlight hidden gems often overlooked by major platforms.", color: "text-purple-400 bg-purple-500/10" }
   ];
 

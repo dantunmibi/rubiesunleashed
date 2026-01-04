@@ -19,7 +19,7 @@ export default function Hero() {
           </h1>
           
           <p className="text-slate-400 text-lg md:text-xl max-w-xl font-medium leading-relaxed mx-auto lg:mx-0 animate-in slide-in-from-bottom-4 fade-in duration-700 delay-200">
-            Discover the next big indie hit, support rising developers, and fill your vault with Rubies. A marketplace built for the community.
+            Discover the next big hit, support rising developers, and fill your vault with Rubies. A marketplace built for the community.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start animate-in slide-in-from-bottom-4 fade-in duration-700 delay-300">
