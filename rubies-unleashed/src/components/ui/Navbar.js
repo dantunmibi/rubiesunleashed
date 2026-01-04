@@ -42,12 +42,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   Menu, X, User, Heart, Upload, Settings, 
   HelpCircle, LogOut, Sparkles, Activity, LayoutDashboard,
-  Bell, Users, Search, ChevronDown, Contact
+  Bell, Search, ChevronDown, Contact // ❌ Users icon removed from imports
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/userManager";
 import { fetchGames } from "@/lib/blogger"; // ✅ IMPORT THIS
 import { useSearch } from "@/hooks/useSearch"; // ✅ IMPORT THIS
 import SearchDropdown from "./SearchDropdown"; // ✅ IMPORT THIS
+import SearchCommandCenter from "./SearchCommandCenter"; // ✅ NEW IMPORT
 
 export default function Navbar() {
   // State Management
@@ -60,6 +61,10 @@ export default function Navbar() {
   const [allGames, setAllGames] = useState([]); // Store fetched games
   const { query, setQuery, results, isSearching, clearSearch } = useSearch(allGames);
   const [searchOpen, setSearchOpen] = useState(false);
+  
+  // ✅ NEW STATE for Mobile Search Overlay
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false); 
+
   const searchInputRef = useRef(null);
 
   // Refs for click-outside detection
@@ -164,7 +169,6 @@ export default function Navbar() {
     async function loadNavbarData() {
       try {
         // Fetch 1000 games just like ExploreContent does
-        // This returns PRE-PARSED data (titles, tags, images are already fixed)
         const data = await fetchGames(1000); 
         console.log(`💎 Navbar: Loaded ${data.length} vault items.`);
         setAllGames(data);
@@ -220,6 +224,13 @@ export default function Navbar() {
 
   return (
     <>
+      {/* ✅ MOBILE SEARCH OVERLAY (The "Spotlight") */}
+      <SearchCommandCenter 
+        isOpen={mobileSearchOpen} 
+        onClose={() => setMobileSearchOpen(false)}
+        allGames={allGames}
+      />
+
       {/* ========================================
           NAVBAR - MAIN COMPONENT
           Z-Index: 40 (Sits below the Sidebar which is Z-50)
@@ -359,10 +370,21 @@ export default function Navbar() {
               RIGHT SECTION: USER & ACTIONS
               ======================================== */}
           <div className="flex items-center gap-1 sm:gap-2 z-50">
+            
+            {/* ✅ ADDED: Mobile Search Trigger (Top Level - visible to all) */}
+            {/* Left of the Notification Bell */}
+            <button
+                onClick={() => setMobileSearchOpen(true)}
+                className="md:hidden p-2 text-slate-400 hover:text-ruby hover:bg-white/5 rounded-full transition-all"
+                aria-label="Open Search"
+            >
+                <Search size={22} />
+            </button>
+
             {currentUser ? (
               <>
                 {/* 
-                    Notifications & Friends 
+                    Notifications 
                     - Now VISIBLE on Mobile (Flex instead of Hidden)
                 */}
                 <div className="flex items-center gap-1">
@@ -386,10 +408,7 @@ export default function Navbar() {
                     />
                   </div>
                   
-                  {/* Friends/Users Icon */}
-                  <button className="p-2 text-slate-400 hover:text-ruby hover:bg-white/5 rounded-full transition-all">
-                    <Users size={22} />
-                  </button>
+                  {/* ❌ REMOVED: Friends/Users Icon */}
                 </div>
                 
                 <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block" />

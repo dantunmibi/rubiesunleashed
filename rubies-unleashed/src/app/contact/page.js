@@ -12,6 +12,7 @@
  * - Input validation & loading states
  * - Direct contact information
  * - Professional cinematic UI
+ * - Toast Notification Integration
  * 
  * ================================================================
  */
@@ -23,6 +24,7 @@ import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import { Mail, Send, Sparkles, MessageSquare, HelpCircle, Briefcase, ChevronRight } from "lucide-react";
+import { useToastContext } from "@/components/providers/ToastProvider";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -32,6 +34,7 @@ export default function ContactPage() {
     message: "",
   });
   const [status, setStatus] = useState("idle");
+  const { showToast } = useToastContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -52,15 +55,21 @@ export default function ContactPage() {
 
       if (response.ok) {
         setStatus("success");
+        // ✅ UI FEEDBACK: Trigger global toast
+        showToast("Message sent successfully! We'll be in touch.", "success");
+        
         setFormData({ name: "", email: "", subject: "", message: "" });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
         console.error("Form submission failed:", response.statusText);
         setStatus("error");
+        // ✅ UI FEEDBACK: Trigger global toast error
+        showToast("Unable to send message. Please try again.", "error");
       }
     } catch (error) {
       console.error("Network error:", error);
       setStatus("error");
+      showToast("Network error. Please check your connection.", "error");
     } finally {
       setIsSubmitting(false);
     }

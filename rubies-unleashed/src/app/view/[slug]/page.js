@@ -1,10 +1,18 @@
 "use client";
 
+/* 
+  💎 RUBIES UNLEASHED - Item Details Page
+  ---------------------------------------
+  - Handles dynamic routing for both Games AND Apps.
+  - "Not Found" state is now neutral ("Item not found").
+  - Includes Smart Recommendation Engine (Dev > Tags).
+*/
+
 import React, { useEffect, useState, use } from "react";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { fetchGameById, fetchGames } from "@/lib/blogger";
-import { Loader2 } from "lucide-react";
+import { Loader2, PackageOpen } from "lucide-react"; // Added PackageOpen for neutral icon
 import Link from "next/link";
 import { useWishlist } from "@/hooks/useWishlist";
 import AuthModal from "@/components/auth/AuthModal";
@@ -15,7 +23,7 @@ import GameContent from "@/components/store/GameContent";
 import GameSidebar from "@/components/store/GameSidebar";
 import DownloadCallout from "@/components/store/DownloadCallout";
 import SimilarGames from "@/components/store/SimilarGames";
-import ContentWarningModal from "@/components/store/ContentWarningModal"; // ✅ NEW
+import ContentWarningModal from "@/components/store/ContentWarningModal";
 
 // Helper: Fisher-Yates Shuffle
 function shuffleArray(array) {
@@ -35,20 +43,20 @@ export default function GameDetails({ params }) {
   const [similarGames, setSimilarGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
-const { 
-  isWishlisted, 
-  toggleWishlist, 
-  showAuthModal, 
-  closeAuthModal, 
-  handleContinueAsGuest 
-} = useWishlist(game?.id);
+  const { 
+    isWishlisted, 
+    toggleWishlist, 
+    showAuthModal, 
+    closeAuthModal, 
+    handleContinueAsGuest 
+  } = useWishlist(game?.id);
 
   useEffect(() => {
     let isMounted = true;
 
     async function load() {
       try {
-      console.log('🔍 FULL SLUG:', slug);
+        console.log('🔍 FULL SLUG:', slug);
         let gameId = null;
         if (slug) {
           const parts = slug.split("-");
@@ -80,7 +88,8 @@ const {
                 if (!Array.isArray(g.tags)) return false;
                 return g.tags.some(t => currentTags.includes(t));
             });
-              // 3. Merge: Shuffled Devs first, then Shuffled Tags
+            
+            // 3. Merge: Shuffled Devs first, then Shuffled Tags
             const finalSelection = [
                 ...shuffleArray(devMatches),
                 ...shuffleArray(tagMatches)
@@ -109,12 +118,20 @@ const {
       </div>
     );
 
+  // 💎 NEUTRAL NOT FOUND STATE
   if (!game)
     return (
       <div className="min-h-screen bg-[#0b0f19] text-white flex flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-bold">Game not found</h2>
-        <Link href="/explore" className="text-ruby hover:underline">
-          Return to Vault
+        <PackageOpen size={64} className="text-slate-600 mb-2" />
+        <h2 className="text-2xl font-bold uppercase tracking-widest text-slate-400">Item Not Found</h2>
+        <p className="text-slate-500 max-w-md text-center">
+          The item you are looking for might have been moved, removed, or the link is incorrect.
+        </p>
+        <Link 
+          href="/explore" 
+          className="mt-4 px-6 py-3 rounded-xl bg-ruby text-white font-bold uppercase tracking-widest text-xs hover:bg-ruby-600 transition-colors shadow-lg shadow-ruby/20"
+        >
+          Return to Explore
         </Link>
       </div>
     );
@@ -129,6 +146,11 @@ const {
       <div className="hidden md:block">
         <Navbar />
       </div>
+      
+      {/* 
+         GameHero handles the visual distinction (Ruby vs Cyan) internally 
+         based on game.type or tags passed to it.
+      */}
       <GameHero
         game={game}
         isWishlisted={isWishlisted}
@@ -142,18 +164,18 @@ const {
           <DownloadCallout game={game} />
         </div>
 
+        {/* Sidebar Logic */}
         {game && typeof game === "object" && <GameSidebar game={game} />}
       </main>
 
-      {/* Only render sidebar if game is valid object */}
-
       <SimilarGames games={similarGames} />
-    {/* ✅ ADD THIS: Auth Modal */}
-    <AuthModal
-      isOpen={showAuthModal}
-      onClose={closeAuthModal}
-      onContinueAsGuest={handleContinueAsGuest}
-    />
+      
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={closeAuthModal}
+        onContinueAsGuest={handleContinueAsGuest}
+      />
       <Footer />
     </div>
   );

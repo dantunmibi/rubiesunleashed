@@ -135,7 +135,7 @@ const handleUndo = (notification) => {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-full right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-surface border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-110 animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="absolute top-full right-0 mt-2 w-96 max-w-[calc(100vw-5rem)] bg-surface border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-110 animate-in fade-in slide-in-from-top-2 duration-200">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/5">
         <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ const handleUndo = (notification) => {
       </div>
 
       {/* Notifications List */}
-      <div className="max-h-96 overflow-y-auto custom-scrollbar">
+      <div className="max-h-96 max-w-full overflow-y-auto custom-scrollbar">
         {notifications.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">

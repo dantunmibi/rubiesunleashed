@@ -1510,13 +1510,13 @@ export async function fetchGameById(id) {
     // 1️⃣ FAST PATH: Check snapshot first
     const backupGames = getBackupGames(500);
     
-    // Helper to find match
+    // ✅ FIX: Strict Matching Only
     const findMatch = (list) => {
         return list.find(g => 
-            g.id === id || 
-            g.slug === id || 
-            g.slug.endsWith(`-${id}`) ||
-            g.slug.includes(id) // Broadest match last
+            g.id === id ||                   // Exact ID Match (e.g. "123456")
+            g.slug === id ||                 // Exact Slug Match (e.g. "game-title-123456")
+            g.slug.endsWith(`-${id}`)        // Standard Slug End Match
+            // ❌ REMOVED: g.slug.includes(id) -> This was causing random text to match
         );
     };
 
@@ -1527,12 +1527,10 @@ export async function fetchGameById(id) {
     }
     
     // 2️⃣ LIVE PATH: Use the working fetchGames logic
-    // We fetch the latest 100 posts via the API proxy that Explore uses
     console.log('🌐 Not in snapshot, fetching fresh data via fetchGames...');
     
     try {
         const freshGames = await fetchGames(500);
-        
         game = findMatch(freshGames);
         
         if (game) {
