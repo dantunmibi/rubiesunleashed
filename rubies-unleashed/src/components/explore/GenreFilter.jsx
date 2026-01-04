@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Filter, Grid, X, Box, Layers } from "lucide-react";
 import { getTagStyle } from "@/lib/game-utils";
 
@@ -12,16 +12,27 @@ export default function GenreFilter({
   const [isExpanded, setIsExpanded] = useState(false);
   const ribbonRef = useRef(null);
 
-  // Auto-scroll selected tag into view
+  // 1. DYNAMIC RIBBON LIST (Inject Ghost Tags)
+  // Ensures hidden selected tags appear in the ribbon so "All" isn't the only thing visible.
+  const displayRibbonTags = useMemo(() => {
+    if (
+      selectedGenre && 
+      selectedGenre !== "All" && 
+      !ribbonTags.includes(selectedGenre)
+    ) {
+      return [selectedGenre, ...ribbonTags];
+    }
+    return ribbonTags;
+  }, [selectedGenre, ribbonTags]);
+
+  // 2. SCROLL LOGIC
   useEffect(() => {
     if (selectedGenre && !isExpanded && ribbonRef.current) {
-      // Determine which button to scroll to
       const targetId = selectedGenre === "All" ? "tag-btn-All" : `tag-btn-${selectedGenre}`;
       
       setTimeout(() => {
         const activeBtn = document.getElementById(targetId);
         if (activeBtn) {
-          // Calculate center position relative to container
           const container = ribbonRef.current;
           const scrollLeft = 
             activeBtn.offsetLeft - 
@@ -37,6 +48,10 @@ export default function GenreFilter({
       }, 200);
     }
   }, [selectedGenre, isExpanded]);
+
+  // 3. 💎 FIX: STRICT "ALL" ACTIVE STATE
+  // "All" is active ONLY if selectedGenre is "All" AND there is no search query.
+  const isAllActive = selectedGenre === "All" && (!searchQuery || searchQuery.trim() === "");
 
   return (
     <div className="relative w-full">
@@ -66,7 +81,8 @@ export default function GenreFilter({
         <div className="relative border border-white/10 rounded-xl bg-black/40 p-2 animate-in fade-in zoom-in duration-300">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {allTags.map((tag) => {
-              const isSelected = selectedGenre === tag || searchQuery.toLowerCase() === tag.toLowerCase();
+              // Match strictly by tag OR by search
+              const isSelected = selectedGenre === tag || (searchQuery && searchQuery.toLowerCase() === tag.toLowerCase());
               let styleClass = getTagStyle(tag);
               const isApp = tag === 'App';
 
@@ -99,13 +115,13 @@ export default function GenreFilter({
           ref={ribbonRef} 
           className="flex overflow-x-auto gap-2 py-2 px-1 no-scrollbar"
         >
-          {/* 1. MANUAL "ALL" BUTTON (Always First) */}
+          {/* 1. MANUAL "ALL" BUTTON */}
           <button
             id="tag-btn-All"
             onClick={() => onGenreClick("All")}
             className={`
                 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border
-                ${selectedGenre === "All" 
+                ${isAllActive 
                     ? "bg-white text-black border-white shadow-lg scale-105" 
                     : "bg-surface text-slate-400 border-white/5 hover:text-white"
                 }
@@ -115,11 +131,11 @@ export default function GenreFilter({
           </button>
 
           {/* 2. DYNAMIC TAGS LOOP */}
-          {ribbonTags.map((tag) => {
-            // Skip "All" if it somehow got into the ribbonTags list to avoid duplicates
+          {displayRibbonTags.map((tag) => {
             if (tag === "All") return null;
 
-            const isSelected = selectedGenre === tag || searchQuery.toLowerCase() === tag.toLowerCase();
+            // Highlight if matches selection OR exact search query match
+            const isSelected = selectedGenre === tag || (searchQuery && searchQuery.toLowerCase() === tag.toLowerCase());
             const isApp = tag === 'App';
             
             let styleClass = getTagStyle(tag);

@@ -8,6 +8,7 @@ import {
   GitBranch,
   Calendar,
   AlertCircle,
+  HardDrive,
 } from "lucide-react";
 import {
   getPlatformInfo,
@@ -109,6 +110,18 @@ export default function GameSidebar({ game }) {
               {formatDate(game.publishedDate)}
             </span>
           </div>
+
+          {game.size && (
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-3 text-slate-400">
+                <HardDrive size={18} />{" "}
+                <span className="text-sm font-bold">Size</span>
+              </div>
+              <span className="text-white font-bold truncate max-w-35 text-right">
+                {game.size}
+              </span>
+            </div>
+          )}
 
           {/* Age Rating - Only render if provided */}
           {game.ageRating && (

@@ -1,0 +1,61 @@
+{
+  "incidents": [
+    {
+      "id": "inc_001",
+      "title": "Blogger API Rate Limiting",
+      "status": "resolved",
+      "severity": "major",
+      "affectedServices": ["api", "content"],
+      "startTime": "2024-01-15T14:30:00Z",
+      "endTime": "2024-01-15T16:45:00Z",
+      "updates": [
+        {
+          "timestamp": "2024-01-15T14:30:00Z",
+          "status": "investigating",
+          "message": "We're experiencing intermittent failures with the Blogger API. Investigating the root cause."
+        },
+        {
+          "timestamp": "2024-01-15T15:15:00Z",
+          "status": "identified",
+          "message": "Issue identified as API rate limiting. RSS fallback has been activated for all users."
+        },
+        {
+          "timestamp": "2024-01-15T16:45:00Z",
+          "status": "resolved",
+          "message": "API access restored. Implementing enhanced caching to prevent future occurrences."
+        }
+      ]
+    },
+    {
+      "id": "inc_002",
+      "title": "Scheduled Maintenance - Database Optimization",
+      "status": "completed",
+      "severity": "maintenance",
+      "affectedServices": ["wishlist", "auth"],
+      "startTime": "2024-01-10T02:00:00Z",
+      "endTime": "2024-01-10T03:30:00Z",
+      "updates": [
+        {
+          "timestamp": "2024-01-10T02:00:00Z",
+          "status": "maintenance",
+          "message": "Scheduled maintenance in progress. Wishlist features temporarily unavailable."
+        },
+        {
+          "timestamp": "2024-01-10T03:30:00Z",
+          "status": "completed",
+          "message": "Maintenance completed successfully. All systems operational."
+        }
+      ]
+    }
+  ],
+  "scheduled": [
+    {
+      "id": "maint_001",
+      "title": "Infrastructure Upgrade",
+      "description": "Upgrading CDN infrastructure for improved global performance",
+      "scheduledFor": "2024-02-01T03:00:00Z",
+      "estimatedDuration": "2 hours",
+      "affectedServices": ["cdn", "images"]
+    }
+  ]
+}

@@ -515,6 +515,7 @@ function normalizePost(post) {
   let contentWarnings = [];
   let ageRating = null; // ✅ NEW
   let cleanDescriptionLines = [];
+  let size = null; // ✅ Initialize
 
 const textLines = htmlToTextLines(contentRaw);
 
@@ -908,6 +909,13 @@ if (socialHeaders.includes(lowerLine) || lowerLine.startsWith('music -')) {
       }
       else if (captureMode === 'requirements') {
            const clean = line.replace(/^[-•*]\s*/, '');
+            // ✅ NEW: Detect size
+            const sizeMatch = clean.match(/(?:Storage|Size|Disk Space|HDD|Space):\s*([\d\.]+\s*(?:GB|MB|KB))/i);
+            if (sizeMatch) {
+                size = sizeMatch[1];
+                console.log('💾 Extracted Size:', size);
+            }
+            
            if (clean.length > 2 && !clean.toLowerCase().includes('price')) {
                requirements.push(clean);
            }
@@ -1401,6 +1409,7 @@ if (socialLinks.length > 0) {
     contentWarnings,
     ageRating, // ✅ NEW
     tag: tags[0] || 'Game', 
+    size,
     tags, 
     description: truncateDescription(fullDescription, 150),
     fullDescription: fullDescription,
