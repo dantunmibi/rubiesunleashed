@@ -275,22 +275,7 @@ function isDownloadButton(imgUrl, href = '') {
     if (lowerHref.match(/\.(jpg|jpeg|png|webp|gif|bmp|svg)$/)) return false;
     if (lowerHref.includes('bp.blogspot.com') || lowerHref.includes('googleusercontent.com')) return false;
 
-    // ✅ NEW: Exclude common developer/portfolio domains (general patterns)
-    const excludedDomains = [
-        '.com/', // Personal sites often end in .com/
-        '.io/', // Portfolio sites
-        '.dev/',
-        '.me/',
-        '.net/',
-        '.org/'
-    ];
-    
-    // Only exclude if it's a root domain (ends with /) AND not a known download platform
-    const isRootDomain = excludedDomains.some(domain => {
-        const pattern = new RegExp(domain.replace('.', '\\.') + '$');
-        return pattern.test(lowerHref);
-    });
-    
+    // ✅ Known download platforms
     const isKnownDownloadPlatform = 
         lowerHref.includes('play.google.com') ||
         lowerHref.includes('apps.apple.com') ||
@@ -303,8 +288,31 @@ function isDownloadButton(imgUrl, href = '') {
         lowerHref.includes('dropbox.com') ||
         lowerHref.includes('github.com/releases');
     
-    // If it's a root domain AND not a download platform, skip it
-    if (isRootDomain && !isKnownDownloadPlatform) {
+    // ✅ Detect web/HTML5 games by image alt text or filename
+    const isWebGameButton = 
+        lowerImg.includes('play') || 
+        lowerImg.includes('browser') || 
+        lowerImg.includes('web') || 
+        lowerImg.includes('html5') ||
+        lowerImg.includes('online');
+
+    // ✅ Excluded domains (personal sites)
+    const excludedDomains = [
+        '.com/', 
+        '.io/', 
+        '.dev/',
+        '.me/',
+        '.net/',
+        '.org/'
+    ];
+    
+    // Only exclude if it's a root domain (ends with /) AND not a known platform AND not a web game button
+    const isRootDomain = excludedDomains.some(domain => {
+        const pattern = new RegExp(domain.replace('.', '\\.') + '$');
+        return pattern.test(lowerHref);
+    });
+    
+    if (isRootDomain && !isKnownDownloadPlatform && !isWebGameButton) {
         console.log('⏭️ Skipping personal website link:', lowerHref);
         return false;
     }
@@ -321,7 +329,7 @@ function isDownloadButton(imgUrl, href = '') {
                            !lowerImg.includes('logo') && 
                            !lowerImg.includes('thumb');
     
-    return (hasDownloadKeyword || isKnownDownloadPlatform) && isNotScreenshot;
+    return (hasDownloadKeyword || isKnownDownloadPlatform || isWebGameButton) && isNotScreenshot;
 }
 
 function truncateDescription(text, maxLength = 150) {
