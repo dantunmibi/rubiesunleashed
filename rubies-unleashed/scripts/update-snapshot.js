@@ -2,15 +2,16 @@
 /**
  * DUAL-BLOG SNAPSHOT GENERATOR
  * Fetches from both primary and backup blogs
- * Preserves existing snapshot if both blogs fail
+ * Preserves existing snapshot if fetched count is suspiciously low
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const PRIMARY_BLOG = 'rubyapks.blogspot.com';  // Old library (currently down)
-const BACKUP_BLOG = 'rubyapk.blogspot.com';    // New uploads (active)
+const PRIMARY_BLOG = 'rubyapks.blogspot.com';
+const BACKUP_BLOG = 'rubyapk.blogspot.com';
 const MAX_RESULTS = 500;
+const MINIMUM_SAFE_COUNT = 50; // ✅ Prevent overwrite if we get less than this
 
 async function fetchAllPosts(blogId, blogName) {
   let allEntries = [];
@@ -61,6 +62,8 @@ async function fetchAllPosts(blogId, blogName) {
 }
 
 async function updateSnapshot() {
+  const backupPath = path.join(__dirname, '../src/lib/backup-data.json');
+  
   try {
     // ✅ Fetch from BOTH blogs in parallel
     console.log('🚀 Starting dual-blog snapshot generation...\n');
@@ -84,23 +87,19 @@ async function updateSnapshot() {
       seen.add(id);
       return true;
     });
-
-// ✅ SORT BY PUBLISHED DATE (NEWEST FIRST)
-uniquePosts.sort((a, b) => {
-  const dateA = new Date(a.published?.$t || a.published || 0);
-  const dateB = new Date(b.published?.$t || b.published || 0);
-  return dateB - dateA;
-});
-
-console.log(`   Unique Posts: ${uniquePosts.length}`);
+    
+    // ✅ SORT BY PUBLISHED DATE (NEWEST FIRST)
+    uniquePosts.sort((a, b) => {
+      const dateA = new Date(a.published?.$t || a.published || 0);
+      const dateB = new Date(b.published?.$t || b.published || 0);
+      return dateB - dateA;
+    });
     
     console.log(`   Unique Posts: ${uniquePosts.length}`);
     
-    // ✅ SAFETY: If we got 0 posts from both sources, preserve existing backup
-    if (uniquePosts.length === 0) {
-      console.warn('\n⚠️ WARNING: Both blogs returned 0 posts!');
-      
-      const backupPath = path.join(__dirname, '../src/lib/backup-data.json');
+    // ✅ ENHANCED SAFETY: Prevent overwrite if count is suspiciously low
+    if (uniquePosts.length < MINIMUM_SAFE_COUNT) {
+      console.warn(`\n⚠️ WARNING: Only ${uniquePosts.length} posts fetched (minimum safe: ${MINIMUM_SAFE_COUNT})!`);
       
       if (fs.existsSync(backupPath)) {
         const existing = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
@@ -110,7 +109,7 @@ console.log(`   Unique Posts: ${uniquePosts.length}`);
         console.warn('⚠️ Skipping backup update to prevent data loss\n');
         process.exit(0); // Exit successfully without updating
       } else {
-        console.error('❌ No existing backup found and no posts fetched!');
+        console.error('❌ No existing backup found and only got low post count!');
         process.exit(1);
       }
     }
@@ -128,7 +127,6 @@ console.log(`   Unique Posts: ${uniquePosts.length}`);
       }
     };
     
-    const backupPath = path.join(__dirname, '../src/lib/backup-data.json');
     fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
     
     console.log(`\n✅ Backup saved to: ${backupPath}`);
@@ -138,12 +136,11 @@ console.log(`   Unique Posts: ${uniquePosts.length}`);
     console.error('❌ Snapshot update failed:', error.message);
     
     // ✅ SAFETY: Don't fail the build, preserve existing backup
-    const backupPath = path.join(__dirname, '../src/lib/backup-data.json');
     if (fs.existsSync(backupPath)) {
       console.warn('⚠️ Error occurred but existing backup preserved');
-      process.exit(0); // Don't fail the build
+      process.exit(0);
     } else {
-      process.exit(1); // Fail if no backup exists
+      process.exit(1);
     }
   }
 }
