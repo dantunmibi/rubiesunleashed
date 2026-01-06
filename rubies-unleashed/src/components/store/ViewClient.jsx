@@ -60,7 +60,6 @@ export default function ViewClient({ slug, initialGame }) {
 
         // If no initial data, fetch it now (Client Side Fallback)
         if (!currentGame && slug) {
-          console.log('🔍 FULL SLUG:', slug);
           const parts = slug.split("-");
           const gameId = parts[parts.length - 1].replace(/\.[^/.]+$/, "");
           

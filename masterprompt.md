@@ -1,320 +1,5 @@
 
 
-💎 RUBIES UNLEASHED - Master Project Prompt (v19.0 - The Ultimate Source)
-📋 Project Overview
-Name: Rubies Unleashed
-Type: Universal Digital Marketplace (Games, Apps, Tools, Assets)
-Tech Stack: Next.js 15+ (App Router), React, Tailwind CSS v4, Lucide React Icons
-Data Source: Blogger API Bridge (Headless CMS via rubyapks.blogspot.com)
-Hosting/Forms: Netlify (Static Export + Form Detection)
-🎨 Visual Design System (Strict Tailwind v4)
-Theme: "Hyper-Professional Cinematic Dark Mode"
-Mobile Experience: "Native App Feel" → Hidden Global Navbar on Details, Floating Action Bars, Horizontal Scroll Command Bars.
-Design Tokens (Strict)
-Colors:
-ruby: #E0115F (Primary/Games)
-background: #0b0f19 (Deep Slate)
-surface: #161b2c (Cards/Modals)
-cyan: #06b6d4 (Apps/Tools)
-Typography:
-Headings: Font-black, Uppercase, Tracking-tight.
-Body: Font-medium, Line-height 1.6.
-Labels: Font-bold, Uppercase, Tracking-widest, Text-xs.
-Borders:
-Default: border-white/10
-Hover: border-ruby/30
-Active: border-ruby
-Shadows (Cinematic):
-Cards: shadow-[0_0_60px_rgba(224,17,95,0.15)]
-Buttons: shadow-[0_0_20px_rgba(224,17,95,0.3)]
-Effects:
-Glass: backdrop-blur-xl
-Glow: bg-linear-to-b (never bg-gradient)
-⚠️ CRITICAL CODING RULES
-1. Z-Index Stratification (ABSOLUTE)
-z-100: Toasts, Critical Overlays
-z-50: Mobile Sidebar Drawer, Modals, Search Dropdowns (Must overlay Navbar)
-z-45: Backdrops (Sidebar/Modal overlays)
-z-40: Navbar (Fixed)
-z-35: Sticky Page Controls (Wishlist/Explore Filters) - Sits below Navbar (z-40) but above content
-z-30: Floating Action Buttons, Sticky Headers
-z-0 to z-20: Page Content
-2. Tailwind v4 Syntax (STRICT CANONICAL MODE)
-❌ NEVER USE ARBITRARY VALUES IF A UTILITY EXISTS:
-
-w-[500px] → ✅ Use w-125 (or nearest scale value)
-min-w-[280px] → ✅ Use min-w-70
-hover:translate-y-[-2px] → ✅ Use hover:-translate-y-0.5
-bg-gradient-to-b → ✅ Use bg-linear-to-b
-z-[100] → ✅ Use z-100
-3. Safety & Process Rules
-✅ Validate all objects: game?.tags || []
-✅ Never crash on missing data: Use fallbacks ("Unknown", placeholder images).
-✅ ALWAYS request contextual files before implementing features.
-✅ DO NOT generate code unless given specific instructions.
-✅ DO NOT strip or trim code (preserve all comments and structure).
-✅ ENSURE a summary is included and commented at the top of every file.
-4. Netlify Form Architecture
-Detection: public/__forms.html (data-netlify="true").
-Submission: React forms MUST fetch to /__forms.html (NOT /).
-Payload: application/x-www-form-urlencoded + hidden form-name.
-🔌 Data Architecture
-1. The Bridge (src/lib/blogger.js)
-Features Extracted:
-Size/Storage: Regex /(?:Storage|Size|Disk Space|HDD|Space):\s*([\d\.]+\s*(?:GB|MB|KB))/i.
-Age Rating: Regex Audience - 7+ or Rated: T in metadata/warnings.
-Socials: Discord, Patreon, Developer, Itch.io.
-Platform: Detected via Image Alt Text, Filenames, and URL patterns.
-Fail-Safe: Returns backup-data.json (Snapshot) if API fails.
-2. Logic Brain (src/lib/game-utils.js)
-Smart Classification: isApp checks tags ("App", "Tool") → Swaps Gamepad icon for Box icon + Cyan accents.
-👤 User System & Auth Migration
-Current State (Guest System)
-Storage: localStorage ("ruby_user_data")
-Functions: createGuestUser(), addToWishlist(), getWishlist().
-Structure:
-JavaScript
-
-{
-  id: "temp_12345",
-  username: "Ruby_Gamer_42",
-  avatar: "💎",
-  isGuest: true
-}
-🔮 Future State (Real Auth Migration)
-Goal: Seamless transition from Guest to Cloud Account.
-Backend Structure (Ready for DB):
-JavaScript
-
-{
-  currentUser: {
-    id: "user_uuid_v4",         // Permanent DB ID
-    username: "RealUser_42",    // User-chosen
-    email: "user@example.com",  // Verified
-    authProvider: "google",     // google, discord, email
-    createdAt: 1234567890,
-    isGuest: false,
-    preferences: {
-       sortBy: "dateAdded-desc"
-    }
-  },
-  wishlist: [
-     { gameId: "slug-1", dateAdded: 123456 } // Syncs to DB
-  ]
-}
-Migration Logic: On Sign Up, check for localStorage wishlist -> Push items to DB -> Clear LocalStorage.
-🗺️ Core Page Structure
-1. Home Page (/)
-Navbar: Transparent → Glass (useScrollBehavior).
-Content: Hero, Featured Carousel, About, Vault CTA.
-2. Explore Vault (/explore)
-Navbar: Fixed Glass.
-Features: Deep Linking (?q=search), Dynamic Tag Ribbon, Smart Search.
-PWA: Install Button (Desktop) appears left of Bell (Phase 4).
-3. Item Details (/view/[slug])
-Mobile: Immersive "App" Mode (Global Navbar Hidden).
-Desktop: Standard Sidebar Layout.
-Sidebar (GameSidebar.jsx): Displays Size (HardDrive), Version, Developer, Rating, License.
-4. Wishlist (/[username]/wishlist)
-Mobile UX: "Command Bar" Layout.
-Row 1: Search (Full Width).
-Row 2: Horizontal Scroll Toolbar (Sort, Filters, Share, Clear).
-Z-Index: Sticky Controls at z-35.
-5. Help Center (/help)
-Purpose: Self-Service Support ("Solve My Problem").
-Design: Search Bar + Category Grid + FAQ Accordion.
-CTA: "Still stuck? Contact Support" (links to /contact).
-6. Contact (/contact)
-Tone: Professional/Business (Partnerships, Support).
-Tech: Uses /__forms.html bypass.
-7. Footer (Global)
-Structure: 4-Column "Treasure Hunter" Layout (Hybrid).
-Brand: Logo + "Games, Apps, Tools" text + Legacy Link.
-Treasure Map: Discovery Links.
-Guild Hall: Support (Help Center) & Contact.
-The Codex: Legal.
-📂 Project Structure (Verified v19.0)
-text
-
-src/
-├── app/
-│   ├── api/
-│   │   └── games/
-│   │       └── route.js          # Blogger API proxy (Live + RSS Fallback)
-│   ├── contact/
-│   │   └── page.js               # Professional Contact Form
-│   ├── explore/
-│   │   └── page.js               # Vault Page (Sticky Filters)
-│   ├── help/
-│   │   └── page.js               # Self-Service Help Center
-│   ├── login/
-│   │   └── page.js               # Login Placeholder
-│   ├── privacy/
-│   │   └── page.js
-│   ├── signup/
-│   │   └── page.js               # Signup Placeholder
-│   ├── terms/
-│   │   └── page.js
-│   ├── view/
-│   │   └── [slug]/
-│   │       └── page.js           # Game Details (Hybrid Layout)
-│   ├── [username]/
-│   │   └── wishlist/
-│   │       └── page.js           # User Wishlist (Command Bar UX)
-│   ├── favicon.ico
-│   ├── globals.css
-│   ├── layout.js                 # Root Layout
-│   └── page.js                   # Home Page
-├── components/
-│   ├── auth/
-│   │   └── AuthModal.jsx         # Auth Gate Modal
-│   ├── explore/
-│   │   ├── ExploreContent.jsx
-│   │   ├── GameGrid.jsx
-│   │   ├── GenreFilter.jsx
-│   │   ├── PlatformSelector.jsx
-│   │   ├── ScrollToTopButton.jsx
-│   │   ├── SpecialCollections.jsx
-│   │   ├── SpotlightHero.jsx
-│   │   ├── VaultFilters.jsx
-│   │   ├── VaultHeader.jsx
-│   │   └── VaultSection.jsx
-│   ├── providers/
-│   │   └── ToastProvider.jsx     # Global Context
-│   ├── store/
-│   │   ├── ContentWarningModal.jsx
-│   │   ├── DownloadCallout.jsx
-│   │   ├── GameCard.jsx
-│   │   ├── GameContent.jsx
-│   │   ├── GameHero.jsx
-│   │   ├── GameMedia.jsx
-│   │   ├── GameSidebar.jsx       # Logic: Size, Rating, License
-│   │   └── SimilarGames.jsx
-│   ├── ui/
-│   │   ├── AboutSection.js
-│   │   ├── BackgroundEffects.js
-│   │   ├── FeatureTriangles.js
-│   │   ├── Footer.js             # 4-Column Hybrid Layout
-│   │   ├── GameModal.js
-│   │   ├── GameVault.js
-│   │   ├── GiantRuby.js
-│   │   ├── Hero.js
-│   │   ├── Navbar.js             # Adaptive + Mobile Drawer
-│   │   ├── NotificationPanel.jsx
-│   │   ├── Toast.jsx
-│   │   └── ToastContainer.jsx
-│   └── wishlist/
-│       ├── EmptyWishlist.jsx
-│       ├── WishlistControls.jsx  # Mobile Command Bar (z-35)
-│       ├── WishlistGrid.jsx
-│       └── WishlistStats.jsx
-├── hooks/
-│   ├── useAuth.js
-│   ├── useGameFilters.js
-│   ├── useScrollBehavior.js
-│   ├── useToast.js
-│   └── useWishlist.js
-├── lib/
-│   ├── config/
-│   │   └── platforms.js
-│   ├── utils/
-│   │   ├── collectionMatchers.js
-│   │   ├── gameFilters.js
-│   │   ├── platformUtils.js
-│   │   ├── tagExtractor.js
-│   │   └── textUtils.js
-│   ├── backup-data.json          # Snapshot Cache
-│   ├── blogger.js                # API parser (Size Extraction added)
-│   ├── game-utils.js             # Logic Brain
-│   ├── notificationManager.js
-│   └── userManager.js            # Guest System
-scripts/
-└── update-snapshot.js            # Build script
-public/
-├── __forms.html                  # Netlify Form Schematic
-├── ru-logo.png
-└── ...
-🎯 Blogger Post Template
-Required Structure for Parsing:
-
-HTML
-
-<!-- 1. COVER IMAGE -->
-<img src="..." alt="Game Cover" />
-
-<!-- 2. DESCRIPTION -->
-<p>First paragraph...</p>
-
-<!-- 3. METADATA BOX -->
-<div>
-    Developer – Name
-    Version – 1.0
-    Build – Windows/Android
-    Audience – 7+  <!-- ✅ Age Rating -->
-</div>
-
-<!-- 4. REQUIREMENTS (Size Extraction) -->
-<h3>System Requirements:</h3>
-<ul>
-    <li>OS: Windows 10+</li>
-    <li>Storage: 104 MB available space</li> <!-- ✅ SIZE DETECTED HERE -->
-</ul>
-
-<!-- 5. DOWNLOADS -->
-<h3>Download:</h3>
-<a href="..."><img alt="Download for Windows" src="button.png" /></a>
-🔐 Authentication System
-Auth Flow
-User clicks ❤️ Wishlist
-Is logged in?
-YES → Add via API [FUTURE]
-NO (Has Guest Session) → Add to guest wishlist
-NO (First Time) → Show Auth Modal
-Auth Modal Options:
-Sign Up / Log In (Placeholders)
-Continue as Guest → Create temp user + add to wishlist ✅
-🎉 Toast Notification System
-Usage: showToast("Message", "success/error/wishlist").
-Z-Index: Always z-100.
-🚀 Development Roadmap
-Phase 1: User Features (Completed ✅)
-✅ Wishlist Page (Command Bar UX, Z-Index 35)
-✅ Help Center (/help - Self Service)
-✅ Netlify Form Integration (/__forms.html bypass)
-✅ Adaptive Navbar (Transparent on Home / Fixed Glass on Explore)
-✅ Hybrid Footer (4-Column, Brand Aligned)
-✅ Size & Age Rating Extraction
-✅ Mobile Drawer & UX Polish
-Phase 2: Production Polish (Current 🚧)
-⏳ SEO & Metadata (Dynamic generateMetadata)
-⏳ Loading Skeletons (Replace spinners with pulsing shapes)
-⏳ Error Handling (Custom error.js)
-⏳ Static Pages: /publish (Guide), /about (Mission)
-Phase 3: Real Authentication
-⏳ Backend API for auth (/api/auth/...)
-⏳ OAuth providers (Google, Discord)
-⏳ Migrate guest wishlists to real accounts
-Phase 4: Maintenance Tools & PWA
-⏳ PWA Install Button:
-Desktop: In Explore Navbar (Left of Bell).
-Mobile: In Sidebar Drawer (Bottom Button).
-⏳ Report Broken Link: Under download button.
-⏳ Admin Dashboard.
-🔧 Environment Variables
-Bash
-
-NEXT_PUBLIC_BLOG_ID=rubyapks.blogspot.com
-NEXT_PUBLIC_BLOGGER_KEY=(Optional for API, not needed for RSS)
-🔄 Snapshot System
-Build Process: npm run build triggers scripts/update-snapshot.js → Saves to src/lib/backup-data.json.
-Live Fallback: If post missing, fetches from RSS.
-End of Master Prompt v19.0 💎
-
-\
-
-
-
-
 💎 RUBIES UNLEASHED - Master Project Prompt (v20.0 - The Ecosystem Edition)
 📋 1. Project Overview
 Name: Rubies Unleashed
@@ -1626,10 +1311,31 @@ Use this prompt to initialize **Phase 3**.
     *   **`loading.js`**: Cinematic Skeleton prevents CLS.
     *   **`error.js`**: "System Failure" screen with Reboot button.
 
-## 👤 6. User System & Archetypes
-*   **Current State:** Guest System (LocalStorage `ruby_user_data`).
-*   **Future State (Phase 3):** Real Auth (Supabase/NextAuth).
-*   **The "Architect" Protocol:** User submits via `/publish` → Account upgrades → Dashboard unlock.
+👤 6. User System & Archetypes
+Strategy: "Archetype-First Discovery."
+
+Selection: User selects Class during Sign-up (determines Theme + Feed).
+Evolution: "Architect" is the only earned class (via Publishing).
+The 5 Classes:
+
+Class	Color	Variable	User Intent	Feed Priority	Special Feature
+Hunter	Ruby	--color-ruby	"Play"	Games (Action, RPG)	Standard Wishlist
+Netrunner	Cyan	--color-netrunner	"Optimize"	Apps, Tools, Utils	Software Filters
+Curator	Amber	--color-curator	"Collect"	Highly Rated / Rare	Advanced Lists (Multiple)
+Phantom	Violet	--color-phantom	"Observe"	Privacy / Stealth	No History Tracking
+Architect	Emerald	--color-architect	"Build"	Analytics / Dev	The Forge (Dashboard)
+Database Schema (Supabase profiles):
+
+JSON
+
+{
+  "id": "uuid (PK)",
+  "username": "text (unique)",
+  "email": "text",
+  "role": "user | architect | admin",
+  "archetype": "hunter | netrunner | curator | phantom | architect",
+  "created_at": "timestamp"
+}
 
 ## 🗺️ 7. Core Page Structure
 *   **Home (`/`)**: Transparent Navbar, Hero, Spotlight.
@@ -1799,10 +1505,19 @@ README.md
 *   **Resilience:** Cinematic Skeletons (`loading.js`) + Glitch Boundaries (`error.js`).
 *   **Ecosystem Pages:** About (Manifesto), Publish (Architect), Legal.
 
-### Phase 3: Identity & The Forge 🚧 NEXT
-*   **Authentication:** Replace Guest system with real Auth.
-*   **User Profiles:** Persist Wishlists and Archetype Themes.
-*   **The Forge:** Developer Login & Dashboard.
+Phase 3: Identity & The Forge 🚧 NEXT
+Backend Setup: Initialize Supabase (Auth + DB).
+Auth Flow:
+Create src/lib/supabase.js.
+Create AuthProvider.jsx (Global Context).
+Build /signup with Archetype Selection Cards.
+Build /login.
+The Dynamic Engine:
+Create ThemeProvider.jsx to inject --user-accent based on profile.archetype.
+Update src/app/page.js (Home) to filter feed based on Archetype.
+Profile Migration: Move localStorage wishlist to Supabase wishlists table on signup.
+The Forge: Create Developer Dashboard for Architects.
+Feed - curated for user archetype
 
 ### Phase 4: Ecosystem & PWA ⏳ PLANNED
 *   **PWA:** Install Prompts (Desktop/Mobile).

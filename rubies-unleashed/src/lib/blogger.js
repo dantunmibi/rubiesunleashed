@@ -52,12 +52,8 @@ const htmlToTextLines = (html) => {
 function cleanPlatformName(text) {
     if (!text || text.trim().length === 0) return null;
     
-    console.log('🔍 cleanPlatformName INPUT:', text); // ✅ ADD THIS
-    
     const noParens = text.replace(/\([^)]*\)/g, '');
     const lower = noParens.toLowerCase().trim();
-    
-    console.log('🔍 cleanPlatformName LOWER:', lower); // ✅ ADD THIS
     
     // ✅ FIRST: Detect platforms (before rejecting)
     const detected = [];
@@ -133,7 +129,6 @@ function cleanPlatformName(text) {
         }
         
     const result = detected.join(', ');
-    console.log('🔍 cleanPlatformName OUTPUT:', result); // ✅ ADD THIS
     return result || null;
     }
     
@@ -297,7 +292,6 @@ function isDownloadButton(imgUrl, href = '') {
     ];
 
     if (blockedDomains.some(domain => lowerHref.includes(domain))) {
-        console.log('⏭️ Blocked video/social platform:', lowerHref);
         return false;
     }
 
@@ -338,7 +332,6 @@ function isDownloadButton(imgUrl, href = '') {
     });
     
     if (isRootDomain && !isKnownDownloadPlatform && !isWebGameButton) {
-        console.log('⏭️ Skipping personal website link:', lowerHref);
         return false;
     }
 
@@ -484,7 +477,6 @@ function safeNormalizePost(post) {
     try {
         return normalizePost(post);
     } catch (error) {
-        console.error('Error normalizing post:', error);
         
         const title = post?.title?.$t || post?.title || 'Untitled';
         const idRaw = post?.id?.$t || post?.id || 'unknown';
@@ -553,8 +545,6 @@ function normalizePost(post) {
 const textLines = htmlToTextLines(contentRaw);
 
 // ✅ ADD THIS DEBUG
-console.log('🔍 ALL TEXT LINES:', textLines);
-console.log('🔍 First 20 lines:', textLines.slice(0, 20));
 
 let captureMode = null;
 
@@ -730,7 +720,6 @@ const socialHeaders = [
     const devLinkMatch = contentRaw.match(new RegExp(`<a[^>]+href=["']([^"']+)["'][^>]*>${rawDev.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</a>`, 'i'));
     if (devLinkMatch && isValidUrl(devLinkMatch[1])) {
         socialLinks.push({ label: 'Developer', url: devLinkMatch[1] });
-        console.log('🔗 FOUND DEVELOPER LINK:', devLinkMatch[1]);
     }
     
     continue;
@@ -781,12 +770,9 @@ if (lowerLine.startsWith('build') || lowerLine.startsWith('platform')) {
     const parts = line.split(/[:\-]/); 
     let rawBuild = '';
     
-    console.log('🔍 DEBUG - Build line:', line);
-    console.log('🔍 DEBUG - Parts after split:', parts);
     
     if (parts.length > 1) {
         const afterSeparator = parts.slice(1).join(' ').trim();
-        console.log('🔍 DEBUG - After separator:', afterSeparator);
         
         if (afterSeparator.length > 0 && !afterSeparator.match(/^\s*$/)) {
             rawBuild = afterSeparator;
@@ -795,24 +781,19 @@ if (lowerLine.startsWith('build') || lowerLine.startsWith('platform')) {
     
     if (rawBuild.length === 0 && i + 1 < textLines.length) {
         const nextLine = textLines[i + 1].trim();
-        console.log('🔍 DEBUG - Checking next line:', nextLine);
         const nextLineLower = nextLine.toLowerCase();
         
         if (!allSectionHeaders.includes(nextLineLower) && isValidPlatformText(nextLine)) {
             rawBuild = nextLine;
-            console.log('🔍 DEBUG - Using next line as rawBuild');
             i++;
         }
     }
     
-    console.log('🔍 DEBUG - Final rawBuild:', rawBuild);
     
     if (rawBuild.length > 0) {
         const cleaned = cleanPlatformName(rawBuild);
-        console.log('🔍 DEBUG - Cleaned platform:', cleaned);
         if (cleaned) {
             buildPlatform = cleaned;
-            console.log('✅ DEBUG - Set buildPlatform to:', buildPlatform);
         }
     }
     continue;
@@ -909,7 +890,6 @@ if (controlHeaders.includes(lowerLine)) {
 }
 
 if (socialHeaders.includes(lowerLine) || lowerLine.startsWith('music -')) {
-    console.log('🔗 SOCIAL MODE ACTIVATED - Line:', line);
     captureMode = 'socials';
     if (lowerLine.startsWith('music -')) {
          const url = line.match(/https?:\/\/[^\s]+/);
@@ -946,7 +926,6 @@ if (socialHeaders.includes(lowerLine) || lowerLine.startsWith('music -')) {
             const sizeMatch = clean.match(/(?:Storage|Size|Disk Space|HDD|Space):\s*([\d\.]+\s*(?:GB|MB|KB))/i);
             if (sizeMatch) {
                 size = sizeMatch[1];
-                console.log('💾 Extracted Size:', size);
             }
             
            if (clean.length > 2 && !clean.toLowerCase().includes('price')) {
@@ -1030,7 +1009,6 @@ else if (captureMode === 'howItWorks') {
     }
 }
 else if (captureMode === 'socials') {
-    console.log('🔗 CAPTURING SOCIAL - Line:', line);
     
     // ✅ Skip descriptive/instructional text lines (generic check)
     const lowerClean = line.toLowerCase();
@@ -1042,7 +1020,6 @@ else if (captureMode === 'socials') {
     
     const urlMatch = line.match(/https?:\/\/[^\s]+/);
     if (urlMatch && isValidUrl(urlMatch[0])) {
-        console.log('🔗 FOUND URL:', urlMatch[0]);
         let label = 'Website';
         const url = urlMatch[0];
         
@@ -1060,7 +1037,6 @@ else if (captureMode === 'socials') {
         
         if (!socialLinks.some(s => s.url === url)) {
             socialLinks.push({ label, url });
-            console.log('🔗 ADDED SOCIAL LINK:', label, url);
         }
 
         
@@ -1096,7 +1072,6 @@ else if (captureMode === 'socials') {
             } else {
                 ageRating = `${age}+`;
             }
-            console.log('✅ EXTRACTED AGE RATING FROM WARNING:', ageRating);
         }
     }
           
@@ -1154,7 +1129,6 @@ const socialDomains = socialLinks.map(link => {
     }
 }).filter(Boolean);
 
-console.log('🔗 Social domains to exclude:', socialDomains);
 
 const imgLinkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>[\s\S]*?<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi;
 let linkMatch;
@@ -1182,7 +1156,6 @@ while ((linkMatch = imgLinkRegex.exec(contentRaw)) !== null) {
                     linkPath === '/index' || linkPath === '/home' ||
                     linkPath === '/index.html' || linkPath === '/home.html') {
                     shouldSkip = true;
-                    console.log('⏭️ Skipping social/dev root domain:', href);
                 }
             }
         } catch (e) {
@@ -1242,7 +1215,6 @@ if (!platform) {
         
         if (!platform) platform = 'Download';
         
-        console.log(`🔗 Download link detected: ${platform} → ${href}`);
         rawLinks.push({ platform, url: href });
     }
 }
@@ -1293,7 +1265,6 @@ if (!platform) {
   while ((tokenMatch = tokenVideoRegex.exec(contentRaw)) !== null) {
       const foundUrl = tokenMatch[0];
       if (!videos.includes(foundUrl)) {
-          console.log('🎥 Found Direct Token Video:', foundUrl);
           // Add to START of array so it takes priority
           videos.unshift(foundUrl);
       }
@@ -1376,11 +1347,9 @@ let mainImage = null;
 const coverImageMatch = contentRaw.match(/<img[^>]*alt=["'](Game Cover|Cover|Icon|App Icon|Game Icon|Logo)["'][^>]*(?:src|data-src)=["']([^"']+)["']/i);
 if (coverImageMatch) {
     mainImage = processImage(coverImageMatch[2]);
-    console.log('✅ Cover found by alt text:', mainImage);
 } else {
     // Fallback: Use media thumbnail or first image
     mainImage = processImage(post.media$thumbnail?.url || allImages[0]);
-    console.log('✅ Cover from thumbnail/first image');
 }
 
 if (!mainImage) mainImage = "https://placehold.co/600x900/0b0f19/E0115F.png?text=No+Cover";
@@ -1388,7 +1357,6 @@ if (!mainImage) mainImage = "https://placehold.co/600x900/0b0f19/E0115F.png?text
 const normalizeUrl = (url) => url ? url.split('?')[0].split('=')[0] : '';
 const mainImageNormalized = normalizeUrl(mainImage);
 
-console.log('🖼️ Cover image normalized URL:', mainImageNormalized);
 
 // ✅ FIX: Exclude cover image AND tiny icons from screenshots
 const screenshots = allImages
@@ -1400,13 +1368,11 @@ const screenshots = allImages
         
         // Skip if matches cover
         if (normalized === mainImageNormalized) {
-            console.log('⏭️ Skipping cover image from screenshots:', img);
             return false;
         }
         
         // Skip tiny icons (common in Google Play posts)
         if (img.includes('=s128') || img.includes('=s64') || img.includes('=s96')) {
-            console.log('⏭️ Skipping tiny icon:', img);
             return false;
         }
         
@@ -1415,7 +1381,6 @@ const screenshots = allImages
         if (sizeMatch) {
             const width = parseInt(sizeMatch[1]);
             if (width < 400) {
-                console.log('⏭️ Skipping small image:', img);
                 return false;
             }
         }
@@ -1424,7 +1389,6 @@ const screenshots = allImages
     })
     .slice(0, 6);
 
-console.log(`✅ Final screenshot count: ${screenshots.length}`);
 
   const rawTags = post.category ? post.category.map(c => c.term) : [];
   const tags = cleanTags(rawTags);
@@ -1526,7 +1490,6 @@ export async function fetchGames(limit = 500) {
     }
     
     // ✅ DEBUG: Log what we actually got
-    console.log(`✅ fetchGames: Received ${data.feed.entry.length} posts from API`);
     
     const games = data.feed.entry.map(post => safeNormalizePost(post));
     return games;
@@ -1538,7 +1501,6 @@ export async function fetchGames(limit = 500) {
 }
 
 export async function fetchGameById(id) {
-    console.log('🔍 Looking for post:', id);
     
     // 1️⃣ FAST PATH: Check snapshot first
     const backupGames = getBackupGames(500);
@@ -1555,19 +1517,16 @@ export async function fetchGameById(id) {
 
     let game = findMatch(backupGames);
     if (game) {
-        console.log('✅ Found in snapshot:', game.title);
         return game;
     }
     
     // 2️⃣ LIVE PATH: Use the working fetchGames logic
-    console.log('🌐 Not in snapshot, fetching fresh data via fetchGames...');
     
     try {
         const freshGames = await fetchGames(500);
         game = findMatch(freshGames);
         
         if (game) {
-            console.log('✅ Found in live data:', game.title);
             return game;
         }
         

@@ -88,7 +88,6 @@ export default function Navbar() {
     loadUser(); // Initial load
 
     const handleUserChange = () => {
-      console.log("🔄 Navbar detected user change");
       loadUser();
     };
 
@@ -102,7 +101,6 @@ export default function Navbar() {
   const loadUser = () => {
     const user = getCurrentUser();
     setCurrentUser(user);
-    console.log("👤 Navbar user state:", user ? user.username : "No user");
   };
 
   const isGuest = currentUser?.isGuest || currentUser?.id?.startsWith('temp_');
@@ -170,7 +168,6 @@ export default function Navbar() {
       try {
         // Fetch 1000 games just like ExploreContent does
         const data = await fetchGames(1000); 
-        console.log(`💎 Navbar: Loaded ${data.length} vault items.`);
         setAllGames(data);
       } catch (error) {
         console.error("❌ Navbar data load failed:", error);

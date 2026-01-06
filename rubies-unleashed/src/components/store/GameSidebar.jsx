@@ -22,9 +22,6 @@ export default function GameSidebar({ game }) {
   // 1. If game is falsy, return nothing.
   if (!game) return null;
 
-  console.log("🎮 SIDEBAR - Full game object:", game);
-  console.log("🎮 SIDEBAR - buildPlatform:", game.buildPlatform);
-  console.log("🎮 SIDEBAR - typeof buildPlatform:", typeof game.buildPlatform);
 
   // 2. Normalize inputs to prevent "undefined" access errors
   // We create local variables guaranteed to be the right type.

@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ✅ 1. Enable React Compiler (Next.js 15+)
-  experimental: {
-    reactCompiler: true,
-    // Note: 'viewTransition' flag is no longer required in Next.js 15 
-    // as it is now supported natively via CSS and React 19 Actions.
-  },
+  // ✅ 1. React Compiler (Moved to Top Level for Next.js 15)
+  reactCompiler: true,
 
   // ✅ 2. Image Optimization (CRITICAL for Blogger CMS)
   images: {
@@ -31,6 +27,10 @@ const nextConfig = {
 
   // ✅ 3. Strict React Mode
   reactStrictMode: true,
+
+  // ✅ 4. Experimental (Empty for now, viewTransition is native)
+  experimental: {
+  },
 };
 
 export default nextConfig;

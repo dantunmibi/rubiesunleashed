@@ -56,7 +56,6 @@ export default function NotFound() {
               );
 
         setPopularItems(finalSelection);
-        console.log('🎮 Popular Items Loaded:', finalSelection.length, finalSelection);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to load popular items:", error);

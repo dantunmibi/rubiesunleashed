@@ -1,17 +1,18 @@
 // scripts/update-snapshot.js
 /**
- * DUAL-BLOG SNAPSHOT GENERATOR
- * Fetches from both primary and backup blogs
- * Preserves existing snapshot if fetched count is suspiciously low
+ * DUAL-BLOG SNAPSHOT GENERATOR (MERGE EDITION)
+ * 1. Loads existing snapshot (The Vault)
+ * 2. Fetches new posts from backup blog
+ * 3. Merges them to preserve history
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const PRIMARY_BLOG = 'rubyapks.blogspot.com';
-const BACKUP_BLOG = 'rubyapk.blogspot.com';
+const PRIMARY_BLOG = 'rubyapks.blogspot.com'; // DEAD
+const BACKUP_BLOG = 'rubyapk.blogspot.com';   // ACTIVE
 const MAX_RESULTS = 500;
-const MINIMUM_SAFE_COUNT = 50; // ✅ Prevent overwrite if we get less than this
+const MINIMUM_SAFE_COUNT = 50; // Keep high to prevent accidental wipes
 
 async function fetchAllPosts(blogId, blogName) {
   let allEntries = [];
@@ -65,79 +66,81 @@ async function updateSnapshot() {
   const backupPath = path.join(__dirname, '../src/lib/backup-data.json');
   
   try {
-    // ✅ Fetch from BOTH blogs in parallel
-    console.log('🚀 Starting dual-blog snapshot generation...\n');
+    console.log('🚀 Starting Smart Snapshot Update (Merge Mode)...\n');
+
+    // 1. Load Existing Snapshot (The Vault)
+    let existingPosts = [];
+    if (fs.existsSync(backupPath)) {
+      try {
+        const fileContent = fs.readFileSync(backupPath, 'utf8');
+        const json = JSON.parse(fileContent);
+        existingPosts = json.feed?.entry || [];
+        console.log(`📦 Loaded existing snapshot: ${existingPosts.length} posts`);
+      } catch (e) {
+        console.warn('⚠️ Existing snapshot corrupted or unreadable');
+      }
+    }
+
+    // 2. Fetch from Backup Blog (Active Source)
+    // Note: We skip Primary Blog fetch since we know it's dead/404 to save build time
+    const backupPosts = await fetchAllPosts(BACKUP_BLOG, 'Backup Blog');
     
-    const [primaryPosts, backupPosts] = await Promise.all([
-      fetchAllPosts(PRIMARY_BLOG, 'Primary Blog'),
-      fetchAllPosts(BACKUP_BLOG, 'Backup Blog')
-    ]);
-    
-    console.log('\n📊 RESULTS:');
-    console.log(`   Primary Blog: ${primaryPosts.length} posts`);
-    console.log(`   Backup Blog:  ${backupPosts.length} posts`);
-    
-    // ✅ Merge and deduplicate
-    const allPosts = [...primaryPosts, ...backupPosts];
-    
-    const seen = new Set();
-    const uniquePosts = allPosts.filter(post => {
+    // 3. Merge Strategy: Map by ID
+    const postMap = new Map();
+
+    // A. Add Old Posts
+    existingPosts.forEach(post => {
       const id = post.id?.$t || post.id;
-      if (seen.has(id)) return false;
-      seen.add(id);
-      return true;
+      if (id) postMap.set(id, post);
     });
-    
-    // ✅ SORT BY PUBLISHED DATE (NEWEST FIRST)
-    uniquePosts.sort((a, b) => {
+
+    // B. Add New Posts (Overwrite if exists to update content)
+    backupPosts.forEach(post => {
+      const id = post.id?.$t || post.id;
+      if (id) postMap.set(id, post);
+    });
+
+    // 4. Convert back to array
+    const mergedPosts = Array.from(postMap.values());
+
+    // 5. Sort by Date (Newest First)
+    mergedPosts.sort((a, b) => {
       const dateA = new Date(a.published?.$t || a.published || 0);
       const dateB = new Date(b.published?.$t || b.published || 0);
       return dateB - dateA;
     });
-    
-    console.log(`   Unique Posts: ${uniquePosts.length}`);
-    
-    // ✅ ENHANCED SAFETY: Prevent overwrite if count is suspiciously low
-    if (uniquePosts.length < MINIMUM_SAFE_COUNT) {
-      console.warn(`\n⚠️ WARNING: Only ${uniquePosts.length} posts fetched (minimum safe: ${MINIMUM_SAFE_COUNT})!`);
-      
-      if (fs.existsSync(backupPath)) {
-        const existing = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-        const existingCount = existing.feed?.entry?.length || 0;
-        
-        console.warn(`⚠️ Preserving existing snapshot (${existingCount} posts)`);
-        console.warn('⚠️ Skipping backup update to prevent data loss\n');
-        process.exit(0); // Exit successfully without updating
-      } else {
-        console.error('❌ No existing backup found and only got low post count!');
-        process.exit(1);
-      }
+
+    console.log(`\n📊 RESULTS:`);
+    console.log(`   Old Vault:    ${existingPosts.length} posts`);
+    console.log(`   New Fetched:  ${backupPosts.length} posts`);
+    console.log(`   Total Merged: ${mergedPosts.length} posts`);
+
+    // 6. Safety Check
+    if (mergedPosts.length < MINIMUM_SAFE_COUNT) {
+      console.warn(`\n⚠️ CRITICAL WARNING: Total merged count (${mergedPosts.length}) is below safety threshold (${MINIMUM_SAFE_COUNT})!`);
+      console.warn('⚠️ Aborting write to prevent data loss.');
+      process.exit(0);
     }
     
-    // ✅ Create backup data structure
+    // 7. Save to Disk
     const backupData = {
       feed: {
-        entry: uniquePosts,
+        entry: mergedPosts,
         _metadata: {
           generatedAt: new Date().toISOString(),
-          primaryBlogPosts: primaryPosts.length,
-          backupBlogPosts: backupPosts.length,
-          totalUniquePosts: uniquePosts.length
+          source: "Merge (Vault + Live)",
+          totalPosts: mergedPosts.length
         }
       }
     };
     
     fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
-    
-    console.log(`\n✅ Backup saved to: ${backupPath}`);
-    console.log(`✅ Total unique posts in backup: ${uniquePosts.length}\n`);
+    console.log(`\n💾 Snapshot updated successfully at: ${backupPath}\n`);
     
   } catch (error) {
     console.error('❌ Snapshot update failed:', error.message);
-    
-    // ✅ SAFETY: Don't fail the build, preserve existing backup
     if (fs.existsSync(backupPath)) {
-      console.warn('⚠️ Error occurred but existing backup preserved');
+      console.warn('⚠️ Preserving existing backup due to error.');
       process.exit(0);
     } else {
       process.exit(1);

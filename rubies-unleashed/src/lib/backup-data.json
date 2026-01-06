@@ -3,6 +3,351 @@
     "entry": [
       {
         "id": {
+          "$t": "tag:blogger.com,1999:blog-4882300547081353236.post-2860549366488016355"
+        },
+        "published": {
+          "$t": "2026-01-05T12:00:00.000-08:00"
+        },
+        "updated": {
+          "$t": "2026-01-05T12:00:53.329-08:00"
+        },
+        "category": [
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "2d"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Action"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Beta"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Free"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Games"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Linux Games"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Survival"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Windows Games"
+          }
+        ],
+        "title": {
+          "type": "text",
+          "$t": "Particulitix "
+        },
+        "content": {
+          "type": "html",
+          "$t": "<!--1. COVER IMAGE-->\n<!--==========================================-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjYCZi8J2E5UfpBjun6BlzACHJbYis672DSK_HnD_uNeyfcoUcS92Oij32vZPrNleC9QeQFSXNacYIXglwFwmJI0xRGrHn6bST_7dpDmrKjC46R_cARr6_yOjX0pUSySefkfPqmvkwkceVrgxUZLiYN7v7EYgXYvdoggcQCZGPUpfaQjkM-TNTmDJsSMtY/s256/icon%20-%20Julien%20B.png\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Game cover\" border=\"0\" data-original-height=\"256\" data-original-width=\"256\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjYCZi8J2E5UfpBjun6BlzACHJbYis672DSK_HnD_uNeyfcoUcS92Oij32vZPrNleC9QeQFSXNacYIXglwFwmJI0xRGrHn6bST_7dpDmrKjC46R_cARr6_yOjX0pUSySefkfPqmvkwkceVrgxUZLiYN7v7EYgXYvdoggcQCZGPUpfaQjkM-TNTmDJsSMtY/s16000/icon%20-%20Julien%20B.png\" /></a></div><br />\n\n<br />\n\n<!--==========================================-->\n<!--2. GAME DESCRIPTION (MUST COME FIRST!)-->\n<!--==========================================-->\n<div style=\"text-align: left;\">\n    <p style=\"line-height: 1.6;\"><span style=\"font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">Choose your upgrades carefully and build a death engine to shoot down waves of tougher and tougher enemies in this arcadey roguelite.&nbsp;</span></span></p>\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--3. METADATA BOX-->\n<!--==========================================-->\n<div style=\"background-color: whitesmoke; border-radius: 5px; margin: 20px 0px; padding: 15px;\">\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Developer - Workshop Geek</span>\n    </div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Version - 0.8</span>\n    </div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Build - Windows, Linux</span></div>\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--5. FEATURES-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Features:</u>\n    </span>\n</h3>\n\n<div style=\"background-color: white;\">\n    <ul style=\"line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;\">\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\"><span style=\"color: #404040; font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">Lots of particles</span></span></li></ul></div>\n\n<br />\n\n<!--==========================================-->\n<!--10. TRAILER (OPTIONAL)-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Trailer:</u>\n    </span>\n</h3>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\"><iframe allowfullscreen=\"\" class=\"BLOG_video_class\" height=\"266\" src=\"https://www.youtube.com/embed/nJy3OnVMCEA\" width=\"320\" youtube-src-id=\"nJy3OnVMCEA\"></iframe></div>\n<br />\n\n<!--==========================================-->\n<!--11. SCREENSHOTS-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Screenshots:</u>\n    </span>\n</h3>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgZu6lpn3aLTxYeMC3AsUbKIkfzQr-3Wd4G26eNfJPknoqJ53nlzmG-pMQ9LY47U4SB8hTK74Lb-FJByQTPVICTAF2quom3jVFuXOjOCPNtbsoWXj0gjWaEK8h76hTmjgoipgnBN81z0T_IMuEal1VQP9MtYFN0NBJJ51IDxtD4Fp38mc8g9YQc00X-EDM/s920/headercapsule%20-%20Julien%20B.png\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 1\" border=\"0\" data-original-height=\"430\" data-original-width=\"920\" height=\"150\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgZu6lpn3aLTxYeMC3AsUbKIkfzQr-3Wd4G26eNfJPknoqJ53nlzmG-pMQ9LY47U4SB8hTK74Lb-FJByQTPVICTAF2quom3jVFuXOjOCPNtbsoWXj0gjWaEK8h76hTmjgoipgnBN81z0T_IMuEal1VQP9MtYFN0NBJJ51IDxtD4Fp38mc8g9YQc00X-EDM/w320-h150/headercapsule%20-%20Julien%20B.png\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh4_xcTEqPcDs4Bk_rKQmOppnQ8_2-UmNGiMkcj4Touc_SNeNWg-ReVicll0Bzth-Jbc_n49s_brOXZrNzt2Ek3KNBaOXOUUXFLgqpvfp_JBKFly05L2a8Nr8MvYSuGHA-3LQhcz6oOs86rjkx4gt0rHq9-tOgqCqjXaYe_RJz7Ajjigj3sEAsJM35SJIs/s800/screenshot6%20-%20Julien%20B.jpg\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 2\" border=\"0\" data-original-height=\"450\" data-original-width=\"800\" height=\"180\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh4_xcTEqPcDs4Bk_rKQmOppnQ8_2-UmNGiMkcj4Touc_SNeNWg-ReVicll0Bzth-Jbc_n49s_brOXZrNzt2Ek3KNBaOXOUUXFLgqpvfp_JBKFly05L2a8Nr8MvYSuGHA-3LQhcz6oOs86rjkx4gt0rHq9-tOgqCqjXaYe_RJz7Ajjigj3sEAsJM35SJIs/w320-h180/screenshot6%20-%20Julien%20B.jpg\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgi50zzX8WVg7BKYCeqmMhyphenhyphen8vE9PN88sIJAeh17R80Msb2sCzMvM2Eedr4FSCJvLEu_zC-dwOmFjpfQSsuz0PKaEzm15u3DIVo27fT9sD-NFKXhWUOPR6AHWXkTeIe32qbSKD_ha6qXRI9Eb1vKjk9VfsYvN8Xs2fWfWPCMo0G25OasjE61PgDLKBmIgdM/s800/screenshot5%20-%20Julien%20B.jpg\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 3\" border=\"0\" data-original-height=\"450\" data-original-width=\"800\" height=\"180\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgi50zzX8WVg7BKYCeqmMhyphenhyphen8vE9PN88sIJAeh17R80Msb2sCzMvM2Eedr4FSCJvLEu_zC-dwOmFjpfQSsuz0PKaEzm15u3DIVo27fT9sD-NFKXhWUOPR6AHWXkTeIe32qbSKD_ha6qXRI9Eb1vKjk9VfsYvN8Xs2fWfWPCMo0G25OasjE61PgDLKBmIgdM/w320-h180/screenshot5%20-%20Julien%20B.jpg\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiZvd4ujqENirYaEL7kMdB062x0_0XQKTYy1jbKsvI6UOVv-e4Htv67jUNsojwBntpyLL9pCtlDqP0xMvyYT2LnoJap9XDmSBf-VGW_ti3OxsKTwEtbpO0wAztToKcU-V02TqxrnssecFGV11_EHLu3sYyk491Pa_DLDhGNmNdyeXmtwIhSE6HxZkMe05c/s800/screenshot3%20-%20Julien%20B.jpg\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 4\" border=\"0\" data-original-height=\"450\" data-original-width=\"800\" height=\"180\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiZvd4ujqENirYaEL7kMdB062x0_0XQKTYy1jbKsvI6UOVv-e4Htv67jUNsojwBntpyLL9pCtlDqP0xMvyYT2LnoJap9XDmSBf-VGW_ti3OxsKTwEtbpO0wAztToKcU-V02TqxrnssecFGV11_EHLu3sYyk491Pa_DLDhGNmNdyeXmtwIhSE6HxZkMe05c/w320-h180/screenshot3%20-%20Julien%20B.jpg\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh1_KqazCKqgO3jxoH0D2p5Un1Uq6LsqFrp8mFd92gIakqnteCNP3VrLi2qu9MY0N1WaMZVybqrvqYrXgX_31EYj9OSYImafyQhjeJwTFkgz8gW6H8vEumDEnRpbgOoMHu_3f54drgAQAKmKg9QKKBXaHhKNJVH5oWL-g8Uiz-fvGdjS3jO62O1YOgoe28/s800/screenshot4%20-%20Julien%20B.jpg\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 5\" border=\"0\" data-original-height=\"450\" data-original-width=\"800\" height=\"180\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh1_KqazCKqgO3jxoH0D2p5Un1Uq6LsqFrp8mFd92gIakqnteCNP3VrLi2qu9MY0N1WaMZVybqrvqYrXgX_31EYj9OSYImafyQhjeJwTFkgz8gW6H8vEumDEnRpbgOoMHu_3f54drgAQAKmKg9QKKBXaHhKNJVH5oWL-g8Uiz-fvGdjS3jO62O1YOgoe28/w320-h180/screenshot4%20-%20Julien%20B.jpg\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgmv5dP4fhFhql5XD5nk3CDuYIPhkxP4na-i6AY3rzOBliMPi9vW0TXGtrO5VfneiQJBzyiPBI1rxN_Ea0_2N5NjLp4TQhCNOAQ8Pat2QHaExty0fx3KVlNDt3o9EY9y-14ZkmeLOn91NnY1-P8ntUhr6Lq6eJAzKHRlY00ez583MvgcXv6HhQB75hF4jY/s800/screenshot1%20-%20Julien%20B.jpg\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 6\" border=\"0\" data-original-height=\"450\" data-original-width=\"800\" height=\"180\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgmv5dP4fhFhql5XD5nk3CDuYIPhkxP4na-i6AY3rzOBliMPi9vW0TXGtrO5VfneiQJBzyiPBI1rxN_Ea0_2N5NjLp4TQhCNOAQ8Pat2QHaExty0fx3KVlNDt3o9EY9y-14ZkmeLOn91NnY1-P8ntUhr6Lq6eJAzKHRlY00ez583MvgcXv6HhQB75hF4jY/w320-h180/screenshot1%20-%20Julien%20B.jpg\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><br /></div>\n\n\n\n<br />\n\n<!--==========================================-->\n<!--12. DOWNLOAD SECTION-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u><b>Download:</b></u>\n    </span>\n</h3>\n\n<!--✅ WINDOWS DOWNLOAD-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <a href=\"https://the-workshop-geek.itch.io/particulitix\" target=\"_blank\">\n        <img border=\"0\" data-original-height=\"150\" data-original-width=\"427\" src=\"https://1.bp.blogspot.com/-amKziz2-_-I/X-Sh3po81eI/AAAAAAAABIc/A_t-jvUXv4IOpBH1HzKGzMMyoZAn5yPIACLcBGAsYHQ/s0/button%2Bdone.webp\" width=\"320\" />\n    </a>\n</div>\n\n<br />\n\n<!--✅ MAC DOWNLOAD-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <a href=\"https://store.steampowered.com/app/4139330/Particulitix/\" target=\"_blank\">\n        <img border=\"0\" data-original-height=\"150\" data-original-width=\"427\" src=\"https://1.bp.blogspot.com/-amKziz2-_-I/X-Sh3po81eI/AAAAAAAABIc/A_t-jvUXv4IOpBH1HzKGzMMyoZAn5yPIACLcBGAsYHQ/s0/button%2Bdone.webp\" width=\"320\" />\n    </a>\n</div>\n\n<br />"
+        },
+        "link": [
+          {
+            "rel": "replies",
+            "type": "application/atom+xml",
+            "href": "https://rubyapk.blogspot.com/feeds/2860549366488016355/comments/default",
+            "title": "Post Comments"
+          },
+          {
+            "rel": "replies",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/particulitix.html#comment-form",
+            "title": "0 Comments"
+          },
+          {
+            "rel": "edit",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/2860549366488016355"
+          },
+          {
+            "rel": "self",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/2860549366488016355"
+          },
+          {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/particulitix.html",
+            "title": "Particulitix "
+          }
+        ],
+        "author": [
+          {
+            "name": {
+              "$t": "Daniel"
+            },
+            "uri": {
+              "$t": "http://www.blogger.com/profile/15206375618270590204"
+            },
+            "email": {
+              "$t": "noreply@blogger.com"
+            },
+            "gd$image": {
+              "rel": "http://schemas.google.com/g/2005#thumbnail",
+              "width": "32",
+              "height": "32",
+              "src": "//blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi1GdyGNofLyAImIEAAX7oIfoSBm_iu7cqL6u35Zji6aEknh7sY8dlQyIkwNk95f63UwOfYe6M2dfDRVNGHAuj-s19e7dLzxr3EdSNLQPSTY_P92p1c2TmtKpTPZhiGHg/s113/download+%282%29.jpg"
+            }
+          }
+        ],
+        "media$thumbnail": {
+          "xmlns$media": "http://search.yahoo.com/mrss/",
+          "url": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjYCZi8J2E5UfpBjun6BlzACHJbYis672DSK_HnD_uNeyfcoUcS92Oij32vZPrNleC9QeQFSXNacYIXglwFwmJI0xRGrHn6bST_7dpDmrKjC46R_cARr6_yOjX0pUSySefkfPqmvkwkceVrgxUZLiYN7v7EYgXYvdoggcQCZGPUpfaQjkM-TNTmDJsSMtY/s72-c/icon%20-%20Julien%20B.png",
+          "height": "72",
+          "width": "72"
+        },
+        "thr$total": {
+          "$t": "0"
+        }
+      },
+      {
+        "id": {
+          "$t": "tag:blogger.com,1999:blog-4882300547081353236.post-1708539689944553769"
+        },
+        "published": {
+          "$t": "2026-01-05T10:53:00.000-08:00"
+        },
+        "updated": {
+          "$t": "2026-01-05T11:32:22.247-08:00"
+        },
+        "category": [
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Apps"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Casual"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Competitive"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Educational"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Featured"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Paid"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Productivity"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "PWA"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Strategy"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Tools"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Trial"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Trivia"
+          }
+        ],
+        "title": {
+          "type": "text",
+          "$t": "The Professor AI"
+        },
+        "content": {
+          "type": "html",
+          "$t": "<!--1. COVER IMAGE-->\n<!--==========================================-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Game Cover\" border=\"0\" data-original-height=\"900\" data-original-width=\"600\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiEKpMGqYCIJe8TzmJ8SjNZNRqYcTtTH4ltJm2OkGDmFpbT2Nj87zA-hLEozxXOy9FEzNO4chwWmIGvTobeyhxUI6DMsOqn0FdF909rVueo1TsUxoaNrLf2KOiyd3kVfFBNpL_HOLde5TS9nU81DvQ0_AoepH7fDNzU1dkRqeNFV6N7XTgUla7WBbK7pqE/s320/Professor%20Logo%20PNG%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.png\" />\n</div>\n\n<!--==========================================-->\n<!--2. GAME DESCRIPTION (MUST COME FIRST!)-->\n<!--==========================================-->\n<div style=\"text-align: left;\"><p style=\"line-height: 1.6;\"><span style=\"font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\"><b>The Professor AI</b></span></span><span style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px;\">&nbsp;</span><span style=\"font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">is an AI-powered academic accelerator designed to transform passive reading into active mastery. Don't just read your notes—interrogate them. Upload lectures, PDFs, or slides, and the Professor will generate interactive exams, Tutoring sessions, and flashcards instantly. Featuring \"Nightmare Mode\" for deep understanding and \"The Syndicate\" for multiplayer study battles, it is the ultimate tool for students who refuse to be average.</span></span></p>\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--3. METADATA BOX-->\n<!--==========================================-->\n<div style=\"background-color: whitesmoke; border-radius: 5px; margin: 20px 0px; padding: 15px;\">\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Developer - William Popoola</span>\n    </div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Version - 1.0</span></div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Build - HTML5</span></div></div>\n\n<br />\n\n<!--==========================================-->\n<!--5. FEATURES-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Features:</u>\n    </span>\n</h3>\n\n<div style=\"background-color: white;\">\n    <ul style=\"line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;\">\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                AI Exam Generator: Instantly create quizzes from PDF/DOCX/Images.\n            </span>\n        </li>\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                \"Professor Mode\" explains complex topics using analogies (E.g., Sports, pop culture).\n            </span>\n        </li>\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px;\"><span style=\"color: #404040; font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">The Syndicate: Multiplayer study duels to challenge friends.</span></span></li>\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                Nightmare Difficulty: Edge-case questions designed to trick you and deepen retention.\n            </span>\n        </li>\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                Active Recall: \"Lock-In\" mode with special psychological techniques to enhance learning.</span></li>\n    </ul>\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--6. SYSTEM REQUIREMENTS (OPTIONAL)-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>System Requirements:</u>\n    </span>\n</h3>\n\n<div style=\"background-color: white;\">\n    <ul style=\"line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;\">\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                Web: Modern Browser (Chrome, Safari, Edge, Firefox) with JavaScript enabled. Mobile: Android 10+ (Chrome) or iOS 15+ (Safari) for PWA installation.&nbsp;\n            </span>\n        </li>\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\"><span style=\"color: #404040; font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">Hardware: A Device with a camera recommended for scanning features.</span></span></li>\n    </ul>\n</div>\n\n<h3 style=\"color: #e0115f; text-align: center;\"><br /></h3>\n\n<!--==========================================-->\n<!--11. SCREENSHOTS-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Screenshots:</u>\n    </span>\n</h3>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Gameplay Screenshot 1\" border=\"0\" data-original-height=\"1080\" data-original-width=\"1920\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiyZVL-yxgPt7MEcfjkOHJkybgwNIA9Dnl-KlkxVxW44Pp8M4di-58HmSYDSOvXwkJb3gx55SLcH0QA1GVTxbXMoQ6b7sEKwda6b16vOEEIwxjBZtn1KSFDhxKUfpKzzcjJX5SsHGpOYBo3V3S70jvd7wo9FD1DOA8cAI7JSrdlPvsk8668okkuFkhrPKo/s320/Professor%20Home%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.png\" style=\"margin: 10px;\" />\n</div>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Gameplay Screenshot 2\" border=\"0\" data-original-height=\"1080\" data-original-width=\"1920\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiFNOZxNJnwr0l92AvVy4YK26g2j3AJUTU0tHdJk8q-XyA-SZnpQbS7P7VtZZUTeSeWSo3QmTEHHoyPP1Znv2_ZvY7p2Wk4c4chOlMSc97vTB9oachUelPXB7QSJzq1SktIVGzO0UEPT5Jme5g-N2lGpBpBIbJIn2Ef62b5A_JT9ITX-wu-vVt5hhw-8HU/s320/Professor%20Loading%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.png\" style=\"margin: 10px;\" />\n</div>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Gameplay Screenshot 3\" border=\"0\" data-original-height=\"1080\" data-original-width=\"1920\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi-DMNwjZMEA5m9kyO31SKPyjZ8GJNPdRF_Uqx_QwBs9gFAr77Dhrlnja6W3IWcPbVFO6EyYgGcHLPHeFQw6sBuJyIFGA0JcfWteW2aV65C8PRxBN5YZ0Z2slLWFpf_zYM8jFVAnGsfgdt1LXF4Kd4fWxVBLS5NOEw_oH5AKhh0sHg3pDBeCw_1ggm2J8g/s320/Professor%20Login%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.png\" style=\"margin: 10px;\" />\n</div>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Gameplay Screenshot 4\" border=\"0\" data-original-height=\"1080\" data-original-width=\"1920\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAXEFxApuHyWC-cVf4RxvxIQt91dVNv7sK4EGKCfWLRbp71um0npzfyNsaJb0IYmuCV-dB-N9hIESaWQmU3apYu25PZpGa7HpBH8FekdWta86_VsQl2a2rPudeOQZgPKkdky7AFVOrAA_uY5IyxUuJZvxUz-mGSCStrA7oB1-Mmh4NQMWq44hTm8013Ww/s320/Screenshot_20260105_045747_Chrome%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.jpg\" style=\"margin: 10px;\" />\n</div>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Gameplay Screenshot 4\" border=\"0\" data-original-height=\"1080\" data-original-width=\"1920\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi-DMNwjZMEA5m9kyO31SKPyjZ8GJNPdRF_Uqx_QwBs9gFAr77Dhrlnja6W3IWcPbVFO6EyYgGcHLPHeFQw6sBuJyIFGA0JcfWteW2aV65C8PRxBN5YZ0Z2slLWFpf_zYM8jFVAnGsfgdt1LXF4Kd4fWxVBLS5NOEw_oH5AKhh0sHg3pDBeCw_1ggm2J8g/s320/Professor%20Login%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.png\" style=\"margin: 10px;\" />\n</div>\n\n\n<br />\n\n<!--==========================================-->\n<!--12. DOWNLOAD SECTION-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u><b>Download:</b></u>\n    </span>\n</h3>\n\n<!--✅ WEB/HTML5 PLAY BUTTON-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <a href=\"https://theprofessorai.vercel.app/\" target=\"_blank\">\n        <img alt=\"Play in Browser\" border=\"0\" data-original-height=\"150\" data-original-width=\"427\" src=\"https://1.bp.blogspot.com/-amKziz2-_-I/X-Sh3po81eI/AAAAAAAABIc/A_t-jvUXv4IOpBH1HzKGzMMyoZAn5yPIACLcBGAsYHQ/s0/button%2Bdone.webp\" width=\"320\" />\n    </a>\n</div>\n\n\n<br />"
+        },
+        "link": [
+          {
+            "rel": "replies",
+            "type": "application/atom+xml",
+            "href": "https://rubyapk.blogspot.com/feeds/1708539689944553769/comments/default",
+            "title": "Post Comments"
+          },
+          {
+            "rel": "replies",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/the-professor-ai.html#comment-form",
+            "title": "0 Comments"
+          },
+          {
+            "rel": "edit",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/1708539689944553769"
+          },
+          {
+            "rel": "self",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/1708539689944553769"
+          },
+          {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/the-professor-ai.html",
+            "title": "The Professor AI"
+          }
+        ],
+        "author": [
+          {
+            "name": {
+              "$t": "Daniel"
+            },
+            "uri": {
+              "$t": "http://www.blogger.com/profile/15206375618270590204"
+            },
+            "email": {
+              "$t": "noreply@blogger.com"
+            },
+            "gd$image": {
+              "rel": "http://schemas.google.com/g/2005#thumbnail",
+              "width": "32",
+              "height": "32",
+              "src": "//blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi1GdyGNofLyAImIEAAX7oIfoSBm_iu7cqL6u35Zji6aEknh7sY8dlQyIkwNk95f63UwOfYe6M2dfDRVNGHAuj-s19e7dLzxr3EdSNLQPSTY_P92p1c2TmtKpTPZhiGHg/s113/download+%282%29.jpg"
+            }
+          }
+        ],
+        "media$thumbnail": {
+          "xmlns$media": "http://search.yahoo.com/mrss/",
+          "url": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiEKpMGqYCIJe8TzmJ8SjNZNRqYcTtTH4ltJm2OkGDmFpbT2Nj87zA-hLEozxXOy9FEzNO4chwWmIGvTobeyhxUI6DMsOqn0FdF909rVueo1TsUxoaNrLf2KOiyd3kVfFBNpL_HOLde5TS9nU81DvQ0_AoepH7fDNzU1dkRqeNFV6N7XTgUla7WBbK7pqE/s72-c/Professor%20Logo%20PNG%20-%20Ariseoluwa%20%E2%80%9CMr.William%E2%80%9D%20Popoola.png",
+          "height": "72",
+          "width": "72"
+        },
+        "thr$total": {
+          "$t": "0"
+        }
+      },
+      {
+        "id": {
+          "$t": "tag:blogger.com,1999:blog-4882300547081353236.post-1488447226004241469"
+        },
+        "published": {
+          "$t": "2026-01-05T09:59:00.000-08:00"
+        },
+        "updated": {
+          "$t": "2026-01-05T10:39:19.131-08:00"
+        },
+        "category": [
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Apps"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Educational"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Featured"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "HTML5"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Productivity"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Tools"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Web"
+          }
+        ],
+        "title": {
+          "type": "text",
+          "$t": "Studly"
+        },
+        "content": {
+          "type": "html",
+          "$t": "<!--1. COVER IMAGE-->\n<!--==========================================-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Game Cover\" border=\"0\" data-original-height=\"900\" data-original-width=\"600\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj6zurvXYGoHpWqYV3MXioLFotMWUibyiuyld8wbCDsizqY1cp39UyUix4Gavu6ZtsdxSERxz9xbVCTUiUaQHAteoNkWR80prDgf0ZP6eLKLZn_gFseYaQQiqDvEiHRuw_Y82Xjm0ZUvELLLdX443zosxzkSIDkiI0jwU-C5ZHPBP99PL5LvKPyiLYFQa4/s715/Studly%20New%20Logo%202%20-%20Zion%20Abubakar.jpg\" />\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--2. GAME DESCRIPTION (MUST COME FIRST!)-->\n<!--==========================================-->\n<div style=\"text-align: left;\"><p style=\"line-height: 1.6;\"><span style=\"font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\"><b>Studly</b></span></span><span style=\"font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">&nbsp;is a social-first learning platform built to help students study smarter, practice better, and grow together.</span></span></p></div>\n\n<!--==========================================-->\n<!--3. METADATA BOX-->\n<!--==========================================-->\n<div style=\"background-color: whitesmoke; border-radius: 5px; margin: 20px 0px; padding: 15px;\">\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Developer - Zion</span>\n    </div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Version - 2.0</span>\n    </div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Build - HTML5</span></div>\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--5. FEATURES-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Features:</u>\n    </span>\n</h3>\n\n<div style=\"background-color: white;\">\n    <ul style=\"line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;\">\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                StudlyGram: Share academic content, discussions, and progress\n            </span>\n        </li>\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\">\n            <span style=\"color: #404040; font-family: 'Georgia', 'Times New Roman', serif; font-size: 14px;\">\n                StudyDock: One hub for studying anything, from Quadratics to Coding\n            </span>\n        </li></ul></div><div style=\"background-color: white;\"><ul style=\"line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;\">\n    </ul>\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--11. SCREENSHOTS-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Screenshots:</u>\n    </span>\n</h3>\n\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <img alt=\"Gameplay Screenshot 1\" border=\"0\" data-original-height=\"1080\" data-original-width=\"1920\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiv2-2VtdyJs0NmWIHTT8fgCIcAN8Xk_WrGS06xG0ahX-u1CS0_w1DDTVPG4abwgl4qQB6yaYulXWML0L5CKAGYeiS-m1HUncPNL8ElFYGyPb5svDwn7jlEpJwsKHCxCJJmliwULWHhm-BSDJ6jkOAKvktTincFIht3fX3CfWr03xgG1h6-oWlNkI9a92U/s320/Screenshot%202026-01-01%20141021%20-%20Zion%20Abubakar.jpg\" style=\"margin: 10px;\" />\n</div>\n\n<br />\n\n<!--==========================================-->\n<!--12. DOWNLOAD SECTION-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u><b>Download:</b></u>\n    </span>\n</h3>\n\n<!-- ✅ WEB/HTML5 PLAY BUTTON -->\n<div class=\"separator\" style=\"clear: both; text-align: center;\">\n    <a href=\"https://usestudly.com/\" \n       target=\"_blank\">\n        <img border=\"0\" \n             data-original-height=\"150\" \n             data-original-width=\"427\" \n             src=\"https://1.bp.blogspot.com/-amKziz2-_-I/X-Sh3po81eI/AAAAAAAABIc/A_t-jvUXv4IOpBH1HzKGzMMyoZAn5yPIACLcBGAsYHQ/s0/button%2Bdone.webp\" \n             alt=\"Play in Browser\"\n             width=\"320\" />\n    </a>\n</div>"
+        },
+        "link": [
+          {
+            "rel": "replies",
+            "type": "application/atom+xml",
+            "href": "https://rubyapk.blogspot.com/feeds/1488447226004241469/comments/default",
+            "title": "Post Comments"
+          },
+          {
+            "rel": "replies",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/studly.html#comment-form",
+            "title": "0 Comments"
+          },
+          {
+            "rel": "edit",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/1488447226004241469"
+          },
+          {
+            "rel": "self",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/1488447226004241469"
+          },
+          {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/studly.html",
+            "title": "Studly"
+          }
+        ],
+        "author": [
+          {
+            "name": {
+              "$t": "Daniel"
+            },
+            "uri": {
+              "$t": "http://www.blogger.com/profile/15206375618270590204"
+            },
+            "email": {
+              "$t": "noreply@blogger.com"
+            },
+            "gd$image": {
+              "rel": "http://schemas.google.com/g/2005#thumbnail",
+              "width": "32",
+              "height": "32",
+              "src": "//blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi1GdyGNofLyAImIEAAX7oIfoSBm_iu7cqL6u35Zji6aEknh7sY8dlQyIkwNk95f63UwOfYe6M2dfDRVNGHAuj-s19e7dLzxr3EdSNLQPSTY_P92p1c2TmtKpTPZhiGHg/s113/download+%282%29.jpg"
+            }
+          }
+        ],
+        "media$thumbnail": {
+          "xmlns$media": "http://search.yahoo.com/mrss/",
+          "url": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj6zurvXYGoHpWqYV3MXioLFotMWUibyiuyld8wbCDsizqY1cp39UyUix4Gavu6ZtsdxSERxz9xbVCTUiUaQHAteoNkWR80prDgf0ZP6eLKLZn_gFseYaQQiqDvEiHRuw_Y82Xjm0ZUvELLLdX443zosxzkSIDkiI0jwU-C5ZHPBP99PL5LvKPyiLYFQa4/s72-c/Studly%20New%20Logo%202%20-%20Zion%20Abubakar.jpg",
+          "height": "72",
+          "width": "72"
+        },
+        "thr$total": {
+          "$t": "0"
+        }
+      },
+      {
+        "id": {
           "$t": "tag:blogger.com,1999:blog-6908499229618333247.post-4843375076442810125"
         },
         "published": {
@@ -6903,6 +7248,11 @@
           "$t": "1"
         }
       }
-    ]
+    ],
+    "_metadata": {
+      "generatedAt": "2026-01-06T22:21:25.902Z",
+      "source": "Merge (Vault + Live)",
+      "totalPosts": 59
+    }
   }
 }
