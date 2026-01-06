@@ -1470,7 +1470,21 @@ function getBackupGames(limit) {
 export async function fetchGames(limit = 500) {
   try {
     const timestamp = Date.now();
-    const res = await fetch(`/api/games?limit=${limit}&_t=${timestamp}`, {
+    
+    // ✅ FIX: Determine Base URL for Server-Side Fetches
+    let baseUrl = '';
+    if (typeof window === 'undefined') {
+      // Server-side: Use Netlify env var or localhost
+      // Note: Netlify sets URL to the deployment URL (e.g. https://rubies...app)
+      baseUrl = process.env.URL || 'http://localhost:3000';
+    }
+    
+    // Construct absolute URL
+    const url = `${baseUrl}/api/games?limit=${limit}&_t=${timestamp}`;
+
+    console.log(`🌐 Fetching from: ${url}`); // Debug Log
+
+    const res = await fetch(url, {
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',

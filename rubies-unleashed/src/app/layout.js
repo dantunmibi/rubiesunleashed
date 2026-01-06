@@ -24,7 +24,7 @@ export const metadata = {
     siteName: 'Rubies Unleashed',
     images: [
       {
-        url: '/rulogo.png', // Resolves to https://rubiesunleashed.netlify.app/rulogo.png
+        url: '/rubieslogo.png', // Resolves to https://rubiesunleashed.netlify.app/rulogo.png
         width: 800,
         height: 600,
         alt: 'Rubies Unleashed Logo',
@@ -37,7 +37,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Rubies Unleashed',
     description: 'Discover indie games and apps.',
-    images: ['/rulogo.png'],
+    images: ['/rubieslogo.png'],
   },
 };
 

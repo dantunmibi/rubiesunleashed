@@ -11,7 +11,7 @@
 import { isApp, getPlatformInfo } from '@/lib/game-utils';
 
 // ✅ Fallback Image (Must be a real absolute URL)
-const DEFAULT_IMAGE = 'https://rubiesunleashed.netlify.app/rulogo.png'; 
+const DEFAULT_IMAGE = 'https://rubiesunleashed.netlify.app/rubieslogo.png'; 
 
 export function generateJsonLd(game) {
   if (!game) return null;
