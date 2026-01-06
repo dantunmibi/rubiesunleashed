@@ -11,14 +11,14 @@
 import { isApp, getPlatformInfo } from '@/lib/game-utils';
 
 // ✅ Fallback Image (Must be a real absolute URL)
-const DEFAULT_IMAGE = 'https://rubiesunleashed.netlify.app/rubieslogo.png'; 
+const DEFAULT_IMAGE = 'https://rubiesunleashed.netlify.app/rubieslogo.png?v=2'; 
 
 export function generateJsonLd(game) {
   if (!game) return null;
 
   const isApplication = isApp(game.tags);
   const platformInfo = getPlatformInfo(game, game.tags);
-  const canonicalUrl = `https://rubiesunleashed.netlify.app/view/${game.id}`;
+ const canonicalUrl = `https://rubiesunleashed.netlify.app/view/${game.slug}`; 
   
   const baseSchema = {
     "@context": "https://schema.org",
@@ -101,7 +101,7 @@ export function generateMetaTags(game) {
     openGraph: {
       title: `${game.title} - Rubies Unleashed`,
       description: richDescription,
-      url: `/view/${game.id}`,
+      url: `/view/${game.slug}`,
       siteName: 'Rubies Unleashed',
       images: [
         {
@@ -121,7 +121,7 @@ export function generateMetaTags(game) {
       images: [imageUrl],
     },
     alternates: {
-      canonical: `/view/${game.id}`,
+      canonical: `/view/${game.slug}`,
     }
   };
 }
