@@ -5,8 +5,20 @@ import {
   ArrowLeft, Download, Gamepad2, Heart, Box, Share2, 
   ShieldCheck, Calendar, User, Gem, Info 
 } from "lucide-react";
-import { getDownloadIcon } from "@/lib/game-utils";
+import { getDownloadIcon, getDownloadLabel } from "@/lib/game-utils";
 import { useState, useEffect } from "react";
+
+/**
+ * GameHero Component
+ * 
+ * Cinematic hero section for game/app detail pages
+ * Features:
+ * - Adaptive blurred background based on cover art
+ * - Platform-aware download buttons (detects stores, web games, direct downloads)
+ * - Mobile floating action bar with intelligent scrolling behavior
+ * - Desktop/Mobile layout adaptation
+ * - Wishlist & Share functionality with fallback mechanisms
+ */
 
 export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
   const [copied, setCopied] = useState(false);
@@ -96,6 +108,43 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
     } else {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
+  };
+
+  // ✅ UNIFIED BUTTON LABEL LOGIC (Shared between desktop and mobile)
+  const getButtonLabel = () => {
+    const primaryLink = game.downloadLinks && game.downloadLinks.length > 0 
+      ? game.downloadLinks[0] 
+      : { platform: 'Download', url: game.downloadUrl || '#' };
+    const platform = (primaryLink.platform || '').toLowerCase().trim();
+    const url = (primaryLink.url || '').toLowerCase();
+    
+    // Store platforms
+    const storePatterns = {
+      'steam': /steam/i,
+      'itch.io': /itch\.io/i,
+      'gog': /gog\.com/i,
+      'epic games': /epicgames/i,
+      'google play': /play\.google\.com/i,
+      'app store': /apps\.apple\.com/i,
+      'microsoft store': /microsoft\.com\/store/i,
+      'game jolt': /gamejolt\.com/i,
+      'humble bundle': /humblebundle\.com/i
+    };
+    
+    // Check if it's a store link
+    for (const [storeName, pattern] of Object.entries(storePatterns)) {
+      if (platform.includes(storeName.toLowerCase()) || pattern.test(url)) {
+        return getDownloadLabel(primaryLink.platform).toUpperCase();
+      }
+    }
+    
+    // Web-based detection
+    if (platform === 'web' || platform.includes('html5') || platform.includes('browser')) {
+      return isApp ? 'VISIT SITE' : 'PLAY NOW';
+    }
+    
+    // Direct downloads
+    return isApp ? 'GET APP' : 'GET GAME';
   };
 
   return (
@@ -189,20 +238,22 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
                 {/* DESKTOP ACTIONS (Hidden on Mobile) */}
                 <div className="hidden md:flex flex-wrap items-center gap-4 pt-6">
                     {hasMultipleBuilds ? (
-                        game.downloadLinks.map((link, i) => (
-                            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-ruby hover:bg-[#c00e50] text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center gap-2 transition-all hover:-translate-y-1 shadow-xl hover:shadow-ruby/20">
-                                {getDownloadIcon(link.platform)} {link.platform}
-                            </a>
-                        ))
+                      <div className="flex flex-wrap gap-3">
+                        {game.downloadLinks.map((link, i) => (
+                          <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-ruby hover:bg-[#c00e50] text-white px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1 shadow-lg">
+                            {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform)}
+                          </a>
+                        ))}
+                      </div>
                     ) : hasValidDownload ? (
-                        <a href={playButtonLink} target="_blank" rel="noopener noreferrer" className="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-ruby hover:text-white transition-all shadow-xl flex items-center gap-3 hover:scale-105">
-                            {isApp ? <Box size={20} /> : <Gamepad2 size={20} />}
-                            {isApp ? "Get App" : "Play Now"}
-                        </a>
+                      <a href={playButtonLink} target="_blank" rel="noopener noreferrer" className="w-full md:w-auto bg-ruby hover:bg-[#c00e50] text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:scale-105 shadow-[0_0_20px_rgba(224,17,95,0.3)]">
+                        {isApp ? <Box size={20} className="text-white" /> : <Gamepad2 size={20} className="text-white" />}
+                        {getButtonLabel()}
+                      </a>
                     ) : (
-                         <div className="bg-slate-800 text-slate-500 px-10 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center gap-3 cursor-not-allowed">
-                            <Download size={20} /> Unavailable
-                        </div>
+                      <button disabled className="w-full md:w-auto bg-slate-700 text-slate-400 px-8 py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 cursor-not-allowed">
+                        Unavailable
+                      </button>
                     )}
 
                     <button 
@@ -247,7 +298,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
                         className="flex-1 bg-white text-black py-3.5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"
                     >
                         {isApp ? <Box size={18} /> : <Gamepad2 size={18} />} 
-                        {isApp ? "Get App" : "Play Now"}
+                        {getButtonLabel()}
                     </a>
                 ) : (
                     <button disabled className="flex-1 bg-slate-800 text-slate-500 py-3.5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 cursor-not-allowed">

@@ -2,18 +2,18 @@
  * ================================================================
  * CONTACT PAGE
  * ================================================================
- * 
+ *
  * Purpose:
  * - Professional contact interface for users, developers, and partners
  * - Handles Netlify form submission via static file bypass
- * 
+ *
  * Features:
  * - Netlify Forms Integration (via /__forms.html)
  * - Input validation & loading states
  * - Direct contact information
  * - Professional cinematic UI
  * - Toast Notification Integration
- * 
+ *
  * ================================================================
  */
 
@@ -23,7 +23,15 @@ import React, { useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
-import { Mail, Send, Sparkles, MessageSquare, HelpCircle, Briefcase, ChevronRight } from "lucide-react";
+import {
+  Mail,
+  Send,
+  Sparkles,
+  MessageSquare,
+  HelpCircle,
+  Briefcase,
+  ChevronRight,
+} from "lucide-react";
 import { useToastContext } from "@/components/providers/ToastProvider";
 
 export default function ContactPage() {
@@ -57,7 +65,7 @@ export default function ContactPage() {
         setStatus("success");
         // ✅ UI FEEDBACK: Trigger global toast
         showToast("Message sent successfully! We'll be in touch.", "success");
-        
+
         setFormData({ name: "", email: "", subject: "", message: "" });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
@@ -98,7 +106,8 @@ export default function ContactPage() {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-              Have a question about the marketplace? Interested in publishing? Our team is ready to assist you.
+              Have a question about the marketplace? Interested in publishing?
+              Our team is ready to assist you.
             </p>
           </div>
 
@@ -110,14 +119,18 @@ export default function ContactPage() {
                   <Send size={24} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Send a Message</h2>
-                  <p className="text-slate-400 text-sm">We typically respond within 24 hours.</p>
+                  <h2 className="text-2xl font-bold text-white">
+                    Send a Message
+                  </h2>
+                  <p className="text-slate-400 text-sm">
+                    We typically respond within 24 hours.
+                  </p>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <input type="hidden" name="form-name" value="contact" />
-                
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label
@@ -218,13 +231,18 @@ export default function ContactPage() {
               {status === "success" && (
                 <div className="mt-6 p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 font-medium flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
                   <Sparkles size={20} />
-                  <span>Thank you. Your message has been sent successfully.</span>
+                  <span>
+                    Thank you. Your message has been sent successfully.
+                  </span>
                 </div>
               )}
 
               {status === "error" && (
                 <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 font-medium flex items-center gap-3">
-                  <span>Unable to send message. Please try again or email us directly.</span>
+                  <span>
+                    Unable to send message. Please try again or email us
+                    directly.
+                  </span>
                 </div>
               )}
             </div>
@@ -238,12 +256,14 @@ export default function ContactPage() {
                     <Mail size={24} className="text-ruby" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-2">Email Support</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      Email Support
+                    </h3>
                     <a
-                      href="mailto:doluwatunmibi@gmail.com"
+                      href="mailto:officialrubiesunleashed@gmail.com"
                       className="text-slate-300 hover:text-white transition-colors font-medium break-all"
                     >
-                      doluwatunmibi@gmail.com
+                      officialrubiesunleashed@gmail.com
                     </a>
                     <p className="text-slate-500 mt-2 text-sm">
                       For urgent inquiries and direct assistance.
@@ -261,15 +281,24 @@ export default function ContactPage() {
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
                     <span className="mt-1 w-1.5 h-1.5 rounded-full bg-ruby shrink-0"></span>
-                    <span>Rubies Unleashed is a premium digital marketplace for curated indie games, applications and tools.</span>
+                    <span>
+                      Rubies Unleashed is a premium digital marketplace for
+                      curated indie games, applications and tools.
+                    </span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
                     <span className="mt-1 w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0"></span>
-                    <span>We partner with developers to provide secure, high-speed distribution.</span>
+                    <span>
+                      We partner with developers to provide secure, high-speed
+                      distribution.
+                    </span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
                     <span className="mt-1 w-1.5 h-1.5 rounded-full bg-ruby shrink-0"></span>
-                    <span>Open for strategic partnerships and cross-promotion opportunities.</span>
+                    <span>
+                      Open for strategic partnerships and cross-promotion
+                      opportunities.
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -286,14 +315,20 @@ export default function ContactPage() {
                     className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
                     <span>Submit a Game</span>
-                    <ChevronRight size={14} className="text-slate-500 group-hover:text-ruby transition-colors" />
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-ruby transition-colors"
+                    />
                   </a>
                   <a
                     href="https://forms.gle/i7X2sUJ5cnqsUciA6"
                     className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
                     <span>Developer Portal</span>
-                    <ChevronRight size={14} className="text-slate-500 group-hover:text-ruby transition-colors" />
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-ruby transition-colors"
+                    />
                   </a>
                   <a
                     href="https://rubyapks.blogspot.com"
@@ -302,7 +337,10 @@ export default function ContactPage() {
                     className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
                     <span>Visit RubyApks Blog</span>
-                    <ChevronRight size={14} className="text-slate-500 group-hover:text-ruby transition-colors" />
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-ruby transition-colors"
+                    />
                   </a>
                 </div>
               </div>

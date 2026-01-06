@@ -143,3 +143,53 @@ export const getSocialIcon = (label) => {
   if (lower.includes("website") || lower.includes("itch")) return <Globe size={16} />;
   return <ExternalLink size={16} />;
 };
+
+/**
+ * Get display label for download platform
+ * Provides consistent "View on", "Get on", "Get for" labeling
+ * Used ONLY for multi-platform downloads
+ * @param {string} platform - Platform name from blogger.js
+ * @returns {string} - User-friendly label
+ */
+export const getDownloadLabel = (platform) => {
+  if (!platform) return 'Download';
+  
+  const lower = platform.toLowerCase();
+  
+  // PC Game Stores - "View on"
+  if (lower === 'steam') return 'View on Steam';
+  if (lower === 'itch.io') return 'View on Itch.io';
+  if (lower === 'gog') return 'View on GOG';
+  if (lower === 'epic games') return 'View on Epic Games';
+  if (lower === 'game jolt') return 'View on Game Jolt';
+  if (lower === 'humble bundle') return 'View on Humble Bundle';
+  if (lower === 'game jolt') return 'View on Game Jolt';
+  
+  // Mobile/Desktop App Stores - "Get on/in"
+  if (lower === 'google play') return 'Get on Google Play';
+  if (lower === 'app store') return 'Download on App Store';
+  if (lower === 'microsoft store') return 'Get in Microsoft Store';
+  
+  // Direct Downloads - "Get for"
+  if (lower === 'windows') return 'Get for Windows';
+  if (lower === 'mac') return 'Get for Mac';
+  if (lower === 'linux') return 'Get for Linux';
+  if (lower === 'android') return 'Get for Android';
+  if (lower === 'ios') return 'Get for iOS';
+  if (lower === 'steamos') return 'Get for SteamOS';
+  if (lower === 'chromeos') return 'Get for ChromeOS';
+  
+  // Consoles
+  if (lower === 'nintendo switch' || lower === 'switch') return 'Get for Switch';
+  if (lower === 'xbox') return 'Get for Xbox';
+  if (lower === 'playstation') return 'Get for PlayStation';
+  
+  // Web
+  if (lower === 'web') return 'Play Online';
+  
+  // Generic fallback
+  if (lower === 'download') return 'Download';
+  
+  // Unknown platform - show as-is with "Get for" prefix
+  return `Get for ${platform}`;
+};

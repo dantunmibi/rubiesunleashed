@@ -225,11 +225,13 @@ function refineDownloadLinks(links) {
     return unique;
 }
 
-function detectPlatformFromImage(imgUrl, altText = '') {
+function detectPlatformFromImage(imgUrl, altText = '', href = '') {
     const filename = imgUrl.toLowerCase();
     const alt = altText.toLowerCase();
     const parts = filename.split('/').pop().split('.')[0];
+    const linkUrl = href.toLowerCase();
     
+    // ✅ PRIORITY 1: Alt text detection (existing behavior - HIGHEST PRIORITY)
     if (alt.includes('windows') || alt.includes('win') || alt.includes('pc')) return 'Windows';
     if (alt.includes('mac') || alt.includes('osx') || alt.includes('apple')) return 'Mac';
     if (alt.includes('linux') || alt.includes('ubuntu') || alt.includes('debian')) return 'Linux';
@@ -242,6 +244,20 @@ function detectPlatformFromImage(imgUrl, altText = '') {
     if (alt.includes('playstation') || alt.includes('ps4') || alt.includes('ps5')) return 'PlayStation';
     if (alt.includes('web') || alt.includes('browser') || alt.includes('html5') || alt.includes('online') || alt.includes('play now') || alt.includes('webgl')) return 'Web';
     
+    // ✅ PRIORITY 2: Store URL detection (NEW - FALLBACK WHEN NO ALT TEXT)
+    if (linkUrl) {
+        if (linkUrl.includes('steampowered.com') || linkUrl.includes('store.steam')) return 'Steam';
+        if (linkUrl.includes('itch.io')) return 'Itch.io';
+        if (linkUrl.includes('gog.com')) return 'GOG';
+        if (linkUrl.includes('epicgames.com')) return 'Epic Games';
+        if (linkUrl.includes('play.google.com')) return 'Google Play';
+        if (linkUrl.includes('apps.apple.com')) return 'App Store';
+        if (linkUrl.includes('microsoft.com/store')) return 'Microsoft Store';
+        if (linkUrl.includes('humblebundle.com')) return 'Humble Bundle';
+        if (linkUrl.includes('gamejolt.com')) return 'Game Jolt';
+    }
+    
+    // PRIORITY 3: Filename patterns (existing - LAST RESORT)
     if (/\b(web|browser|online|html5|html|webgl)\b/.test(parts)) return 'Web';
     if (/\b(mac|osx|apple|dmg|darwin)\b/.test(parts)) return 'Mac';
     if (/\b(windows|win64|win32|win|pc)\b/.test(parts)) return 'Windows';
@@ -271,6 +287,20 @@ function isDownloadButton(imgUrl, href = '') {
     const lowerImg = imgUrl.toLowerCase();
     const lowerHref = href.toLowerCase();
 
+    // ✅ Add this block at the START of isDownloadButton()
+    const blockedDomains = [
+        'youtube.com', 'youtu.be', 'youtube-nocookie.com',
+        'vimeo.com', 'dailymotion.com', 'twitch.tv',
+        'twitter.com', 'facebook.com', 'instagram.com',
+        'tiktok.com', 'reddit.com',
+        'discord.gg', 'discord.com' , 'rubyapks.blogspot.com'
+    ];
+
+    if (blockedDomains.some(domain => lowerHref.includes(domain))) {
+        console.log('⏭️ Blocked video/social platform:', lowerHref);
+        return false;
+    }
+
     // ✅ Exclude direct image links
     if (lowerHref.match(/\.(jpg|jpeg|png|webp|gif|bmp|svg)$/)) return false;
     if (lowerHref.includes('bp.blogspot.com') || lowerHref.includes('googleusercontent.com')) return false;
@@ -299,11 +329,6 @@ function isDownloadButton(imgUrl, href = '') {
     // ✅ Excluded domains (personal sites)
     const excludedDomains = [
         '.com/', 
-        '.io/', 
-        '.dev/',
-        '.me/',
-        '.net/',
-        '.org/'
     ];
     
     // Only exclude if it's a root domain (ends with /) AND not a known platform AND not a web game button
@@ -1182,7 +1207,7 @@ while ((linkMatch = imgLinkRegex.exec(contentRaw)) !== null) {
         } 
         else {
             // Check image-based detection
-            platform = detectPlatformFromImage(imgSrc, altText);
+            platform = detectPlatformFromImage(imgSrc, altText, href);
             
 if (!platform) {
     // Fallback to URL patterns

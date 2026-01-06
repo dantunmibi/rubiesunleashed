@@ -1,3 +1,18 @@
+/**
+ * GameModal.js
+ * 
+ * Summary:
+ * Modal overlay component for quick game/app preview with download actions.
+ * Features: Content warning overlay, responsive layout, wishlist integration,
+ * dynamic download buttons with platform detection, smart app vs game classification.
+ * 
+ * Key Logic:
+ * - Uses getSmartTag(game.tags) for accurate App/Game detection
+ * - Multi-platform downloads show "View on Steam", "Get for Windows", etc.
+ * - Single downloads show "GET APP" (apps) or "PLAY NOW" (games)
+ * - Badge shows "SOFTWARE" for apps, "GAME" for games (matching VaultSection)
+ */
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -8,7 +23,7 @@ import {
   Gamepad2, Box, User, GitBranch
 } from "lucide-react";
 import Link from "next/link";
-import { getDownloadIcon, getSmartTag } from "@/lib/game-utils";
+import { getDownloadIcon, getSmartTag, getDownloadLabel } from "@/lib/game-utils";
 
 export default function GameModal({ game, onClose }) {
 const { 
@@ -36,8 +51,7 @@ const {
   if (!game) return null;
 
   // --- LOGIC PREP ---
-  const primaryTag = getSmartTag(game);
-  const isApp = ['App', 'Tool', 'Software', 'PWA'].includes(primaryTag);
+  const isApp = game.type === 'App';
   
   // Download Logic
   const downloadLinks = Array.isArray(game.downloadLinks) ? game.downloadLinks : [];
@@ -137,7 +151,7 @@ const {
               <div className="flex items-center gap-3 mb-2">
                 <span className={`flex items-center gap-1.5 px-2 py-0.5 bg-ruby/10 border border-ruby/30 text-ruby text-[9px] font-black uppercase tracking-[0.15em] rounded-sm`}>
                    {isApp ? <Box size={10} /> : <Gamepad2 size={10} />}
-                   {isApp ? 'APP' : 'GAME'}
+                   {game.type === 'App' ? "SOFTWARE" : "GAME"}
                 </span>
               </div>
               
@@ -201,20 +215,51 @@ const {
                             rel="noopener noreferrer"
                             className="flex-1 bg-background border border-ruby/20 hover:border-ruby hover:bg-ruby/10 text-white font-bold uppercase tracking-wider py-3 px-3 flex items-center justify-center gap-2 transition-all text-[9px] whitespace-nowrap rounded-sm"
                         >
-                            {getDownloadIcon(link.platform)} {link.platform}
+                            {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform)}
                         </a>
                     ))}
                 </div>
-              ) : hasValidDownload ? (
-                <a 
-                    href={primaryLink.url}
-                    target="_blank"
-                    rel="noopener noreferrer" 
-                    className="flex-4 bg-background border border-ruby/20 hover:border-ruby hover:bg-ruby/10 text-white font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm"
-                >
-                    <Download size={14} className="text-ruby" /> 
-                    {primaryLink.platform === 'Download' ? 'GET' : `GET FOR ${primaryLink.platform.toUpperCase()}`}
-                </a>
+) : hasValidDownload ? (
+  <a 
+    href={primaryLink.url}
+    target="_blank"
+    rel="noopener noreferrer" 
+    className="flex-4 bg-background border border-ruby/20 hover:border-ruby hover:bg-ruby/10 text-white font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm"
+  >
+    {isApp ? <Box size={14} className="text-ruby" /> : <Gamepad2 size={14} className="text-ruby" />}
+    {(() => {
+      const platform = (primaryLink.platform || '').toLowerCase().trim();
+      const url = (primaryLink.url || '').toLowerCase();
+      
+      // Store platforms - Check both platform name AND URL
+      const storePatterns = {
+        'steam': /steam/i,
+        'itch.io': /itch\.io/i,
+        'gog': /gog\.com/i,
+        'epic games': /epicgames/i,
+        'google play': /play\.google\.com/i,
+        'app store': /apps\.apple\.com/i,
+        'microsoft store': /microsoft\.com\/store/i,
+        'game jolt': /gamejolt\.com/i,
+        'humble bundle': /humblebundle\.com/i
+      };
+      
+      // Check if it's a store link
+      for (const [storeName, pattern] of Object.entries(storePatterns)) {
+        if (platform.includes(storeName.toLowerCase()) || pattern.test(url)) {
+          return getDownloadLabel(primaryLink.platform).toUpperCase();
+        }
+      }
+      
+      // Web-based detection
+      if (platform === 'web' || platform.includes('html5') || platform.includes('browser')) {
+        return isApp ? 'VISIT SITE' : 'PLAY NOW';
+      }
+      
+      // Direct downloads (Windows, Mac, Linux, Android, iOS, etc.)
+      return isApp ? 'GET APP' : 'GET GAME';
+    })()}
+  </a>
               ) : (
                 <button disabled className="flex-4 bg-background border border-white/5 text-slate-600 font-bold uppercase tracking-widest py-3 flex items-center justify-center gap-2 cursor-not-allowed text-[10px] rounded-sm">
                     <Download size={14} /> ARCHIVED
