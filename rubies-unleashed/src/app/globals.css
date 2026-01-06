@@ -2,24 +2,53 @@
 
 @theme {
   /* --- CUSTOM COLORS --- */
-  /* Using the --color-* prefix automatically generates utility classes like bg-ruby or text-ruby-dark */
-    --color-ruby: #e0115f;
-    --color-ruby-dark: #9b0c42;
-    --color-ruby-light: #ff4d88;
-    --color-ruby-muted: #701a3c;
+  
+  /* 1. RUBY (Primary / Hunter) */
+  --color-ruby: #e0115f;
+  --color-ruby-dark: #9b0c42;
+  --color-ruby-light: #ff4d88;
+  --color-ruby-muted: #701a3c;
+  --color-ruby-glow: rgba(224, 17, 95, 0.5);
 
-    /* Background Colors */
-    --color-background: #020617;
-    --color-surface: #0f172a;
+  /* 2. ARCHITECT (Developers / Emerald) */
+  --color-architect: #10b981;       /* Emerald 500 */
+  --color-architect-dark: #047857;  /* Emerald 700 */
+  --color-architect-light: #34d399; /* Emerald 400 */
+  --color-architect-muted: #064e3b; /* Emerald 900 */
+  --color-architect-glow: rgba(16, 185, 129, 0.5);
 
-    /* --- CUSTOM SPACING --- */
-    /* Generates utilities like p-19, h-104, etc. */
-    --spacing-19: 4.75rem;
-    --spacing-104: 26rem;
-    --spacing-125: 31.25rem;
-    --spacing-150: 37.5rem;
-    --spacing-200: 50rem;
-    --spacing-250: 62.5rem;
+  /* 3. NETRUNNER (Apps / Cyan) */
+  --color-netrunner: #06b6d4;       /* Cyan 500 */
+  --color-netrunner-dark: #0e7490;  /* Cyan 700 */
+  --color-netrunner-light: #22d3ee; /* Cyan 400 */
+  --color-netrunner-muted: #164e63; /* Cyan 900 */
+  --color-netrunner-glow: rgba(6, 182, 212, 0.5);
+
+  /* 4. CURATOR (Collectors / Amber) */
+  --color-curator: #f59e0b;       /* Amber 500 */
+  --color-curator-dark: #b45309;  /* Amber 700 */
+  --color-curator-light: #fbbf24; /* Amber 400 */
+  --color-curator-muted: #78350f; /* Amber 900 */
+  --color-curator-glow: rgba(245, 158, 11, 0.5);
+
+  /* 5. PHANTOM (Privacy / Violet) */
+  --color-phantom: #8b5cf6;       /* Violet 500 */
+  --color-phantom-dark: #6d28d9;  /* Violet 700 */
+  --color-phantom-light: #a78bfa; /* Violet 400 */
+  --color-phantom-muted: #4c1d95; /* Violet 900 */
+  --color-phantom-glow: rgba(139, 92, 246, 0.5);
+
+  /* Background Colors */
+  --color-background: #020617;
+  --color-surface: #0f172a;
+
+  /* --- CUSTOM SPACING --- */
+  --spacing-19: 4.75rem;
+  --spacing-104: 26rem;
+  --spacing-125: 31.25rem;
+  --spacing-150: 37.5rem;
+  --spacing-200: 50rem;
+  --spacing-250: 62.5rem;
 
   /* --- CUSTOM ANIMATIONS --- */
   --animate-progress: progress 5s linear infinite;
@@ -27,45 +56,51 @@
 }
 
 /* Keyframes defined at the root for maximum compatibility */
-@keyframes progress {
-  0% {
-    width: 0%;
-  }
-  100% {
-    width: 100%;
-  }
-}
-
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
 }
 
 @keyframes progress {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0%);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0%); }
 }
 
 @keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
+}
+
+/* 404 Page Animations */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+}
+
+.animate-glitch {
+  animation: glitch 3s infinite;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Scroll Behavior for Anchor Links */
+html {
+  scroll-behavior: smooth;
 }
 
 /* --- NON-TAILWIND CUSTOM STYLES --- */

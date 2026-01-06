@@ -15,7 +15,15 @@
 
 # next.js
 /.next/
-/out/
+/out/C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\.gitignore
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\eslint.config.mjs
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\jsconfig.json
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\netlify.toml
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\next.config.mjs
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\package-lock.json
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\package.json
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\postcss.config.mjs
+C:\Users\danit\Documents\Github\rubiesunleashed\rubies-unleashed\README.md
 
 # production
 /build

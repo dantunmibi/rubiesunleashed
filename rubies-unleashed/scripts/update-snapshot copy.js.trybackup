@@ -1,0 +1,202 @@
+// scripts/update-snapshot.js
+/**
+ * DUAL-BLOG SNAPSHOT GENERATOR - ROBUST VERSION
+ * Fetches from both primary and backup blogs
+ * Includes RETRY LOGIC for downtime/network issues
+ * Preserves existing snapshot if fetched count is suspiciously low
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const PRIMARY_BLOG = 'rubyapks.blogspot.com';
+const BACKUP_BLOG = 'rubyapk.blogspot.com';
+const MAX_RESULTS = 500;
+const MINIMUM_SAFE_COUNT = 50; 
+
+// ⚙️ RETRY CONFIGURATION
+const MAX_RETRIES = 5; // How many times to try before giving up
+const INITIAL_BACKOFF_MS = 1000; // Start waiting 1 second, then 2s, 4s, etc.
+
+/**
+ * Helper: Sleep function
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Helper: Fetch with Retry Logic
+ * Tries to fetch data multiple times if it fails
+ */
+async function fetchWithRetry(url, contextName) {
+  let attempt = 0;
+
+  while (attempt < MAX_RETRIES) {
+    try {
+      const response = await fetch(url);
+
+      // If server error (5xx) or rate limit (429), throw to trigger retry
+      if (!response.ok) {
+        if (response.status >= 500 || response.status === 429) {
+          throw new Error(`Server returned status ${response.status}`);
+        }
+        // If it's a 404, retrying won't help, so return null
+        console.warn(`⚠️ ${contextName}: 404 Not Found.`);
+        return null; 
+      }
+
+      // Try to parse JSON. If HTML is returned (common during downtime), this fails
+      const data = await response.json();
+      return data;
+
+    } catch (error) {
+      attempt++;
+      const delay = INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1); // 1s, 2s, 4s, 8s...
+      
+      console.warn(`⚠️ ${contextName} fetch failed (Attempt ${attempt}/${MAX_RETRIES}): ${error.message}`);
+      
+      if (attempt >= MAX_RETRIES) {
+        console.error(`❌ ${contextName}: All retry attempts exhausted.`);
+        throw error;
+      }
+
+      console.log(`⏳ Waiting ${delay}ms before retrying...`);
+      await sleep(delay);
+    }
+  }
+}
+
+async function fetchAllPosts(blogId, blogName) {
+  let allEntries = [];
+  let startIndex = 1;
+  let hasMore = true;
+  
+  console.log(`\n🔄 Fetching posts from ${blogName} (${blogId})...`);
+  
+  while (hasMore) {
+    try {
+      const timestamp = Date.now();
+      const url = `https://${blogId}/feeds/posts/default?alt=json&max-results=${MAX_RESULTS}&start-index=${startIndex}&_t=${timestamp}`;
+      
+      console.log(`📡 Fetching batch starting at index ${startIndex}...`);
+      
+      // ✅ CHANGED: Use the new retry helper
+      const data = await fetchWithRetry(url, `${blogName} (Index ${startIndex})`);
+      
+      if (!data) {
+        console.warn(`⚠️ No data received for ${blogName}`);
+        hasMore = false;
+        break;
+      }
+
+      const entries = data.feed?.entry || [];
+      
+      if (entries.length === 0) {
+        hasMore = false;
+        break;
+      }
+      
+      allEntries = allEntries.concat(entries);
+      console.log(`✅ Fetched ${entries.length} posts (Total so far: ${allEntries.length})`);
+      
+      if (entries.length < MAX_RESULTS) {
+        hasMore = false;
+      } else {
+        startIndex += MAX_RESULTS;
+      }
+      
+    } catch (error) {
+      console.error(`❌ Critical Fetch error from ${blogName}:`, error.message);
+      // Depending on how strict you want to be, you can break or continue.
+      // Usually, if a retry fails 5 times, we should stop trying this blog.
+      hasMore = false; 
+    }
+  }
+  
+  return allEntries;
+}
+
+async function updateSnapshot() {
+  const backupPath = path.join(__dirname, '../src/lib/backup-data.json');
+  
+  try {
+    console.log('🚀 Starting dual-blog snapshot generation with RETRY logic...\n');
+    
+    // ✅ Fetch from BOTH blogs in parallel
+    const [primaryPosts, backupPosts] = await Promise.all([
+      fetchAllPosts(PRIMARY_BLOG, 'Primary Blog'),
+      fetchAllPosts(BACKUP_BLOG, 'Backup Blog')
+    ]);
+    
+    console.log('\n📊 RESULTS:');
+    console.log(`   Primary Blog: ${primaryPosts.length} posts`);
+    console.log(`   Backup Blog:  ${backupPosts.length} posts`);
+    
+    // ✅ Merge and deduplicate
+    const allPosts = [...primaryPosts, ...backupPosts];
+    
+    const seen = new Set();
+    const uniquePosts = allPosts.filter(post => {
+      const id = post.id?.$t || post.id;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    
+    // ✅ SORT BY PUBLISHED DATE (NEWEST FIRST)
+    uniquePosts.sort((a, b) => {
+      const dateA = new Date(a.published?.$t || a.published || 0);
+      const dateB = new Date(b.published?.$t || b.published || 0);
+      return dateB - dateA;
+    });
+    
+    console.log(`   Unique Posts: ${uniquePosts.length}`);
+    
+    // ✅ ENHANCED SAFETY: Prevent overwrite if count is suspiciously low
+    if (uniquePosts.length < MINIMUM_SAFE_COUNT) {
+      console.warn(`\n⚠️ WARNING: Only ${uniquePosts.length} posts fetched (minimum safe: ${MINIMUM_SAFE_COUNT})!`);
+      
+      if (fs.existsSync(backupPath)) {
+        const existing = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+        const existingCount = existing.feed?.entry?.length || 0;
+        
+        console.warn(`⚠️ Preserving existing snapshot (${existingCount} posts)`);
+        console.warn('⚠️ Skipping backup update to prevent data loss\n');
+        process.exit(0); // Exit successfully without updating
+      } else {
+        console.error('❌ No existing backup found and only got low post count!');
+        process.exit(1);
+      }
+    }
+    
+    // ✅ Create backup data structure
+    const backupData = {
+      feed: {
+        entry: uniquePosts,
+        _metadata: {
+          generatedAt: new Date().toISOString(),
+          primaryBlogPosts: primaryPosts.length,
+          backupBlogPosts: backupPosts.length,
+          totalUniquePosts: uniquePosts.length
+        }
+      }
+    };
+    
+    fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
+    
+    console.log(`\n✅ Backup saved to: ${backupPath}`);
+    console.log(`✅ Total unique posts in backup: ${uniquePosts.length}\n`);
+    
+  } catch (error) {
+    console.error('❌ Snapshot update failed:', error.message);
+    
+    // ✅ SAFETY: Don't fail the build, preserve existing backup
+    if (fs.existsSync(backupPath)) {
+      console.warn('⚠️ Error occurred but existing backup preserved');
+      process.exit(0);
+    } else {
+      process.exit(1);
+    }
+  }
+}
+
+updateSnapshot();

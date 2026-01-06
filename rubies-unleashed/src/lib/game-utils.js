@@ -14,6 +14,15 @@ export const getSmartTag = (tags) => {
   return bestTag || tags[0];
 };
 
+/**
+ * 🛠️ UTILITY: Detect if item is an App/Tool vs a Game
+ * Shared between UI (Icons) and SEO (Schema.org)
+ */
+export const isApp = (tags) => {
+  if (!tags || !Array.isArray(tags)) return false;
+  return tags.some(t => ['app', 'pwa', 'tool', 'utility', 'software'].includes(t.toLowerCase()));
+};
+
 // --- 2. VISUAL COLOR MAPPING ---
 const TAG_STYLES = {
   "App": "text-sky-300 bg-sky-900/20 border-sky-500/30",
@@ -115,9 +124,8 @@ export const getPlatformInfo = (game, tags) => {
   }
   
   // Check if it's an app (apps are often cross-platform)
-  const isApp = lowerTags.some(t => ['app', 'pwa', 'tool', 'utility', 'software'].includes(t.toLowerCase()));
-  
-  if (isApp) {
+  // UPDATED: Now uses the exported utility function for consistency
+  if (isApp(safeTags)) {
     return { name: "Cross-Platform", icon: <Globe size={20} />, ver: "Any" };
   }
   
