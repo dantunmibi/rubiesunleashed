@@ -1,39 +1,37 @@
 /**
- * 💎 RUBIES UNLEASHED - SEO Utility
+ * 💎 RUBIES UNLEASHED - SEO Utility (Social Preview Enhanced)
  * Generates JSON-LD Schema and Metadata for the ecosystem.
  * 
- * Logic:
- * - Detects if item is Game or App using isApp() logic
- * - Generates strict Schema.org JSON-LD
- * - Handles fallbacks for missing data
+ * UPGRADES:
+ * - Smart "Hook + CTA" Description Logic
+ * - Strict Image Validation
+ * - Absolute URL Resolution (metadataBase)
  */
 
 import { isApp, getPlatformInfo } from '@/lib/game-utils';
 
+// ✅ Fallback Image (Must be a real absolute URL)
+const DEFAULT_IMAGE = 'https://rubiesunleashed.netlify.app/rulogo.png'; 
+
 export function generateJsonLd(game) {
   if (!game) return null;
 
-  // Use existing tag logic to determine type
   const isApplication = isApp(game.tags);
   const platformInfo = getPlatformInfo(game, game.tags);
-  
-  // Canonical URL for SEO authority
   const canonicalUrl = `https://rubiesunleashed.netlify.app/view/${game.id}`;
   
-  // Base Schema (Shared properties)
   const baseSchema = {
     "@context": "https://schema.org",
     "@type": isApplication ? "SoftwareApplication" : "VideoGame",
     "name": game.title,
-    "description": game.description?.substring(0, 160) || "Download from Rubies Unleashed.",
-    "image": game.image,
+    "description": game.metaDescription || game.description?.substring(0, 160) || "Download from Rubies Unleashed.",
+    "image": game.image || DEFAULT_IMAGE,
     "url": canonicalUrl,
     "datePublished": game.date, 
     "author": {
       "@type": "Person",
       "name": game.developer || "Unknown Developer"
     },
-    // Distinguish between Game and App in Google's eyes
     "applicationCategory": isApplication ? "UtilitiesApplication" : "Game",
     "operatingSystem": platformInfo.name === "Platform TBA" ? "Windows" : platformInfo.name,
     "offers": {
@@ -44,18 +42,16 @@ export function generateJsonLd(game) {
     }
   };
 
-  // Add Rating if it exists (Critical for rich snippets stars)
   if (game.rating) {
     baseSchema.aggregateRating = {
       "@type": "AggregateRating",
       "ratingValue": game.rating,
       "bestRating": "5",
       "worstRating": "1",
-      "ratingCount": "10" // Static fallback until user system tracks counts
+      "ratingCount": "10" 
     };
   }
 
-  // Specific VideoGame properties
   if (!isApplication) {
     baseSchema.genre = game.genre || "Action";
     baseSchema.playMode = "SinglePlayer";
@@ -68,31 +64,48 @@ export function generateMetaTags(game) {
   if (!game) {
     return {
       title: 'Item Not Found - Rubies Unleashed',
-      description: 'The requested item could not be found in the vault.'
+      description: 'The requested item could not be found in the vault.',
+      robots: 'noindex'
     };
   }
 
   const isApplication = isApp(game.tags);
   const typeLabel = isApplication ? 'Tool' : 'Game';
   
-  // Clean description for Meta tags (strips HTML if necessary, simplified here)
-  const cleanDesc = game.description?.replace(/<[^>]*>?/gm, '').substring(0, 155) || `Get ${game.title} on Rubies Unleashed.`;
+  // ✅ SMART DESCRIPTION GENERATOR
+  // 1. Get raw text (game.metaDescription is already truncated by blogger.js)
+  const rawDesc = (game.metaDescription || game.description || '').replace(/<[^>]*>?/gm, '');
+  
+  // 2. Truncate to ~110 chars for the "Hook"
+  const hook = rawDesc.length > 110 
+    ? rawDesc.substring(0, 110).trim() + '...' 
+    : rawDesc;
+
+  // 3. Build Context (Version + Dev)
+  const context = `v${game.version || 'Latest'} by ${game.developer || 'Unknown'}`;
+
+  // 4. Assemble: "Hook (Context) - Download on Rubies Unleashed"
+  const richDescription = `${hook} (${context}) - Download on Rubies Unleashed.`;
+
+  // ✅ Ensure Image is Absolute
+  const imageUrl = game.image?.startsWith('http') ? game.image : DEFAULT_IMAGE;
 
   return {
-    // ✅ CHANGED: Clean, Professional Title Format
+    // ✅ Base Metadata (Resolves relative links)
+    metadataBase: new URL('https://rubiesunleashed.netlify.app'),
+
+    // ✅ TITLE KEPT EXACTLY AS REQUESTED
     title: `${game.title} - Rubies Unleashed`,
-    
-    // ✅ SEO OPTIMIZED: Keywords go in the description, not the title
-    description: `Download ${game.title} v${game.version || 'Latest'} by ${game.developer || 'Unknown'}. Free ${typeLabel} available now in the Vault.`,
+    description: richDescription,
     
     openGraph: {
       title: `${game.title} - Rubies Unleashed`,
-      description: cleanDesc,
-      url: `https://rubiesunleashed.netlify.app/view/${game.id}`,
+      description: richDescription,
+      url: `/view/${game.id}`,
       siteName: 'Rubies Unleashed',
       images: [
         {
-          url: game.image,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: `${game.title} Cover`,
@@ -104,8 +117,11 @@ export function generateMetaTags(game) {
     twitter: {
       card: 'summary_large_image',
       title: `${game.title} - Rubies Unleashed`,
-      description: `Download ${game.title} now.`,
-      images: [game.image],
+      description: richDescription,
+      images: [imageUrl],
     },
+    alternates: {
+      canonical: `/view/${game.id}`,
+    }
   };
 }

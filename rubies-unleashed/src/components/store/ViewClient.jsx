@@ -36,11 +36,11 @@ function shuffleArray(array) {
 }
 
 export default function ViewClient({ slug, initialGame }) {
-  // Use initialGame if provided (Server Side Hydration), otherwise null
+  // ✅ Initialize with server data immediately
   const [game, setGame] = useState(initialGame || null);
   const [similarGames, setSimilarGames] = useState([]);
   
-  // Only loading if we didn't get initial data
+  // ✅ Only loading if we truly have nothing
   const [loading, setLoading] = useState(!initialGame);
 
   const { 
@@ -56,27 +56,31 @@ export default function ViewClient({ slug, initialGame }) {
 
     async function load() {
       try {
-        let currentGame = game;
+        let currentGame = game; // Use state if available (from initialGame)
 
-        // If no initial data, fetch it now (Client Side Fallback)
+        // 1. Fetch Game Data ONLY if missing (Client-side navigation fallback)
         if (!currentGame && slug) {
           const parts = slug.split("-");
           const gameId = parts[parts.length - 1].replace(/\.[^/.]+$/, "");
           
           if (gameId) {
             const data = await fetchGameById(gameId);
-            if (isMounted && data) {
-              setGame(data);
-              currentGame = data;
+            if (isMounted) {
+              if (data) {
+                setGame(data);
+                currentGame = data;
+              }
+              setLoading(false); // Done loading regardless of result
             }
           }
         }
 
         // --- 🧠 SMART RECOMMENDATION LOGIC (Preserved) ---
-        if (currentGame) {
-            const allGames = await fetchGames(1000); // Fetch candidate pool
+        // Runs for both Server & Client fetched games
+        if (currentGame && isMounted) {
+            const allGames = await fetchGames(1000); 
 
-            // 1. Priority A: Developer Matches (Exact match, ignore "Unknown")
+            // Priority A: Developer Matches
             const devMatches = allGames.filter((g) => 
                 g.id !== currentGame.id &&
                 g.developer && 
@@ -85,16 +89,16 @@ export default function ViewClient({ slug, initialGame }) {
                 g.developer.trim().toLowerCase() === currentGame.developer.trim().toLowerCase()
             );
 
-            // 2. Priority B: Tag Matches (Exclude if already found in Dev Matches)
+            // Priority B: Tag Matches
             const currentTags = Array.isArray(currentGame.tags) ? currentGame.tags : [];
             const tagMatches = allGames.filter((g) => {
                 if (g.id === currentGame.id) return false;
-                if (devMatches.some(dm => dm.id === g.id)) return false; // Prevent duplicates
+                if (devMatches.some(dm => dm.id === g.id)) return false; 
                 if (!Array.isArray(g.tags)) return false;
                 return g.tags.some(t => currentTags.includes(t));
             });
             
-            // 3. Merge: Shuffled Devs first, then Shuffled Tags
+            // Merge
             const finalSelection = [
                 ...shuffleArray(devMatches),
                 ...shuffleArray(tagMatches)
@@ -105,26 +109,32 @@ export default function ViewClient({ slug, initialGame }) {
 
       } catch (err) {
         console.error("Game Load Error:", err);
-      } finally {
         if (isMounted) setLoading(false);
       }
     }
-    load();
+    
+    // Only run load logic if we don't have recommendations yet OR we don't have the game
+    if (!game || similarGames.length === 0) {
+        load();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [slug, game]); // Dependency on game ensures recommendations run after hydration
+  }, [slug, initialGame]); // Removed 'game' dependency to prevent loops
 
-  if (loading)
+  // ✅ 4. The Spinner - STRICT CONDITION
+  // Only show if loading AND we have no game data
+  if (loading && !game) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center">
         <Loader2 className="animate-spin text-ruby" size={48} />
       </div>
     );
+  }
 
   // 💎 NEUTRAL NOT FOUND STATE
-  if (!game)
+  if (!game && !loading)
     return (
       <div className="min-h-screen bg-[#0b0f19] text-white flex flex-col items-center justify-center gap-4">
         <PackageOpen size={64} className="text-slate-600 mb-2" />
@@ -143,7 +153,7 @@ export default function ViewClient({ slug, initialGame }) {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans selection:bg-ruby/30">
-      {/* ✅ Content Warning Modal - Shows BEFORE any content */}
+      {/* ✅ Content Warning Modal */}
       {game.contentWarnings && game.contentWarnings.length > 0 && (
         <ContentWarningModal warnings={game.contentWarnings} gameId={game.id} />
       )}
@@ -152,10 +162,6 @@ export default function ViewClient({ slug, initialGame }) {
         <Navbar />
       </div>
       
-      {/* 
-         GameHero handles the visual distinction (Ruby vs Cyan) internally 
-         based on game.type or tags passed to it.
-      */}
       <GameHero
         game={game}
         isWishlisted={isWishlisted}
@@ -175,7 +181,6 @@ export default function ViewClient({ slug, initialGame }) {
 
       <SimilarGames games={similarGames} />
       
-      {/* Auth Modal */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={closeAuthModal}
