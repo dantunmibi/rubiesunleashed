@@ -1333,13 +1333,25 @@ while ((match = imgRegex.exec(contentRaw)) !== null) {
 const processImage = (url) => {
     if (!url) return null;
     url = url.replace(/^http:/, 'https:');
+    
+    // ✅ FORCE HIGH QUALITY (1600px width)
+    // Blogger/Google URLs usually follow pattern: .../s320/name.png or ...=s320
     if (url.includes('blogspot') || url.includes('googleusercontent')) {
-        url = url.replace(/\/s\d+(-c)?\//g, '/w800/');
-        url = url.replace(/=s\d+(-c)?$/g, '=w800');
+        // Replace folder-style sizing (/s320/) with /w1600/ (Width 1600px)
+        // or /s0/ (Original Size - risky if original is 4000px+, stick to w1600 for performance)
+        url = url.replace(/\/s\d+(-c)?\//g, '/w1600/');
+        
+        // Replace query-style sizing (=s320) with =w1600
+        url = url.replace(/=s\d+(-c)?$/g, '=w1600');
+        
+        // Ensure we don't accidentally break existing high-res links
+        if (!url.includes('/w1600/') && !url.includes('=w1600')) {
+             // If no size param found, append it to force resizing
+             // This is tricky with Blogger URLs, usually better to leave if regex didn't match
+        }
     }
     return url;
 };
-
 // ✅ NEW: Smart cover image detection
 let mainImage = null;
 

@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, X, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ShieldAlert } from "lucide-react";
+import { getGameTheme } from "@/lib/theme-utils"; // ✅ Modular Theme
 
-export default function ContentWarningModal({ warnings, gameId }) {
+export default function ContentWarningModal({ warnings, gameId, gameType }) { // ✅ Added gameType prop
   const [isOpen, setIsOpen] = useState(false);
+
+  // --- 🎨 THEME ENGINE ---
+  const theme = getGameTheme(gameType);
 
   useEffect(() => {
     // Check if user has already acknowledged this game's warning
@@ -41,19 +45,19 @@ export default function ContentWarningModal({ warnings, gameId }) {
 
       {/* Modal */}
       <div className="fixed inset-0 z-150 flex items-center justify-center p-4">
-        <div className="bg-[#161b2c] border-2 border-ruby/50 rounded-2xl shadow-2xl shadow-ruby/20 max-w-lg w-full relative animate-in fade-in zoom-in duration-300">
+        <div className={`bg-[#161b2c] border-2 rounded-2xl shadow-2xl max-w-lg w-full relative animate-in fade-in zoom-in duration-300 ${theme.border} ${theme.shadow}`}>
           
-          {/* Red accent bar at top */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-ruby via-red-500 to-ruby rounded-t-2xl" />
+          {/* Accent bar at top */}
+          <div className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-transparent ${theme.lineGradient} to-transparent rounded-t-2xl`} />
           
           {/* Content */}
           <div className="p-8">
             {/* Warning Icon */}
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="absolute inset-0 bg-ruby/20 blur-xl rounded-full animate-pulse" />
-                <div className="relative bg-ruby/10 p-5 rounded-full border-2 border-ruby/30">
-                  <ShieldAlert size={56} className="text-ruby" strokeWidth={2} />
+                <div className={`absolute inset-0 blur-xl rounded-full animate-pulse ${theme.bg.replace('bg-', 'bg-')}/20`} />
+                <div className={`relative ${theme.bgLight} p-5 rounded-full border-2 ${theme.border}`}>
+                  <ShieldAlert size={56} className={theme.text} strokeWidth={2} />
                 </div>
               </div>
             </div>
@@ -71,16 +75,16 @@ export default function ContentWarningModal({ warnings, gameId }) {
               {warnings.map((warning, i) => (
                 <div 
                   key={i} 
-                  className="flex items-start gap-3 bg-black/40 border border-white/5 p-4 rounded-xl hover:border-ruby/30 transition-colors"
+                  className={`flex items-start gap-3 bg-black/40 border border-white/5 p-4 rounded-xl ${theme.borderHover} transition-colors`}
                 >
-                  <AlertTriangle size={20} className="text-ruby shrink-0 mt-0.5" />
+                  <AlertTriangle size={20} className={`shrink-0 mt-0.5 ${theme.text}`} />
                   <span className="text-slate-200 text-sm leading-relaxed">{warning}</span>
                 </div>
               ))}
             </div>
 
             {/* Message */}
-            <div className="bg-ruby/5 border border-ruby/20 rounded-lg p-4 mb-6">
+            <div className={`${theme.bgLight} border ${theme.border} rounded-lg p-4 mb-6`}>
               <p className="text-sm text-slate-300 text-center leading-relaxed">
                 This content may not be suitable for all audiences. By continuing, you acknowledge that you understand these warnings.
               </p>
@@ -96,7 +100,7 @@ export default function ContentWarningModal({ warnings, gameId }) {
               </button>
               <button
                 onClick={handleAcknowledge}
-                className="flex-1 px-6 py-3 bg-ruby hover:bg-ruby/90 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-ruby/20 hover:shadow-ruby/30"
+                className={`flex-1 px-6 py-3 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg ${theme.bg} hover:brightness-110 ${theme.glow}`}
               >
                 I Understand
               </button>

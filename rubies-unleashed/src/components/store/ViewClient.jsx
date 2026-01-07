@@ -155,7 +155,11 @@ export default function ViewClient({ slug, initialGame }) {
     <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans selection:bg-ruby/30">
       {/* ✅ Content Warning Modal */}
       {game.contentWarnings && game.contentWarnings.length > 0 && (
-        <ContentWarningModal warnings={game.contentWarnings} gameId={game.id} />
+        <ContentWarningModal 
+  warnings={game.contentWarnings} 
+  gameId={game.id} 
+  gameType={game.type} // ✅ ADD THIS
+/>
       )}
 
       <div className="hidden md:block">
@@ -179,7 +183,7 @@ export default function ViewClient({ slug, initialGame }) {
         {game && typeof game === "object" && <GameSidebar game={game} />}
       </main>
 
-      <SimilarGames games={similarGames} />
+      <SimilarGames games={similarGames} currentGameType={game.type} />
       
       <AuthModal
         isOpen={showAuthModal}

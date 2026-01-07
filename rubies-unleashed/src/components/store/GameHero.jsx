@@ -6,6 +6,7 @@ import {
   ShieldCheck, Calendar, User, Gem, Info 
 } from "lucide-react";
 import { getDownloadIcon, getDownloadLabel } from "@/lib/game-utils";
+import { getGameTheme } from "@/lib/theme-utils"; // ✅ Modular Theme
 import { useState, useEffect } from "react";
 
 /**
@@ -26,6 +27,9 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
 
   // Safety Checks
   if (!game) return null;
+
+  // --- 🎨 THEME ENGINE (New) ---
+  const theme = getGameTheme(game.type);
 
   const isApp = game.type === 'App' || game.tags?.some(t => ['App', 'Apps', 'Tool', 'Software'].includes(t));
   const hasMultipleBuilds = game.downloadLinks && game.downloadLinks.length > 1;
@@ -176,7 +180,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
                <Share2 size={20} />
                {/* ✅ UPDATED: Informative Mobile Feedback */}
                {copied && (
-                  <span className="absolute top-full right-0 mt-2 text-[10px] font-bold bg-ruby text-white px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-top-1 shadow-xl z-50 border border-white/10">
+                  <span className={`absolute top-full right-0 mt-2 text-[10px] font-bold ${theme.bg} text-white px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-top-1 shadow-xl z-50 border border-white/10`}>
                       Link copied to clipboard
                   </span>
                )}
@@ -184,7 +188,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
              <button 
                onClick={onToggleWishlist}
                className={`p-3 rounded-full border backdrop-blur-xl transition-all shadow-xl ${
-                 isWishlisted ? 'bg-ruby border-ruby text-white' : 'bg-black/40 border-white/10 text-white'
+                 isWishlisted ? `${theme.bg} ${theme.border} text-white` : 'bg-black/40 border-white/10 text-white'
                }`}
              >
                <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
@@ -196,9 +200,9 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
         <div className="hidden md:block absolute top-24 left-8 z-30">
             <Link 
               href="/explore" 
-              className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:border-ruby/50 hover:bg-black/60 transition-all hover:-translate-x-1 shadow-lg shadow-black/20"
+              className={`group flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 ${theme.borderHover} hover:bg-black/60 transition-all hover:-translate-x-1 shadow-lg shadow-black/20`}
             >
-              <ArrowLeft size={18} className="text-slate-300 group-hover:text-ruby transition-colors" />
+              <ArrowLeft size={18} className={`text-slate-300 ${theme.text.replace('text-', 'group-hover:text-')} transition-colors`} />
               <span className="text-xs font-bold text-slate-300 group-hover:text-white uppercase tracking-widest">
                   Back to Vault
               </span>
@@ -216,7 +220,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
 
             <div className="flex-1 space-y-4 md:mb-4">
                 {/* Tag Pill */}
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ruby/10 border border-ruby/20 text-ruby text-[10px] font-black uppercase tracking-widest shadow-lg shadow-ruby/10">
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theme.bgLight} ${theme.border} ${theme.text} text-[10px] font-black uppercase tracking-widest shadow-lg shadow-ruby/10`}>
                     <Gem size={12} /> {game.tag || (isApp ? "App" : "Game")}
                 </div>
                 
@@ -227,7 +231,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
                 {/* Metadata Row */}
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 md:gap-8 text-slate-400 text-xs font-bold uppercase tracking-widest">
                     {game.developer && (
-                        <div className="flex items-center gap-2"><User size={14} className="text-ruby" /> {game.developer}</div>
+                        <div className="flex items-center gap-2"><User size={14} className={theme.text} /> {game.developer}</div>
                     )}
                     {game.updated && (
                         <div className="flex items-center gap-2"><Calendar size={14} className="text-blue-400" /> {game.updated}</div>
@@ -240,13 +244,13 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
                     {hasMultipleBuilds ? (
                       <div className="flex flex-wrap gap-3">
                         {game.downloadLinks.map((link, i) => (
-                          <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-ruby hover:bg-[#c00e50] text-white px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1 shadow-lg">
+                          <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className={`${theme.bg} hover:brightness-110 text-white px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1 shadow-lg`}>
                             {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform)}
                           </a>
                         ))}
                       </div>
                     ) : hasValidDownload ? (
-                      <a href={playButtonLink} target="_blank" rel="noopener noreferrer" className="w-full md:w-auto bg-ruby hover:bg-[#c00e50] text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:scale-105 shadow-[0_0_20px_rgba(224,17,95,0.3)]">
+                      <a href={playButtonLink} target="_blank" rel="noopener noreferrer" className={`w-full md:w-auto ${theme.bg} hover:brightness-110 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:scale-105 ${theme.glow}`}>
                         {isApp ? <Box size={20} className="text-white" /> : <Gamepad2 size={20} className="text-white" />}
                         {getButtonLabel()}
                       </a>
@@ -258,7 +262,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
 
                     <button 
                         onClick={onToggleWishlist} 
-                        className={`p-4 rounded-2xl border-2 font-bold transition-all ${isWishlisted ? "bg-white text-ruby border-white shadow-lg" : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 text-white"}`}
+                        className={`p-4 rounded-2xl border-2 font-bold transition-all ${isWishlisted ? `bg-white ${theme.text} border-white shadow-lg` : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 text-white"}`}
                     >
                         <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
                     </button>
@@ -270,7 +274,7 @@ export default function GameHero({ game, isWishlisted, onToggleWishlist }) {
                         <Share2 size={20} />
                          {/* ✅ UPDATED: Desktop Feedback */}
                          {copied && (
-                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 text-[10px] font-bold bg-ruby text-white px-3 py-1 rounded-md whitespace-nowrap animate-in fade-in slide-in-from-bottom-1">
+                            <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 text-[10px] font-bold ${theme.bg} text-white px-3 py-1 rounded-md whitespace-nowrap animate-in fade-in slide-in-from-bottom-1`}>
                                 Link copied
                             </span>
                         )}

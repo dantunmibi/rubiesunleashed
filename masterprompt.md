@@ -1311,19 +1311,20 @@ Use this prompt to initialize **Phase 3**.
     *   **`loading.js`**: Cinematic Skeleton prevents CLS.
     *   **`error.js`**: "System Failure" screen with Reboot button.
 
-👤 6. User System & Archetypes
-Strategy: "Archetype-First Discovery."
+👤 6. User System & Archetypes (Phase 3)
+Identity Protocol:
 
-Selection: User selects Class during Sign-up (determines Theme + Feed).
-Evolution: "Architect" is the only earned class (via Publishing).
-The 5 Classes:
+Initialization: Users MUST select an Archetype upon account creation.
+Persistence: Selection is stored in Supabase profiles table.
+Evolution: "Architect" (Emerald) overrides selection only after a user Publishes.
+The 5 Archetypes (Classes):
 
-Class	Color	Variable	User Intent	Feed Priority	Special Feature
-Hunter	Ruby	--color-ruby	"Play"	Games (Action, RPG)	Standard Wishlist
-Netrunner	Cyan	--color-netrunner	"Optimize"	Apps, Tools, Utils	Software Filters
-Curator	Amber	--color-curator	"Collect"	Highly Rated / Rare	Advanced Lists (Multiple)
-Phantom	Violet	--color-phantom	"Observe"	Privacy / Stealth	No History Tracking
-Architect	Emerald	--color-architect	"Build"	Analytics / Dev	The Forge (Dashboard)
+Class	Color	Variable	User Intent	Feed Algorithm (Priority)
+Hunter	Ruby	--color-ruby	"Acquire & Execute"	Games First. Top slots filled by Action/RPG/Strategy.
+Netrunner	Cyan	--color-netrunner	"Optimize & Hack"	Tools First. Top slots filled by Apps/Utilities/Software.
+Curator	Amber	--color-curator	"Index & Preserve"	Quality First. Top slots filled by High Ratings (>4.5) & Collections.
+Phantom	Violet	--color-phantom	"Observe & Vanish"	The Underground. Randomized/Shuffle logic. Least viewed items. "Discovery of the Unseen."
+Architect	Emerald	--color-architect	"Build & Deploy"	Analytics. Dashboard-focused. Standard feed + Dev News.
 Database Schema (Supabase profiles):
 
 JSON
@@ -1331,11 +1332,27 @@ JSON
 {
   "id": "uuid (PK)",
   "username": "text (unique)",
-  "email": "text",
   "role": "user | architect | admin",
   "archetype": "hunter | netrunner | curator | phantom | architect",
   "created_at": "timestamp"
 }
+
+🎨 Visual Hierarchy (Color Logic)
+Rule: Context determines the Color Source.
+
+Content Context (The Item):
+
+Source: game.type ('Game' or 'App').
+Logic: Games are Red. Apps are Cyan.
+Where: Hero Banner, GameModal, Download Buttons, Similarity Cards.
+Implementation: src/lib/theme-utils.js -> getGameTheme(type).
+User Context (The HUD):
+
+Source: User Archetype (Hunter, Netrunner, Curator, Phantom).
+Logic: The UI adapts to the user's persona.
+Where: Navbar Active State, Wishlist Icons, Profile Dropdown, Toasts.
+Implementation: CSS Variable Injection (--user-accent).
+
 
 ## 🗺️ 7. Core Page Structure
 *   **Home (`/`)**: Transparent Navbar, Hero, Spotlight.
@@ -1364,6 +1381,7 @@ README.md
 📦 public/
  ┣ 📜 __forms.html            # Netlify Forms Detection
  ┣ 📜 ru-logo.png
+ ┣ 📜 rubieslogo.png
  ┗ 📜 [SVG assets]
 
 📦 scripts/
