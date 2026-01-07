@@ -1,25 +1,18 @@
 /**
  * ================================================================
- * CONTACT PAGE
+ * CONTACT PAGE (Search Params Enabled)
  * ================================================================
  *
- * Purpose:
- * - Professional contact interface for users, developers, and partners
- * - Handles Netlify form submission via static file bypass
- *
- * Features:
- * - Netlify Forms Integration (via /__forms.html)
- * - Input validation & loading states
- * - Direct contact information
- * - Professional cinematic UI
- * - Toast Notification Integration
- *
- * ================================================================
+ * Updates:
+ * - Uses useSearchParams to autofill Subject (e.g. from Claim button).
+ * - Wraps logic in Suspense to prevent build errors.
+ * - Preserves all original UI and Layout.
  */
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
@@ -34,13 +27,23 @@ import {
 } from "lucide-react";
 import { useToastContext } from "@/components/providers/ToastProvider";
 
-export default function ContactPage() {
+function ContactFormLogic() {
+  const searchParams = useSearchParams();
+  const defaultSubject = searchParams.get('subject') || "";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    subject: "",
+    subject: defaultSubject,
     message: "",
   });
+  
+  // Update if params change
+  useEffect(() => {
+    const subj = searchParams.get('subject');
+    if (subj) setFormData(prev => ({ ...prev, subject: subj }));
+  }, [searchParams]);
+
   const [status, setStatus] = useState("idle");
   const { showToast } = useToastContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,8 +53,6 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      // ⚠️ CRITICAL: Posting to /__forms.html to bypass Next.js App Router
-      // This ensures Netlify's build bots capture the submission correctly.
       const response = await fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -63,15 +64,12 @@ export default function ContactPage() {
 
       if (response.ok) {
         setStatus("success");
-        // ✅ UI FEEDBACK: Trigger global toast
         showToast("Message sent successfully! We'll be in touch.", "success");
-
         setFormData({ name: "", email: "", subject: "", message: "" });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
         console.error("Form submission failed:", response.statusText);
         setStatus("error");
-        // ✅ UI FEEDBACK: Trigger global toast error
         showToast("Unable to send message. Please try again.", "error");
       }
     } catch (error) {
@@ -88,30 +86,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-slate-200 overflow-x-hidden relative font-sans selection:bg-ruby/30 selection:text-white">
-      <BackgroundEffects />
-      <Navbar />
-
-      <main className="relative z-10 pt-32 pb-24 px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-ruby/10 border border-ruby/30 rounded-full mb-6 font-bold text-sm text-ruby uppercase tracking-wider">
-              <MessageSquare size={14} />
-              <span>Contact & Support</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tight">
-              <span className="bg-linear-to-br from-white via-ruby-light to-ruby bg-clip-text text-transparent">
-                GET IN TOUCH
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-              Have a question about the marketplace? Interested in publishing?
-              Our team is ready to assist you.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+    <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
             {/* Contact Form */}
             <div className="lg:col-span-3 bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 md:p-12 shadow-[0_0_40px_rgba(0,0,0,0.3)]">
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/5">
@@ -311,7 +286,7 @@ export default function ContactPage() {
                 </h3>
                 <div className="space-y-3">
                   <a
-                    href="https://forms.gle/i7X2sUJ5cnqsUciA6"
+                    href="/publish"
                     className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
                     <span>Submit a Game</span>
@@ -321,7 +296,7 @@ export default function ContactPage() {
                     />
                   </a>
                   <a
-                    href="https://forms.gle/i7X2sUJ5cnqsUciA6"
+                    href="/publish"
                     className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
                     <span>Developer Portal</span>
@@ -346,6 +321,37 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <div className="min-h-screen bg-background text-slate-200 overflow-x-hidden relative font-sans selection:bg-ruby/30 selection:text-white">
+      <BackgroundEffects />
+      <Navbar />
+
+      <main className="relative z-10 pt-32 pb-24 px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-ruby/10 border border-ruby/30 rounded-full mb-6 font-bold text-sm text-ruby uppercase tracking-wider">
+              <MessageSquare size={14} />
+              <span>Contact & Support</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tight">
+              <span className="bg-linear-to-br from-white via-ruby-light to-ruby bg-clip-text text-transparent">
+                GET IN TOUCH
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+              Have a question about the marketplace? Interested in publishing?
+              Our team is ready to assist you.
+            </p>
+          </div>
+
+          <Suspense fallback={<div className="h-96 flex items-center justify-center text-slate-500">Loading form...</div>}>
+            <ContactFormLogic />
+          </Suspense>
         </div>
       </main>
 

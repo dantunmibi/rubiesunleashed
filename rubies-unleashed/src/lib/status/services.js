@@ -1,52 +1,50 @@
 /**
- * SERVICE DEFINITIONS
- * Defines all monitored services for the status page
- * Each service includes monitoring configuration and metadata
+ * SERVICE DEFINITIONS (Phase 4)
+ * Defines critical infrastructure monitoring.
  */
 
 export const SERVICES = [
   {
     id: 'api',
-    name: 'Blogger API',
-    description: 'Primary game data source',
+    name: 'Content Delivery API',
+    description: 'Game feed and metadata',
     category: 'core',
-    endpoint: '/api/games', // ✅ This should work
+    endpoint: '/api/games?limit=1', // Check fetching just 1 item for speed
     checkType: 'http',
     icon: 'Database',
     criticalPath: true
   },
   {
-    id: 'rss',
-    name: 'RSS Fallback',
-    description: 'Backup content delivery',
+    id: 'auth',
+    name: 'Identity System',
+    description: 'User authentication & session management',
     category: 'core',
-    endpoint: '/api/games', // ✅ Changed from /api/rss-feed (might not exist)
-    checkType: 'http',
-    icon: 'Rss',
+    checkType: 'supabase_auth', // Validates Login
+    icon: 'Shield',
+    criticalPath: true
+  },
+  {
+    id: 'db',
+    name: 'Database Cluster',
+    description: 'User profiles & wishlist storage',
+    category: 'core',
+    checkType: 'supabase_db', // Validates Data Read
+    icon: 'Server',
     criticalPath: true
   },
   {
     id: 'search',
     name: 'Search Engine',
-    description: 'Game search & filtering',
+    description: 'Client-side index',
     category: 'feature',
     checkType: 'client',
     icon: 'Search',
     criticalPath: false
   },
   {
-    id: 'wishlist',
-    name: 'Wishlist System',
-    description: 'User wishlist storage',
-    category: 'feature',
-    checkType: 'client',
-    icon: 'Heart',
-    criticalPath: false
-  },
-  {
     id: 'forms',
-    name: 'Contact Forms',
-    description: 'Netlify form submissions',
+    name: 'Submission System',
+    description: 'Contact & Publish forms',
     category: 'feature',
     endpoint: '/__forms.html',
     checkType: 'http',
@@ -55,12 +53,12 @@ export const SERVICES = [
   },
   {
     id: 'cdn',
-    name: 'Image Delivery',
-    description: 'Static asset CDN',
+    name: 'Global CDN',
+    description: 'Static asset delivery',
     category: 'infrastructure',
-    endpoint: '/ru-logo.png',
+    endpoint: '/rubieslogo.png', // Check your actual logo
     checkType: 'http',
-    icon: 'Image',
+    icon: 'Globe',
     criticalPath: false
   }
 ];

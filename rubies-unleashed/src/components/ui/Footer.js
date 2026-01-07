@@ -106,7 +106,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://forms.gle/i7X2sUJ5cnqsUciA6"
+                  href="/publish"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-ruby-light transition-colors flex items-center gap-3"
@@ -141,7 +141,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://forms.gle/i7X2sUJ5cnqsUciA6"
+                  href="/publish"
                   className="hover:text-ruby-light transition-colors flex items-center gap-3"
                 >
                   <span>⚔️</span> Developers

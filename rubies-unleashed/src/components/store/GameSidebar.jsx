@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react"; // ✅ Add this
 import Link from "next/link";
 import {
   User,
@@ -9,6 +10,8 @@ import {
   Calendar,
   AlertCircle,
   HardDrive,
+  Flag, 
+  CheckCircle,
 } from "lucide-react";
 import {
   getPlatformInfo,
@@ -16,6 +19,7 @@ import {
   getSocialIcon,
   getTagStyle,
 } from "@/lib/game-utils";
+import ReportModal from "@/components/store/ReportModal";
 
 export default function GameSidebar({ game }) {
   // --- NUCLEAR SAFETY CHECK ---
@@ -27,6 +31,7 @@ export default function GameSidebar({ game }) {
   // We create local variables guaranteed to be the right type.
   const safeTags = game && Array.isArray(game.tags) ? game.tags : [];
   const safeDeveloper = game && game.developer ? game.developer : "Unknown";
+  const [showReport, setShowReport] = useState(false);
   const safeSocials =
     game && Array.isArray(game.socialLinks) ? game.socialLinks : [];
 
@@ -188,7 +193,31 @@ export default function GameSidebar({ game }) {
             </div>
           </div>
         )}
+
+        {/* --- SYSTEM UTILITIES --- */}
+        <div className="mt-8 pt-6 border-t border-white/5 grid grid-cols-2 gap-3">
+            
+            {/* Report Button */}
+            <button 
+                onClick={() => setShowReport(true)}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-black/20 hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 rounded-xl transition-all group"
+            >
+                <Flag size={18} className="text-slate-500 group-hover:text-red-500 transition-colors" />
+                <span className="text-[10px] font-bold text-slate-500 group-hover:text-red-400 uppercase tracking-widest">Report</span>
+            </button>
+
+            {/* Claim Button */}
+            <Link 
+                href={`/contact?subject=Claim Request: ${game.title} (ID: ${game.id})`}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-black/20 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all group"
+            >
+                <ShieldCheck size={18} className="text-slate-500 group-hover:text-emerald-500 transition-colors" />
+                <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 uppercase tracking-widest">Claim</span>
+            </Link>
+
+        </div>
       </div>
+      {showReport && <ReportModal game={game} onClose={() => setShowReport(false)} />}
     </div>
   );
 }

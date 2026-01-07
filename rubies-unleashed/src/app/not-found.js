@@ -131,7 +131,7 @@ export default function NotFound() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               {/* Primary: Go Home */}
               <Link 
-                href="/"
+                href="/explore"
                 className="group relative w-full sm:w-auto"
               >
                 <div className="absolute inset-0 bg-ruby/20 rounded-xl blur-xl group-hover:bg-ruby/30 transition-all duration-300" />

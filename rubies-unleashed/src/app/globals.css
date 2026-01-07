@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- CUSTOM COLORS --- */
+  /* --- CUSTOM COLORS (PALETTE DEFINITIONS) --- */
   
   /* 1. RUBY (Primary / Hunter) */
   --color-ruby: #e0115f;
@@ -11,38 +11,45 @@
   --color-ruby-glow: rgba(224, 17, 95, 0.5);
 
   /* 2. ARCHITECT (Developers / Emerald) */
-  --color-architect: #10b981;       /* Emerald 500 */
-  --color-architect-dark: #047857;  /* Emerald 700 */
-  --color-architect-light: #34d399; /* Emerald 400 */
-  --color-architect-muted: #064e3b; /* Emerald 900 */
+  --color-architect: #10b981;
+  --color-architect-dark: #047857;
+  --color-architect-light: #34d399;
+  --color-architect-muted: #064e3b;
   --color-architect-glow: rgba(16, 185, 129, 0.5);
 
   /* 3. NETRUNNER (Apps / Cyan) */
-  --color-netrunner: #06b6d4;       /* Cyan 500 */
-  --color-netrunner-dark: #0e7490;  /* Cyan 700 */
-  --color-netrunner-light: #22d3ee; /* Cyan 400 */
-  --color-netrunner-muted: #164e63; /* Cyan 900 */
+  --color-netrunner: #06b6d4;
+  --color-netrunner-dark: #0e7490;
+  --color-netrunner-light: #22d3ee;
+  --color-netrunner-muted: #164e63;
   --color-netrunner-glow: rgba(6, 182, 212, 0.5);
 
   /* 4. CURATOR (Collectors / Amber) */
-  --color-curator: #f59e0b;       /* Amber 500 */
-  --color-curator-dark: #b45309;  /* Amber 700 */
-  --color-curator-light: #fbbf24; /* Amber 400 */
-  --color-curator-muted: #78350f; /* Amber 900 */
+  --color-curator: #f59e0b;
+  --color-curator-dark: #b45309;
+  --color-curator-light: #fbbf24;
+  --color-curator-muted: #78350f;
   --color-curator-glow: rgba(245, 158, 11, 0.5);
 
   /* 5. PHANTOM (Privacy / Violet) */
-  --color-phantom: #8b5cf6;       /* Violet 500 */
-  --color-phantom-dark: #6d28d9;  /* Violet 700 */
-  --color-phantom-light: #a78bfa; /* Violet 400 */
-  --color-phantom-muted: #4c1d95; /* Violet 900 */
+  --color-phantom: #8b5cf6;
+  --color-phantom-dark: #6d28d9;
+  --color-phantom-light: #a78bfa;
+  --color-phantom-muted: #4c1d95;
   --color-phantom-glow: rgba(139, 92, 246, 0.5);
+
+  /* --- 🎨 DYNAMIC USER THEME VARIABLES --- */
+  /* These will be used by UI components (Navbar, Toast, Wishlist) */
+  --color-accent: var(--user-accent);
+  --color-accent-dark: var(--user-accent-dark);
+  --color-accent-light: var(--user-accent-light);
+  --color-accent-glow: var(--user-accent-glow);
 
   /* Background Colors */
   --color-background: #020617;
   --color-surface: #0f172a;
 
-  /* --- CUSTOM SPACING --- */
+  /* ... Spacing & Animations preserved ... */
   --spacing-19: 4.75rem;
   --spacing-104: 26rem;
   --spacing-125: 31.25rem;
@@ -50,79 +57,76 @@
   --spacing-200: 50rem;
   --spacing-250: 62.5rem;
 
-  /* --- CUSTOM ANIMATIONS --- */
   --animate-progress: progress 5s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
 }
 
-/* Keyframes defined at the root for maximum compatibility */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
+/* --- THEME MAPPINGS --- */
+/* Default (Guest/Hunter) */
+:root {
+  --user-accent: var(--color-ruby);
+  --user-accent-dark: var(--color-ruby-dark);
+  --user-accent-light: var(--color-ruby-light);
+  --user-accent-glow: var(--color-ruby-glow);
 }
 
-@keyframes progress {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0%); }
+/* Hunter (Ruby) - Explicit Override */
+[data-theme="hunter"] {
+  --user-accent: var(--color-ruby);
+  --user-accent-dark: var(--color-ruby-dark);
+  --user-accent-light: var(--color-ruby-light);
+  --user-accent-glow: var(--color-ruby-glow);
 }
 
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* Netrunner (Cyan) */
+[data-theme="netrunner"] {
+  --user-accent: var(--color-netrunner);
+  --user-accent-dark: var(--color-netrunner-dark);
+  --user-accent-light: var(--color-netrunner-light);
+  --user-accent-glow: var(--color-netrunner-glow);
 }
 
-.animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
+/* Curator (Amber) */
+[data-theme="curator"] {
+  --user-accent: var(--color-curator);
+  --user-accent-dark: var(--color-curator-dark);
+  --user-accent-light: var(--color-curator-light);
+  --user-accent-glow: var(--color-curator-glow);
 }
 
-/* 404 Page Animations */
-@keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-1px, 1px); }
-  40% { transform: translate(-1px, -1px); }
-  60% { transform: translate(1px, 1px); }
-  80% { transform: translate(1px, -1px); }
+/* Phantom (Violet) */
+[data-theme="phantom"] {
+  --user-accent: var(--color-phantom);
+  --user-accent-dark: var(--color-phantom-dark);
+  --user-accent-light: var(--color-phantom-light);
+  --user-accent-glow: var(--color-phantom-glow);
 }
 
-.animate-glitch {
-  animation: glitch 3s infinite;
+/* Architect (Emerald) */
+[data-theme="architect"] {
+  --user-accent: var(--color-architect);
+  --user-accent-dark: var(--color-architect-dark);
+  --user-accent-light: var(--color-architect-light);
+  --user-accent-glow: var(--color-architect-glow);
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* ... Animations & Custom Scrollbar preserved ... */
+@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+@keyframes progress { from { transform: translateX(-100%); } to { transform: translateX(0%); } }
+@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+@keyframes glitch { 0%, 100% { transform: translate(0); } 20% { transform: translate(-1px, 1px); } 40% { transform: translate(-1px, -1px); } 60% { transform: translate(1px, 1px); } 80% { transform: translate(1px, -1px); } }
+.animate-glitch { animation: glitch 3s infinite; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out; animation-fill-mode: both; }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out;
-  animation-fill-mode: both;
-}
+html { scroll-behavior: smooth; }
 
-/* Scroll Behavior for Anchor Links */
-html {
-  scroll-behavior: smooth;
-}
-
-/* --- NON-TAILWIND CUSTOM STYLES --- */
 @layer base {
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(224, 17, 95, 0.5);
-    border-radius: 10px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(224, 17, 95, 0.8);
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--user-accent); border-radius: 10px; } /* ✅ Dynamic Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--user-accent-light); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }

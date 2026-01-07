@@ -5,6 +5,7 @@
  */
 
 import { SERVICES } from './services';
+import { supabase } from '@/lib/supabase'; 
 
 // Performance thresholds (milliseconds)
 const THRESHOLDS = {
@@ -13,6 +14,7 @@ const THRESHOLDS = {
   degraded: 1000,
   poor: 2000
 };
+
 
 /**
  * Check HTTP endpoint health
@@ -55,6 +57,60 @@ async function checkHTTPEndpoint(endpoint) {
       status: 'outage',
       responseTime,
       error: error.name === 'AbortError' ? 'Timeout' : error.message,
+      healthy: false
+    };
+  }
+}
+
+async function checkSupabaseDB() {
+  const start = performance.now();
+  try {
+    // Simple query: Count profiles (fast, low cost)
+    // We limit to 1 to minimize load
+    const { error } = await supabase.from('profiles').select('id').limit(1);
+    
+    const latency = Math.round(performance.now() - start);
+    
+    if (error) throw error;
+    
+    return {
+      status: latency > THRESHOLDS.degraded ? 'degraded' : 'operational',
+      responseTime: latency,
+      healthy: true
+    };
+  } catch (error) {
+    return {
+      status: 'outage',
+      responseTime: Math.round(performance.now() - start),
+      error: error.message,
+      healthy: false
+    };
+  }
+}
+
+/**
+ * Check Supabase Auth Health
+ */
+async function checkSupabaseAuth() {
+  const start = performance.now();
+  try {
+    // Check session retrieval (doesn't hit DB, hits Auth server)
+    const { error } = await supabase.auth.getSession();
+    
+    const latency = Math.round(performance.now() - start);
+    
+    if (error) throw error;
+    
+    return {
+      status: latency > THRESHOLDS.degraded ? 'degraded' : 'operational',
+      responseTime: latency,
+      healthy: true
+    };
+  } catch (error) {
+    return {
+      status: 'outage',
+      responseTime: Math.round(performance.now() - start),
+      error: error.message,
       healthy: false
     };
   }
@@ -107,6 +163,7 @@ function checkClientService(serviceId) {
   }
 }
 
+
 /**
  * Get performance rating based on response time
  */
@@ -125,6 +182,17 @@ export async function checkService(service) {
   const checkStartTime = Date.now();
   
   let result;
+    // ✅ Handle new check types
+  if (service.checkType === 'http') {
+    result = await checkHTTPEndpoint(service.endpoint);
+  } else if (service.checkType === 'supabase_db') {
+    result = await checkSupabaseDB();
+  } else if (service.checkType === 'supabase_auth') {
+    result = await checkSupabaseAuth();
+  } else {
+    result = checkClientService(service.id);
+  }
+  
   if (service.checkType === 'http') {
     result = await checkHTTPEndpoint(service.endpoint);
   } else {

@@ -1,6 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/providers/ToastProvider";
+import AuthProvider from "@/components/providers/AuthProvider";
+import ThemeProvider from "@/components/providers/ThemeProvider";
 import { GoogleAnalytics } from '@next/third-parties/google'
 
 const inter = Inter({ subsets: ["latin"] });
@@ -45,9 +47,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+        <AuthProvider> {/* ✅ Outer Wrap */}
+          <ThemeProvider> {/* ✅ Inner Wrap */}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
       <GoogleAnalytics gaId="G-DWTBY4B7M6" />
     </html>

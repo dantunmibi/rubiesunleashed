@@ -1,19 +1,12 @@
 /**
  * ================================================================
- * SIGNUP PAGE - User Registration
+ * SIGNUP PAGE - User Registration (Supabase Integrated)
  * ================================================================
  * 
- * Purpose:
- * - Registration form for new users
- * - Placeholder for real auth implementation
- * 
- * TODO:
- * - Integrate with backend auth API
- * - Add OAuth providers (Google, Discord, etc.)
- * - Form validation
- * - Password strength meter
- * - Email verification flow
- * ================================================================
+ * Logic:
+ * - Uses Supabase Auth to create user.
+ * - Stores 'username' in metadata (used by DB trigger).
+ * - Redirects to /initialize via AuthProvider logic upon success.
  */
 
 "use client";
@@ -21,7 +14,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserPlus, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { UserPlus, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -29,34 +23,125 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
+  const [showPassword, setShowPassword] = useState(false); // ✅ New State
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [passwordError, setPasswordError] = useState(""); // ✅ New State
+
+  const validatePassword = (pwd) => {
+    if (pwd.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(pwd)) return "Must contain at least one uppercase letter.";
+    if (!/[0-9]/.test(pwd)) return "Must contain at least one number.";
+    return ""; // Valid
+  };
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value;
+    setPassword(val);
+    if (val) setPasswordError(validatePassword(val));
+    else setPasswordError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    if (loading) return; // ✅ Prevent double submission
+    setLoading(true); // ✅ Set loading immediately
+        
+    // ✅ Check Validity Before Submit
+    const err = validatePassword(password);
+    if (err) {
+        setPasswordError(err);
+        return;
+    }
 
-    // 🔮 FUTURE: Replace with real auth
-    // try {
-    //   const res = await fetch('/api/auth/signup', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ username, email, password })
-    //   });
-    //   
-    //   if (res.ok) {
-    //     router.push('/explore');
-    //   } else {
-    //     alert('Signup failed');
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    // }
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username } },
+      });
 
-    // Placeholder: Simulate signup
-    setTimeout(() => {
-      alert("Signup functionality coming soon!");
+      if (signUpError) throw signUpError;
+
+      if (data?.session) {
+        router.push("/initialize");
+      } else {
+        // ✅ User needs to verify email
+        setNeedsVerification(true);
+      }
+    } catch (err) {
+      console.error("Signup Error:", err.message);
+      
+      // ✅ Friendly Error Message Logic
+      if (err.message.includes('duplicate key') || err.message.includes('username')) {
+        setError("That username is already taken. Please choose another.");
+      } else if (err.message.includes('rate limit')) {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError(err.message);
+      }
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
+
+  // ✅ New Handler for OTP
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (loading) return; // ✅ BLOCK DOUBLE CLICKS
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'signup'
+      });
+
+      if (error) throw error;
+
+      // Success -> Redirect
+      router.push("/initialize");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Render Verification View
+  if (needsVerification) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center p-4">
+        <div className="relative w-full max-w-md bg-[#161b2c] border border-ruby/20 rounded-2xl p-8 shadow-[0_0_60px_rgba(224,17,95,0.15)] text-center">
+           <h2 className="text-2xl font-black text-white mb-4">Verify Email</h2>
+           <p className="text-slate-400 text-sm mb-6">Enter the code sent to <strong>{email}</strong></p>
+           
+           {error && <div className="mb-4 text-red-400 text-xs font-bold">{error}</div>}
+
+           <form onSubmit={handleVerify} className="space-y-4">
+             <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="123456"
+                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl py-3 text-center text-white text-2xl tracking-widest focus:border-ruby/50 focus:outline-none"
+             />
+             <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-ruby active:scale-95 cursor-pointer text-white font-black uppercase tracking-widest py-4 rounded-xl hover:brightness-110"
+             >
+                {loading ? <Loader2 className="animate-spin mx-auto" /> : "Verify Code"}
+             </button>
+           </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center p-4">
@@ -85,6 +170,19 @@ export default function SignupPage() {
           <p className="text-slate-400 text-sm">Create your account and start collecting</p>
         </div>
 
+        {/* Error / Success Messages */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold text-center">
+            {error}
+          </div>
+        )}
+        
+        {successMsg && (
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-bold text-center">
+            {successMsg}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Username */}
           <div>
@@ -96,7 +194,8 @@ export default function SignupPage() {
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value.replace(/\s+/g, '_'))} 
+                // ✅ Allow caps, still replace spaces with underscore
                 placeholder="RubyHunter_42"
                 required
                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl py-3 px-12 text-white placeholder:text-slate-600 focus:border-ruby/50 focus:outline-none transition-colors"
@@ -122,32 +221,46 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type="password"
+    {/* Password Field */}
+    <div>
+        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            Password
+        </label>
+        <div className="relative">
+            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+                type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange} // ✅ Updated Handler
                 placeholder="••••••••"
                 required
-                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl py-3 px-12 text-white placeholder:text-slate-600 focus:border-ruby/50 focus:outline-none transition-colors"
-              />
-            </div>
-          </div>
+                className={`w-full bg-[#0b0f19] border rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-slate-600 focus:outline-none transition-colors ${passwordError ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-ruby/50'}`}
+            />
+            <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+            >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+        </div>
+        {/* ✅ Error Message */}
+        {passwordError && (
+            <p className="text-red-400 text-[10px] mt-2 font-bold ml-1">{passwordError}</p>
+        )}
+    </div>
 
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-ruby text-white font-black uppercase tracking-widest py-4 rounded-xl hover:brightness-110 transition-all shadow-[0_0_20px_rgba(224,17,95,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-ruby active:scale-95 cursor-pointer text-white font-black uppercase tracking-widest py-4 rounded-xl hover:brightness-110 transition-all shadow-[0_0_20px_rgba(224,17,95,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
-              "Creating Account..."
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Processing...
+              </>
             ) : (
               <>
                 <UserPlus size={20} />

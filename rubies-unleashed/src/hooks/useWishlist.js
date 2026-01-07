@@ -1,170 +1,161 @@
 /**
  * ================================================================
- * WISHLIST HOOK - Centralized Wishlist State Management
+ * WISHLIST HOOK - Dual-Mode (Cloud + Local)
  * ================================================================
  * 
- * Purpose:
- * - Provides reusable wishlist functionality across components
- * - Syncs with userManager.js (temp user system)
- * - Triggers auth gate for unauthenticated users
- * - Returns wishlist state and actions
- * - Dispatches events for real-time UI sync
- * 
- * Usage:
- * const { isWishlisted, toggleWishlist, wishlistCount, showAuthModal } = useWishlist(gameId);
- * 
- * Features:
- * - Auto-checks if game is in wishlist
- * - Provides toggle function that accepts game object
- * - Tracks total wishlist count
- * - Shows auth modal if user not authenticated
- * - Automatically refreshes on changes
- * - Dispatches "wishlistChanged" event for global sync
- * 
- * Auth Flow:
- * 1. User clicks wishlist
- * 2. Hook checks if user exists
- * 3. If no user → Show auth modal
- * 4. User chooses: Sign Up / Log In / Continue as Guest
- * 5. After auth → Complete wishlist action
- * 
- * Events Dispatched:
- * - "wishlistChanged" - Fired when any wishlist action occurs
- * ================================================================
+ * Logic:
+ * - If User Logged In -> Syncs with Supabase DB.
+ * - If Guest -> Syncs with LocalStorage.
+ * - Handles Auth Gates & Notifications.
  */
 
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { supabase } from "@/lib/supabase";
 import { 
-  addToWishlist, 
-  removeFromWishlist, 
-  isInWishlist,
-  getWishlist,
-  getCurrentUser,
+  addToWishlist as localAdd, 
+  removeFromWishlist as localRemove, 
+  isInWishlist as localCheck,
+  getWishlist as localGet,
   createGuestUser
 } from "@/lib/userManager";
 import { addNotification } from "@/lib/notificationManager";
 import { useToastContext } from "@/components/providers/ToastProvider";
 
 export function useWishlist(gameId = null) {
+  const { user } = useAuth(); // ✅ Access Supabase User
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingGame, setPendingGame] = useState(null);
-
+  
   const { showToast } = useToastContext();
 
-  // Check if specific game is wishlisted
+  // 1. Initial Check & Count Update
   useEffect(() => {
-    if (gameId) {
-      checkWishlistStatus();
-    }
+    checkStatus();
     updateCount();
-  }, [gameId]);
+  }, [gameId, user]);
 
-  // ✅ NEW: Listen for external wishlist changes
+  // 2. Listen for Realtime Changes (Supabase Subscription)
   useEffect(() => {
-    const handleWishlistChange = () => {
-      if (gameId) {
-        checkWishlistStatus();
-      }
-      updateCount();
-    };
+    if (!user) return;
 
-    window.addEventListener("wishlistChanged", handleWishlistChange);
-    
-    return () => {
-      window.removeEventListener("wishlistChanged", handleWishlistChange);
-    };
-  }, [gameId]);
+    const channel = supabase
+      .channel('wishlist-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'wishlists', 
+        filter: `user_id=eq.${user.id}` 
+      }, () => {
+        checkStatus();
+        updateCount();
+      })
+      .subscribe();
 
-  const checkWishlistStatus = () => {
-    setIsWishlisted(isInWishlist(gameId));
+    return () => { supabase.removeChannel(channel); };
+  }, [user, gameId]);
+
+  // --- Logic Helpers ---
+
+  const checkStatus = async () => {
+    if (!gameId) return;
+
+    if (user) {
+      // Cloud Check
+      const { data } = await supabase
+        .from('wishlists')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('game_id', gameId)
+        .single();
+      setIsWishlisted(!!data);
+    } else {
+      // Local Check
+      setIsWishlisted(localCheck(gameId));
+    }
   };
 
-  const updateCount = () => {
-    const wishlist = getWishlist();
-    setWishlistCount(wishlist.length);
+  const updateCount = async () => {
+    if (user) {
+      const { count } = await supabase
+        .from('wishlists')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      setWishlistCount(count || 0);
+    } else {
+      setWishlistCount(localGet().length);
+    }
   };
 
-  const toggleWishlist = (game) => {
+  // --- Actions ---
+
+  const toggleWishlist = async (game) => {
     if (!game) return;
 
-    // Check if user exists
-    const user = getCurrentUser();
+    // Check if user exists (Supabase OR Guest)
+    // We check `user` (Supabase) directly.
+    // If no Supabase user, check if Guest user exists in LocalStorage.
+    const localGuest = typeof window !== 'undefined' ? localStorage.getItem("ruby_user_data") : null;
     
-    if (!user) {
-      // No user yet → Show auth modal
+    if (!user && !localGuest) {
       setPendingGame(game);
       setShowAuthModal(true);
       return;
     }
 
-    // User exists → Proceed with wishlist toggle
-    executeWishlistToggle(game);
+    // Perform Toggle
+    if (isWishlisted) {
+      await removeItem(game);
+    } else {
+      await addItem(game);
+    }
   };
 
-  const executeWishlistToggle = (game) => {
-    if (isInWishlist(game.id)) {
-      removeFromWishlist(game.id);
-      setIsWishlisted(false);
-      
-      showToast("Removed from wishlist", "info");
-      
-      addNotification({
-        type: "wishlist",
-        message: `Removed "${game.title}" from wishlist`,
-        icon: "❌",
-        actionData: {
-          type: "wishlist_remove",
-          game: game,
-          gameSlug: game.slug
-        }
+  const addItem = async (game) => {
+    if (user) {
+      const { error } = await supabase.from('wishlists').insert({
+        user_id: user.id,
+        game_id: game.id
       });
+      if (!error) {
+        setIsWishlisted(true);
+        showToast(`${game.title} saved to wishlist`, "success");
+      }
     } else {
-      addToWishlist(game);
+      localAdd(game);
       setIsWishlisted(true);
-      
-      showToast(`${game.title} added to wishlist!`, "wishlist");
-      
-      addNotification({
-        type: "wishlist",
-        message: `Added "${game.title}" to wishlist`,
-        icon: "❤️",
-        actionData: {
-          type: "wishlist_add",
-          gameId: game.id,
-          gameSlug: game.slug
-        }
-      });
+      showToast(`${game.title} saved locally`, "wishlist");
     }
-    
     updateCount();
-    
-    // ✅ NEW: Dispatch event for global sync
-    window.dispatchEvent(new CustomEvent("wishlistChanged", { 
-      detail: { gameId: game.id, action: isInWishlist(game.id) ? 'removed' : 'added' }
-    }));
+  };
+
+  const removeItem = async (game) => {
+    if (user) {
+      const { error } = await supabase.from('wishlists').delete().eq('user_id', user.id).eq('game_id', game.id);
+      if (!error) {
+        setIsWishlisted(false);
+        showToast("Removed from cloud wishlist", "info");
+      }
+    } else {
+      localRemove(game.id);
+      setIsWishlisted(false);
+      showToast("Removed from local wishlist", "info");
+    }
+    updateCount();
   };
 
   const handleContinueAsGuest = () => {
-    // Create guest user
     createGuestUser();
-    
-    // ✅ Notify navbar to update
     window.dispatchEvent(new Event("userChanged"));
-    
-    // Execute pending wishlist action
     if (pendingGame) {
-      executeWishlistToggle(pendingGame);
+      addItem(pendingGame); // Guest mode add
       setPendingGame(null);
     }
-  };
-
-  const closeAuthModal = () => {
     setShowAuthModal(false);
-    setPendingGame(null);
   };
 
   return {
@@ -172,8 +163,7 @@ export function useWishlist(gameId = null) {
     wishlistCount,
     toggleWishlist,
     showAuthModal,
-    closeAuthModal,
-    handleContinueAsGuest,
-    refresh: updateCount
+    closeAuthModal: () => setShowAuthModal(false),
+    handleContinueAsGuest
   };
 }

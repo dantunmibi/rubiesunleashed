@@ -5,10 +5,17 @@
  * This just serves the snapshot and checks for newer posts
  * Posts are sorted by published date (newest first)
  * Respects limit parameter
+ * 
+ * UPGRADE:
+ * - Filters out hidden content (Ban Hammer)
+ * - Caches Blogger fetch for 60s to improve performance
  */
 
 import { NextResponse } from 'next/server';
 import BACKUP_DATA from '@/lib/backup-data.json';
+import { supabase } from "@/lib/supabase"; 
+
+export const revalidate = 60; // Cache API route output for 60 seconds
 
 export async function GET(request) {
   const BACKUP_BLOG = 'rubyapk.blogspot.com'; // Active blog for real-time updates
@@ -22,11 +29,11 @@ export async function GET(request) {
     // ✅ Check backup blog for posts NEWER than snapshot
     const snapshotDate = new Date(BACKUP_DATA.feed._metadata?.generatedAt || 0);
     
+    // Optimized: Cache external fetch for 60s
     const backupResult = await fetch(
-      `https://${BACKUP_BLOG}/feeds/posts/default?alt=json&max-results=50&_t=${timestamp}`,
+      `https://${BACKUP_BLOG}/feeds/posts/default?alt=json&max-results=50`,
       { 
-        cache: 'no-store',
-        next: { revalidate: 0 }
+        next: { revalidate: 60 } // Cache for 1 min
       }
     );
     
@@ -57,20 +64,35 @@ export async function GET(request) {
       seen.add(id);
       return true;
     });
+
+    // ✅ NEW: Fetch Hidden List from Supabase
+    // Note: Supabase fetch is fast, but adds ~50-100ms. 
+    // If critical speed needed, cache this too? Supabase client caches somewhat.
+    const { data: hiddenData } = await supabase.from('hidden_content').select('game_id');
+    const hiddenIds = new Set(hiddenData?.map(h => h.game_id) || []);
+
+    // ✅ NEW: Filter out hidden games
+    const visiblePosts = uniquePosts.filter(post => {
+        const idRaw = post.id?.$t || post.id;
+        const id = idRaw.includes('post-') ? idRaw.split('post-')[1] : idRaw;
+        // Check slug too if available (covers both ID types)
+        const slug = post.slug; 
+        return !hiddenIds.has(id) && !hiddenIds.has(slug);
+    });
     
     // ✅ SORT BY PUBLISHED DATE (NEWEST FIRST)
-    uniquePosts.sort((a, b) => {
+    visiblePosts.sort((a, b) => {
       const dateA = new Date(a.published?.$t || a.published || 0);
       const dateB = new Date(b.published?.$t || b.published || 0);
       return dateB - dateA; // Descending (newest first)
     });
     
-    console.log(`✅ Total posts available: ${uniquePosts.length} (Snapshot: ${snapshotPosts.length}, New: ${realtimePosts.length})`);
+    console.log(`✅ Total posts available: ${uniquePosts.length} -> Visible: ${visiblePosts.length} (Hidden: ${uniquePosts.length - visiblePosts.length})`);
     
     // ✅ Apply limit from query params
-    const limitedPosts = limit < uniquePosts.length 
-      ? uniquePosts.slice(0, limit) 
-      : uniquePosts;
+    const limitedPosts = limit < visiblePosts.length 
+      ? visiblePosts.slice(0, limit) 
+      : visiblePosts;
     
     console.log(`📦 Returning ${limitedPosts.length} posts (requested limit: ${limit})`);
     

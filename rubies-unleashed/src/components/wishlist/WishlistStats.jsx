@@ -8,7 +8,7 @@ import { Sparkles, Gamepad2, Box } from "lucide-react";
  * 
  * Displays 3 metric cards showing wishlist breakdown.
  * Features:
- * - Total gems count (ruby accent)
+ * - Total gems count ((--user-accent) accent)
  * - Games count (orange accent)
  * - Apps count (cyan accent)
  * - Responsive grid layout
@@ -21,9 +21,9 @@ export default function WishlistStats({ stats }) {
       label: "Total Gems",
       value: stats.total,
       icon: <Sparkles size={24} />,
-      gradient: "from-ruby/20 to-ruby/5",
-      border: "border-ruby/30",
-      text: "text-ruby",
+      gradient: "from-(--user-accent)/20 to-(--user-accent)/5",
+      border: "border-(--user-accent)/30",
+      text: "text-(--user-accent)",
       glow: "shadow-[0_0_30px_rgba(224,17,95,0.15)]",
     },
     {

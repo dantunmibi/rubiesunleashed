@@ -6,12 +6,6 @@
  * Purpose:
  * - Sticky control bar for the wishlist page
  * - Provides Search, Sort, Filter, Share, and Clear actions
- * 
- * Fixes Applied:
- * - Sorting Button now properly toggles dropdown
- * - Dropdown renders correctly outside scroll container
- * - Visual state updates immediately
- * ================================================================
  */
 
 "use client";
@@ -29,6 +23,7 @@ export default function WishlistControls({
   onShare,
   onClearAll,
   itemCount,
+  isOwner // Add isOwner prop if you want to hide Clear All for visitors
 }) {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -48,10 +43,15 @@ export default function WishlistControls({
   ];
 
   const handleShare = async () => {
-    const success = await onShare();
-    if (success) {
-      setShareSuccess(true);
-      setTimeout(() => setShareSuccess(false), 2000);
+    // Guard against missing prop
+    if (typeof onShare === 'function') {
+        const success = await onShare();
+        if (success) {
+            setShareSuccess(true);
+            setTimeout(() => setShareSuccess(false), 2000);
+        }
+    } else {
+        console.warn("WishlistControls: onShare prop is missing");
     }
   };
 
@@ -70,7 +70,7 @@ export default function WishlistControls({
 
   return (
     // z-35 to sit below Navbar (z-40)
-    <div className="sticky top-16 z-35 bg-[#0b0f19]/95 backdrop-blur-xl border-b border-white/5 py-3 mb-6 transition-all duration-300 shadow-2xl shadow-black/20">
+    <div className="w-full sticky top-16 z-35 bg-[#0b0f19]/95 backdrop-blur-xl border-b border-white/5 py-3 px-2 mb-6 transition-all duration-300 shadow-2xl shadow-black/20">
       <div className="flex flex-col gap-3">
         
         {/* ROW 1: Search Bar */}
@@ -81,7 +81,7 @@ export default function WishlistControls({
             placeholder="Search collection..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-ruby/50 focus:ring-1 focus:ring-ruby/30 transition-all"
+            className="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-(--user-accent)/50 focus:ring-1 focus:ring-(--user-accent)/30 transition-all"
           />
         </div>
 
@@ -114,7 +114,7 @@ export default function WishlistControls({
                     }}
                     className={`w-full px-4 py-3 text-left text-xs font-bold transition-colors flex items-center justify-between ${
                       sortBy === option.value
-                        ? "bg-ruby/10 text-ruby"
+                        ? "bg-(--user-accent)/10 text-(--user-accent)"
                         : "text-slate-400 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -136,7 +136,7 @@ export default function WishlistControls({
                 onClick={() => onFilterChange(option.value)}
                 className={`px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 border ${
                   filterType === option.value
-                    ? "bg-ruby text-white border-ruby shadow-[0_0_15px_rgba(224,17,95,0.3)]"
+                    ? "bg-(--user-accent) text-white border-(--user-accent) shadow-[0_0_15px_rgba(224,17,95,0.3)]"
                     : "bg-transparent text-slate-400 border-white/10 hover:border-white/30"
                 }`}
               >
@@ -151,15 +151,18 @@ export default function WishlistControls({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleShare}
-              className="p-2 rounded-lg text-slate-400 hover:text-ruby hover:bg-white/5 border border-white/10 transition-all relative"
+              className="p-2 rounded-lg text-slate-400 hover:text-(--user-accent) hover:bg-white/5 border border-white/10 transition-all relative active:scale-90 shadow-sm hover:shadow-(--user-accent)/20"
+              title="Share Wishlist"
             >
-              <Share2 size={16} className={shareSuccess ? "animate-bounce text-ruby" : ""} />
+              <Share2 size={16} className={shareSuccess ? "animate-bounce text-(--user-accent)" : ""} />
             </button>
 
-            {itemCount > 0 && (
+            {/* Clear All Button */}
+            {itemCount > 0 && onClearAll && (
               <button
                 onClick={onClearAll}
-                className="p-2 rounded-lg text-red-400 hover:text-white hover:bg-red-500 border border-red-500/30 hover:border-red-500 transition-all"
+                className="p-2 rounded-lg text-red-400 hover:text-white hover:bg-red-500 border border-red-500/30 hover:border-red-500 transition-all active:scale-90 shadow-sm hover:shadow-red-500/30"
+                title="Clear All Items"
               >
                 <Trash2 size={16} />
               </button>

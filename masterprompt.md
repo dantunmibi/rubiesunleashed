@@ -1247,6 +1247,10 @@ Use this prompt to initialize **Phase 3**.
 
 ## ⚠️ 3. CRITICAL CODING RULES (ZERO TOLERANCE)
 
+Hybrid Arch: page.js (Server) + Client.jsx (Interactive).
+Tailwind v4: Use text-(--variable) syntax. No arbitrary values if utilities exist.
+Strict Auth: Use useAuth() hook. Handle loading states.
+
 ### A. Z-Index Stratification (ABSOLUTE)
 *   `z-100`: Toasts, Critical Overlays
 *   `z-50`: Mobile Sidebar Drawer, Modals, Search Dropdowns
@@ -1311,31 +1315,82 @@ Use this prompt to initialize **Phase 3**.
     *   **`loading.js`**: Cinematic Skeleton prevents CLS.
     *   **`error.js`**: "System Failure" screen with Reboot button.
 
-👤 6. User System & Archetypes (Phase 3)
-Identity Protocol:
 
-Initialization: Users MUST select an Archetype upon account creation.
-Persistence: Selection is stored in Supabase profiles table.
-Evolution: "Architect" (Emerald) overrides selection only after a user Publishes.
+B. The Ecosystem (User Data - Supabase)
+Auth: Users managed by Supabase.
+Tables:
+profiles: Identity, Archetype, Bio, Cover.
+wishlists: User-Game relationship.
+reports: Broken link tracking.
+hidden_content: Ban list (Admin managed).
+
+👤 5. Identity Protocol
+Initialization: New users redirect to /initialize to pick Class.
+Persistence: useMigration syncs Guest LocalStorage to Cloud DB.
+Dashboard: Home Page (/) adapts feed based on Archetype.
+Hunter: Games First.
+Netrunner: Apps First.
+Phantom: Underground (Shuffled).
+
+👤 6. User System & Identity Protocol (Complete)
+Architecture:
+
+Backend: Supabase (Auth + Postgres).
+Initialization: New users redirected to /initialize to select Archetype.
+Data Migration: Sync-on-Login (Guest localStorage -> Cloud DB).
+Database Schema (profiles):
+
+Constraint: archetype IN ('hunter', 'netrunner', 'curator', 'phantom', 'architect').
+Update Method: RPC Function update_archetype (Bypasses client RLS issues).
 The 5 Archetypes (Classes):
 
-Class	Color	Variable	User Intent	Feed Algorithm (Priority)
-Hunter	Ruby	--color-ruby	"Acquire & Execute"	Games First. Top slots filled by Action/RPG/Strategy.
-Netrunner	Cyan	--color-netrunner	"Optimize & Hack"	Tools First. Top slots filled by Apps/Utilities/Software.
-Curator	Amber	--color-curator	"Index & Preserve"	Quality First. Top slots filled by High Ratings (>4.5) & Collections.
-Phantom	Violet	--color-phantom	"Observe & Vanish"	The Underground. Randomized/Shuffle logic. Least viewed items. "Discovery of the Unseen."
-Architect	Emerald	--color-architect	"Build & Deploy"	Analytics. Dashboard-focused. Standard feed + Dev News.
-Database Schema (Supabase profiles):
+Class	Color	Feed Algorithm (Priority)
+Hunter	Ruby	Games First. Hero: Games. Sec 1: New Games.
+Netrunner	Cyan	Tools First. Hero: Apps. Sec 1: Essential Tools.
+Curator	Amber	Quality First. Hero: Top Rated. Sec 1: Hidden Gems.
+Phantom	Violet	The Underground. Hero: Random. Sec 1: Shuffled Feed.
+Architect	Emerald	Analytics. (Future Dashboard).
+Navbar Logic:
 
-JSON
+Guest: Transparent on Home (Landing). Fixed on Explore.
+User: Fixed Glass on Home (Dashboard) and Explore.
 
-{
-  "id": "uuid (PK)",
-  "username": "text (unique)",
-  "role": "user | architect | admin",
-  "archetype": "hunter | netrunner | curator | phantom | architect",
-  "created_at": "timestamp"
-}
+
+👤 6.2. User System & Identity Protocol (Phase 3 Complete)
+Architecture:
+
+Backend: Supabase (Auth + Postgres).
+Initialization: /initialize screen forces Archetype selection.
+Data Migration: useMigration.js syncs localStorage -> Cloud on login.
+State: AuthProvider.jsx provides user, profile, archetype.
+Database Schema (profiles):
+
+SQL
+
+create table profiles (
+  id uuid primary key references auth.users,
+  username text unique,
+  display_name text,
+  bio text,
+  avatar_url text,
+  cover_url text, -- New
+  role text default 'user',
+  archetype text,
+  profile_visibility text default 'public',
+  is_public_wishlist boolean default true,
+  created_at timestamp,
+  updated_at timestamp -- New
+);
+Database Schema (wishlists):
+
+id, user_id, game_id, added_at.
+RLS: Public Read (if profile permits), Owner Write.
+UI Components:
+
+Navbar: Identity-aware. Supports userChanged event for Guest/Auth sync. Handles Avatar URLs.
+Profile Page (/[username]): Public view. Shows Cover, Avatar, Stats, Wishlist.
+Settings (/settings): Tabbed interface. Edit Profile, Switch Archetype, Privacy Toggles.
+User Dashboard: Replaces Landing Page for logged-in users. Uses getCuratedFeed.
 
 🎨 Visual Hierarchy (Color Logic)
 Rule: Context determines the Color Source.
@@ -1354,16 +1409,19 @@ Where: Navbar Active State, Wishlist Icons, Profile Dropdown, Toasts.
 Implementation: CSS Variable Injection (--user-accent).
 
 
-## 🗺️ 7. Core Page Structure
-*   **Home (`/`)**: Transparent Navbar, Hero, Spotlight.
-*   **Explore (`/explore`)**: Command Center, Deep Linking, Dynamic Ribbon.
-*   **Item Details (`/view/[slug]`)**: 
-    *   **Hybrid:** `page.js` (Server) wraps `ViewClient.jsx` (Client).
-    *   **Resilience:** Wrapped in `loading.js` and `error.js`.
-*   **Publish (`/publish`)**: **Architect Theme**. Google Forms flow.
-*   **About (`/about`)**: **Manifesto**. Explains Archetypes.
-*   **Legal (`/terms`, `/privacy`)**: Standardized text layouts ("Phantom" Theme).
-*   **Wishlist (`/wishlist`)**: LocalStorage Command Bar.
+🗺️ 7. Core Page Structure (Phase 3 Updated)
+Home (/): Dual-Mode Experience.
+Guest: Classic Landing Page (Hero, Marketing, Spotlight).
+User: Personalized Dashboard (Archetype Feed, Wishlist Highlights).
+Implementation: src/app/page.js wraps HomeWrapper.jsx which switches between LandingPage.jsx and UserDashboard.jsx.
+Explore (/explore): The Vault. Global search and discovery.
+Item Details (/view/[slug]): Hybrid Server/Client. Content-aware Theme (Red/Cyan).
+Wishlist (/[username]/wishlist): Social Wishlist. Viewable by public.
+🗺️ 6. Core Page Structure
+Home (/): HomeWrapper -> LandingPage (Guest) OR UserDashboard (User). 
+Profile (/[username]): Public Portfolio + Wishlist.
+Settings (/settings): Tabbed Config (Identity, Privacy).
+Admin (/admin): Stealth Route. Reports & User Management.
 
 ## 📂 8. Project Structure (Source of Truth)
 
@@ -1387,127 +1445,153 @@ README.md
 📦 scripts/
  ┗ 📜 update-snapshot.js      # Dual-blog snapshot generator
 
-📦 src/
- ┣ 📂 app/
- ┃ ┣ 📂 about/
- ┃ ┃ ┗ 📜 page.js            # Manifesto & Archetypes
- ┃ ┣ 📂 api/
- ┃ ┃ ┗ 📂 games/
- ┃ ┃ ┃ ┗ 📜 route.js         # Dual-blog API
- ┃ ┣ 📂 contact/
- ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📂 explore/
- ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📂 help/
- ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📂 login/
- ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📂 privacy/
- ┃ ┃ ┗ 📜 page.js            # "Phantom" Theme
- ┃ ┣ 📂 publish/
- ┃ ┃ ┗ 📜 page.js            # "Architect" Theme
- ┃ ┣ 📂 signup/
- ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📂 status/
- ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📂 terms/
- ┃ ┃ ┗ 📜 page.js            # "Phantom" Theme
- ┃ ┣ 📂 view/
- ┃ ┃ ┗ 📂 [slug]/
- ┃ ┃ ┃ ┣ 📜 error.js         # Glitch Boundary
- ┃ ┃ ┃ ┣ 📜 loading.js       # Cinematic Skeleton Activator
- ┃ ┃ ┃ ┗ 📜 page.js          # Server Entry (SEO + Data Fetch)
- ┃ ┣ 📂 [username]/
- ┃ ┃ ┗ 📂 wishlist/
- ┃ ┃ ┃ ┗ 📜 page.js
- ┃ ┣ 📜 favicon.ico
- ┃ ┣ 📜 globals.css          # DEFINES ALL CSS VARIABLES
- ┃ ┣ 📜 layout.js
- ┃ ┣ 📜 not-found.js
- ┃ ┣ 📜 page.js
- ┃ ┣ 📜 robots.js            # SEO Protocol
- ┃ ┗ 📜 sitemap.js           # Dynamic URL Generation
- ┣ 📂 components/
- ┃ ┣ 📂 auth/
- ┃ ┃ ┗ 📜 AuthModal.jsx
- ┃ ┣ 📂 explore/
- ┃ ┃ ┣ 📜 ExploreContent.jsx
- ┃ ┃ ┣ 📜 GameGrid.jsx
- ┃ ┃ ┣ 📜 GenreFilter.jsx
- ┃ ┃ ┣ 📜 PlatformSelector.jsx
- ┃ ┃ ┣ 📜 ScrollToTopButton.jsx
- ┃ ┃ ┣ 📜 SpecialCollections.jsx
- ┃ ┃ ┣ 📜 SpotlightHero.jsx
- ┃ ┃ ┣ 📜 VaultFilters.jsx
- ┃ ┃ ┣ 📜 VaultHeader.jsx
- ┃ ┃ ┗ 📜 VaultSection.jsx
- ┃ ┣ 📂 providers/
- ┃ ┃ ┗ 📜 ToastProvider.jsx
- ┃ ┣ 📂 status/
- ┃ ┃ ┣ 📜 IncidentTimeline.jsx
- ┃ ┃ ┣ 📜 ServiceGrid.jsx
- ┃ ┃ ┣ 📜 StatusHero.jsx
- ┃ ┃ ┗ 📜 UptimeStats.jsx
- ┃ ┣ 📂 store/
- ┃ ┃ ┣ 📜 ContentWarningModal.jsx
- ┃ ┃ ┣ 📜 DownloadCallout.jsx
- ┃ ┃ ┣ 📜 GameCard.jsx
- ┃ ┃ ┣ 📜 GameContent.jsx
- ┃ ┃ ┣ 📜 GameHero.jsx
- ┃ ┃ ┣ 📜 GameMedia.jsx
- ┃ ┃ ┣ 📜 GameSidebar.jsx
- ┃ ┃ ┣ 📜 GameSkeleton.jsx   # Layout Matcher (CLS prevention)
- ┃ ┃ ┣ 📜 SimilarGames.jsx
- ┃ ┃ ┗ 📜 ViewClient.jsx     # Interactive Client Shell
- ┃ ┣ 📂 ui/
- ┃ ┃ ┣ 📜 AboutSection.js
- ┃ ┃ ┣ 📜 BackgroundEffects.js
- ┃ ┃ ┣ 📜 FeatureTriangles.js
- ┃ ┃ ┣ 📜 Footer.js
- ┃ ┃ ┣ 📜 GameModal.js
- ┃ ┃ ┣ 📜 GameVault.js
- ┃ ┃ ┣ 📜 GiantRuby.js
- ┃ ┃ ┣ 📜 Hero.js
- ┃ ┃ ┣ 📜 Navbar.js
- ┃ ┃ ┣ 📜 NotificationPanel.jsx
- ┃ ┃ ┣ 📜 SearchCommandCenter.jsx
- ┃ ┃ ┣ 📜 SearchDropdown.jsx
- ┃ ┃ ┣ 📜 Skeleton.jsx       # Shimmer Primitive
- ┃ ┃ ┣ 📜 Toast.jsx
- ┃ ┃ ┗ 📜 ToastContainer.jsx
- ┃ ┗ 📂 wishlist/
- ┃ ┃ ┣ 📜 EmptyWishlist.jsx
- ┃ ┃ ┣ 📜 WishlistControls.jsx
- ┃ ┃ ┣ 📜 WishlistGrid.jsx
- ┃ ┃ ┗ 📜 WishlistStats.jsx
- ┣ 📂 hooks/
- ┃ ┣ 📜 useAuth.js
- ┃ ┣ 📜 useDebounce.js
- ┃ ┣ 📜 useGameFilters.js
- ┃ ┣ 📜 useScrollBehavior.js
- ┃ ┣ 📜 useSearch.js
- ┃ ┣ 📜 useServiceStatus.js
- ┃ ┣ 📜 useToast.js
- ┃ ┗ 📜 useWishlist.js
- ┗ 📂 lib/
- ┃ ┣ 📂 config/
- ┃ ┃ ┗ 📜 platforms.js
- ┃ ┣ 📂 status/
- ┃ ┃ ┣ 📜 incidents.json
- ┃ ┃ ┣ 📜 services.js
- ┃ ┃ ┗ 📜 statusChecker.js
- ┃ ┣ 📂 utils/
- ┃ ┃ ┣ 📜 collectionMatchers.js
- ┃ ┃ ┣ 📜 gameFilters.js
- ┃ ┃ ┣ 📜 platformUtils.js
- ┃ ┃ ┣ 📜 tagExtractor.js
- ┃ ┃ ┗ 📜 textUtils.js
- ┃ ┣ 📜 backup-data.json     # 56-post snapshot (PROTECTED)
- ┃ ┣ 📜 blogger.js           # Content Parser
- ┃ ┣ 📜 game-utils.js        # Logic (isApp, Platforms)
- ┃ ┣ 📜 notificationManager.js
- ┃ ┣ 📜 seo-utils.js         # JSON-LD & Metadata Gen
- ┃ ┗ 📜 userManager.js
+📦src
+ ┣ 📂app
+ ┃ ┣ 📂about
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂admin
+ ┃ ┃ ┣ 📜AdminClient.jsx
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂api
+ ┃ ┃ ┗ 📂games
+ ┃ ┃ ┃ ┣ 📜route copy.js.backup
+ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┣ 📂contact
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂dashboard
+ ┃ ┃ ┣ 📜layout.js
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂explore
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂help
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂initialize
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂login
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂privacy
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂publish
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂settings
+ ┃ ┃ ┣ 📜layout.js
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂signup
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂status
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂terms
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂view
+ ┃ ┃ ┗ 📂[slug]
+ ┃ ┃ ┃ ┣ 📜error.js
+ ┃ ┃ ┃ ┣ 📜loading.js
+ ┃ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂[username]
+ ┃ ┃ ┣ 📂wishlist
+ ┃ ┃ ┃ ┗ 📜page.js
+ ┃ ┃ ┣ 📜page.js
+ ┃ ┃ ┗ 📜ProfileClient.jsx
+ ┃ ┣ 📜favicon.ico
+ ┃ ┣ 📜globals.css
+ ┃ ┣ 📜layout.js
+ ┃ ┣ 📜not-found.js
+ ┃ ┣ 📜page.js
+ ┃ ┣ 📜robots.js
+ ┃ ┗ 📜sitemap.js
+ ┣ 📂components
+ ┃ ┣ 📂auth
+ ┃ ┃ ┗ 📜AuthModal.jsx
+ ┃ ┣ 📂explore
+ ┃ ┃ ┣ 📜ExploreContent.jsx
+ ┃ ┃ ┣ 📜GameGrid.jsx
+ ┃ ┃ ┣ 📜GenreFilter.jsx
+ ┃ ┃ ┣ 📜PlatformSelector.jsx
+ ┃ ┃ ┣ 📜ScrollToTopButton.jsx
+ ┃ ┃ ┣ 📜SpecialCollections.jsx
+ ┃ ┃ ┣ 📜SpotlightHero.jsx
+ ┃ ┃ ┣ 📜VaultFilters.jsx
+ ┃ ┃ ┣ 📜VaultHeader.jsx
+ ┃ ┃ ┗ 📜VaultSection.jsx
+ ┃ ┣ 📂home
+ ┃ ┃ ┣ 📜HomeWrapper.jsx
+ ┃ ┃ ┣ 📜LandingPage.jsx
+ ┃ ┃ ┗ 📜UserDashboard.jsx
+ ┃ ┣ 📂providers
+ ┃ ┃ ┣ 📜AuthProvider.jsx
+ ┃ ┃ ┣ 📜ThemeProvider.jsx
+ ┃ ┃ ┗ 📜ToastProvider.jsx
+ ┃ ┣ 📂status
+ ┃ ┃ ┣ 📜IncidentTimeline.jsx
+ ┃ ┃ ┣ 📜ServiceGrid.jsx
+ ┃ ┃ ┣ 📜StatusHero.jsx
+ ┃ ┃ ┗ 📜UptimeStats.jsx
+ ┃ ┣ 📂store
+ ┃ ┃ ┣ 📜ContentWarningModal.jsx
+ ┃ ┃ ┣ 📜DownloadCallout.jsx
+ ┃ ┃ ┣ 📜GameCard.jsx
+ ┃ ┃ ┣ 📜GameContent.jsx
+ ┃ ┃ ┣ 📜GameHero.jsx
+ ┃ ┃ ┣ 📜GameMedia.jsx
+ ┃ ┃ ┣ 📜GameSidebar.jsx
+ ┃ ┃ ┣ 📜GameSkeleton.jsx
+ ┃ ┃ ┣ 📜ReportModal.jsx
+ ┃ ┃ ┣ 📜SimilarGames.jsx
+ ┃ ┃ ┗ 📜ViewClient.jsx
+ ┃ ┣ 📂ui
+ ┃ ┃ ┣ 📜AboutSection.js
+ ┃ ┃ ┣ 📜BackgroundEffects.js
+ ┃ ┃ ┣ 📜FeatureTriangles.js
+ ┃ ┃ ┣ 📜Footer.js
+ ┃ ┃ ┣ 📜GameModal.js
+ ┃ ┃ ┣ 📜GameVault.js
+ ┃ ┃ ┣ 📜GiantRuby.js
+ ┃ ┃ ┣ 📜Hero.js
+ ┃ ┃ ┣ 📜Navbar.js
+ ┃ ┃ ┣ 📜NotificationPanel.jsx
+ ┃ ┃ ┣ 📜SearchCommandCenter.jsx
+ ┃ ┃ ┣ 📜SearchDropdown.jsx
+ ┃ ┃ ┣ 📜Skeleton.jsx
+ ┃ ┃ ┣ 📜Toast.jsx
+ ┃ ┃ ┗ 📜ToastContainer.jsx
+ ┃ ┗ 📂wishlist
+ ┃ ┃ ┣ 📜EmptyWishlist.jsx
+ ┃ ┃ ┣ 📜WishlistControls.jsx
+ ┃ ┃ ┣ 📜WishlistGrid.jsx
+ ┃ ┃ ┗ 📜WishlistStats.jsx
+ ┣ 📂hooks
+ ┃ ┣ 📜useAuth.js
+ ┃ ┣ 📜useDebounce.js
+ ┃ ┣ 📜useGameFilters.js
+ ┃ ┣ 📜useMigration.js
+ ┃ ┣ 📜useScrollBehavior.js
+ ┃ ┣ 📜useSearch.js
+ ┃ ┣ 📜useServiceStatus.js
+ ┃ ┣ 📜useToast.js
+ ┃ ┗ 📜useWishlist.js
+ ┗ 📂lib
+ ┃ ┣ 📂config
+ ┃ ┃ ┗ 📜platforms.js
+ ┃ ┣ 📂status
+ ┃ ┃ ┣ 📜incidents.json
+ ┃ ┃ ┣ 📜services.js
+ ┃ ┃ ┗ 📜statusChecker.js
+ ┃ ┣ 📂utils
+ ┃ ┃ ┣ 📜collectionMatchers.js
+ ┃ ┃ ┣ 📜gameFilters.js
+ ┃ ┃ ┣ 📜platformUtils.js
+ ┃ ┃ ┣ 📜tagExtractor.js
+ ┃ ┃ ┗ 📜textUtils.js
+ ┃ ┣ 📜backup-data copy.json.backup
+ ┃ ┣ 📜backup-data.json
+ ┃ ┣ 📜blogger.js
+ ┃ ┣ 📜feed-utils.js
+ ┃ ┣ 📜game-utils.js
+ ┃ ┣ 📜notificationManager.js
+ ┃ ┣ 📜seo-utils.js
+ ┃ ┣ 📜supabase.js
+ ┃ ┣ 📜theme-utils.js
+ ┃ ┗ 📜userManager.js
 ```
 
 ## 🚀 10. Development Roadmap
@@ -1523,23 +1607,25 @@ README.md
 *   **Resilience:** Cinematic Skeletons (`loading.js`) + Glitch Boundaries (`error.js`).
 *   **Ecosystem Pages:** About (Manifesto), Publish (Architect), Legal.
 
-Phase 3: Identity & The Forge 🚧 NEXT
-Backend Setup: Initialize Supabase (Auth + DB).
-Auth Flow:
-Create src/lib/supabase.js.
-Create AuthProvider.jsx (Global Context).
-Build /signup with Archetype Selection Cards.
-Build /login.
-The Dynamic Engine:
-Create ThemeProvider.jsx to inject --user-accent based on profile.archetype.
-Update src/app/page.js (Home) to filter feed based on Archetype.
-Profile Migration: Move localStorage wishlist to Supabase wishlists table on signup.
-The Forge: Create Developer Dashboard for Architects.
-Feed - curated for user archetype
+Phase 3: Identity & The Forge ✅ COMPLETE
+Auth: Supabase Integration (Signup/Login/OTP).
+Identity: Archetype Protocol & Theme Engine.
+UX: Personalized User Dashboard (Feed).
+Social: Public Profiles & Wishlists. Profile & Settings Pages.
+Data: Guest -> User Migration.
+Admin: Console for User Management & Content Moderation.
 
-### Phase 4: Ecosystem & PWA ⏳ PLANNED
-*   **PWA:** Install Prompts (Desktop/Mobile).
-*   **Report System:** Broken Link automation.
+Phase 4: Social & Ecosystem ⏳ PLANNED
+Report System: Automated checks for reported broken links.
+PWA: manifest.json, Service Worker, Install Prompts.
+The Forge: Full Developer Dashboard (Uploads/Edits).
+Claims: Robust "Claim Project" flow with DB tracking.
+
+Phase 5: Social Layer:
+Follows: Database Schema (follows table), UI Buttons.
+Engagement: Comments & Ratings System.
+Feed: "New from creators you follow".
+
 
 ## 🔐 16. Environment Variables
 **`next.config.mjs` MUST include:**

@@ -3,10 +3,11 @@
  * -------------------------------------
  * Automatically generates URLs for all games/tools.
  * DIRECT READ MODE: Reads backup-data.json directly to avoid API build errors.
+ * UPDATE: Adds Public Profiles from Supabase.
  */
 
-// ✅ Import directly to bypass API fetch during build
 import BACKUP_DATA from '@/lib/backup-data.json'; 
+import { supabase } from "@/lib/supabase"; // ✅ Import
 
 // Helper: Must match src/lib/blogger.js logic exactly
 function createSlug(title, id) {
@@ -21,7 +22,6 @@ export default async function sitemap() {
   const baseUrl = 'https://rubiesunleashed.netlify.app';
 
   // 1. Get Posts Directly from Snapshot
-  // This avoids the "Dynamic server usage" error because it's just reading a file import
   const rawPosts = BACKUP_DATA?.feed?.entry || [];
   
   // 2. Generate Dynamic Game URLs
@@ -65,6 +65,27 @@ export default async function sitemap() {
     priority: route === '' ? 1.0 : 0.5,
   }));
 
-  // 4. Merge
-  return [...staticRoutes, ...gameUrls];
+  // ✅ 4. Fetch Public Profiles (Safe Block)
+  let profileUrls = [];
+  try {
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('username, updated_at')
+        .eq('profile_visibility', 'public')
+        .limit(1000); // Limit to prevent massive build time
+
+    if (profiles) {
+        profileUrls = profiles.map(p => ({
+            url: `${baseUrl}/${p.username}`,
+            lastModified: new Date(p.updated_at || new Date()),
+            changeFrequency: 'weekly',
+            priority: 0.6
+        }));
+    }
+  } catch (error) {
+      console.warn("Sitemap: Failed to fetch profiles", error);
+  }
+
+  // 5. Merge
+  return [...staticRoutes, ...gameUrls, ...profileUrls];
 }

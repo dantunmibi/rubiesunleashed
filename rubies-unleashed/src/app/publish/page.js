@@ -12,14 +12,14 @@ import React from "react";
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
-import { 
-  Terminal, 
-  ShieldCheck, 
-  Zap, 
-  Globe, 
+import {
+  Terminal,
+  ShieldCheck,
+  Zap,
+  Globe,
   ExternalLink,
-  Code, 
-  UserPlus
+  Code,
+  UserPlus,
 } from "lucide-react";
 
 export default function PublishPage() {
@@ -37,7 +37,6 @@ export default function PublishPage() {
         </div>
 
         <div className="container mx-auto px-6 relative z-10 text-center">
-          
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-architect/30 bg-architect/10 mb-8 backdrop-blur-md">
             <Terminal size={14} className="text-architect" />
@@ -55,14 +54,16 @@ export default function PublishPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Join the ecosystem. Submit your games and tools to a dedicated audience of power users. 
-            <br className="hidden md:block" /> No gatekeepers. No hidden fees. Just pure distribution.
+            Join the ecosystem. Submit your games and tools to a dedicated
+            audience of power users.
+            <br className="hidden md:block" /> No gatekeepers. No hidden fees.
+            Just pure distribution.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="https://forms.gle/i7X2sUJ5cnqsUciA6"
+              href="/publish"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2"
@@ -82,26 +83,27 @@ export default function PublishPage() {
 
       {/* --- BENEFITS GRID --- */}
       {/* ✅ Added scroll-mt-32 to handle Navbar offset */}
-      <section id="protocol" className="py-20 bg-surface/30 border-y border-white/5 scroll-mt-32">
+      <section
+        id="protocol"
+        className="py-20 bg-surface/30 border-y border-white/5 scroll-mt-32"
+      >
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            <FeatureCard 
+            <FeatureCard
               icon={<Globe size={32} />}
               title="Universal Visibility"
               desc="Your project is instantly indexed for search engines and distributed globally through our high-speed content network."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<ShieldCheck size={32} />}
               title="Resilient Hosting"
               desc="We prioritize preservation. Once your project is added to the Vault, it is backed up and protected against link rot."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<Zap size={32} />}
               title="Direct Access"
               desc="No proprietary launchers required. Users visit your official storefronts or download your binaries directly."
             />
-
           </div>
         </div>
       </section>
@@ -117,23 +119,22 @@ export default function PublishPage() {
             {/* Connecting Line */}
             <div className="absolute left-6 top-0 bottom-0 w-px bg-white/10 hidden md:block" />
 
-            <Step 
-              num="01" 
-              title="Prepare Manifest" 
+            <Step
+              num="01"
+              title="Prepare Manifest"
               desc="Ensure your project has a name, version, and valid download link (Itch.io, Mega, Drive, or Direct URL)."
             />
-            <Step 
-              num="02" 
-              title="Submit Payload" 
+            <Step
+              num="02"
+              title="Submit Payload"
               desc="Fill out the secure Google Form linked above. It takes less than 2 minutes to complete."
             />
-            <Step 
-              num="03" 
-              title="Live Deployment" 
+            <Step
+              num="03"
+              title="Live Deployment"
               desc="Our Architects verify the data. Your project goes live on the Vault typically within 24 hours."
             />
           </div>
-
         </div>
       </section>
 
@@ -146,14 +147,19 @@ export default function PublishPage() {
               Phase 4: The Forge
             </span>
           </div>
-          
+
           <h3 className="text-2xl font-bold text-white mb-4">
             Developer Accounts Coming Soon
           </h3>
           <p className="text-slate-400 leading-relaxed mb-0">
-            We are currently building <strong>The Forge</strong> — a dedicated dashboard where you can manage your projects, track analytics, and update builds instantly. 
+            We are currently building <strong>The Forge</strong> — a dedicated
+            dashboard where you can manage your projects, track analytics, and
+            update builds instantly.
             <br className="mt-4" />
-            <span className="text-architect">Early submitters via the form will get priority status</span> when accounts launch.
+            <span className="text-architect">
+              Early submitters via the form will get priority status
+            </span>{" "}
+            when accounts launch.
           </p>
         </div>
       </section>
@@ -166,10 +172,10 @@ export default function PublishPage() {
             Ready to deploy?
           </h2>
           <Link
-             href="https://forms.gle/i7X2sUJ5cnqsUciA6"
-             target="_blank"
-             rel="noopener noreferrer"
-             className="inline-flex items-center gap-2 text-architect-light hover:text-architect font-bold uppercase tracking-widest border-b border-architect/30 hover:border-architect pb-1 transition-colors"
+            href="/publish"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-architect-light hover:text-architect font-bold uppercase tracking-widest border-b border-architect/30 hover:border-architect pb-1 transition-colors"
           >
             Open Submission Form <ExternalLink size={14} />
           </Link>
@@ -210,9 +216,7 @@ function Step({ num, title, desc }) {
         <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-wide">
           {title}
         </h3>
-        <p className="text-slate-400 leading-relaxed">
-          {desc}
-        </p>
+        <p className="text-slate-400 leading-relaxed">{desc}</p>
       </div>
     </div>
   );

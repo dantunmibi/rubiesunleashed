@@ -1,24 +1,17 @@
-// src/app/[username]/wishlist/page.js
 /**
- * DYNAMIC WISHLIST PAGE
- * 
- * Route: /[username]/wishlist
- * 
- * Features:
- * - Dynamic username routing
- * - Search, sort, filter controls
- * - Stats cards
- * - ✅ UPDATED: Share blocked for guest users (requires sign up)
- * - Clear all with confirmation
- * - ✅ NEW: "Sign Up to Share" CTA for guest users
- * - Fully responsive
+ * DYNAMIC WISHLIST PAGE (Cloud Integrated)
+ * ----------------------------------------
+ * Fetches wishlist from Supabase (if logged in) or LocalStorage (if guest).
+ * Hydrates game details via blogger API/Snapshot.
+ * Allows viewing other users' public wishlists.
+ * Handles "User Not Found" gracefully.
  */
 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, AlertTriangle, Share2, Trash2, Heart, Sparkles } from "lucide-react";
+import { Loader2, Heart, Sparkles, Trash2, UserX } from "lucide-react";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
@@ -27,400 +20,330 @@ import WishlistStats from "@/components/wishlist/WishlistStats";
 import WishlistControls from "@/components/wishlist/WishlistControls";
 import EmptyWishlist from "@/components/wishlist/EmptyWishlist";
 import AuthModal from "@/components/auth/AuthModal";
-import {
-  getCurrentUser,
-  getWishlist,
-  removeFromWishlist,
-  clearWishlist,
-  getWishlistStats,
-  updatePreferences,
-  getPreferences,
-  createGuestUser,
+
+// Logic Imports
+import { useAuth } from "@/components/providers/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import { fetchGames } from "@/lib/blogger"; // ✅ Use fetchGames instead of fetchGameById
+import { 
+  getWishlist as localGet, 
+  clearWishlist as localClear,
+  removeFromWishlist as localRemove,
+  createGuestUser 
 } from "@/lib/userManager";
 
 export default function WishlistPage() {
-  const params = useParams();
+  const { user, profile } = useAuth(); 
+  const params = useParams(); 
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [wishlist, setWishlist] = useState([]);
-  const [filteredGames, setFilteredGames] = useState([]);
+  
+  const targetUsername = decodeURIComponent(params.username); 
+  
+  const [wishlistGames, setWishlistGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, games: 0, apps: 0 });
-
-  // Filter states
+  const [filteredGames, setFilteredGames] = useState([]);
+  const [viewingProfile, setViewingProfile] = useState(null); 
+  const [userNotFound, setUserNotFound] = useState(false); 
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("dateAdded-desc");
   const [filterType, setFilterType] = useState("all");
 
-  // Modal states
   const [showClearModal, setShowClearModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // ✅ NEW: Guest detection
-  const [isGuest, setIsGuest] = useState(false);
-  const [showSignUpBanner, setShowSignUpBanner] = useState(false);
-
-  // Load user and wishlist
+  // 1. Fetch Data Logic
   useEffect(() => {
-    try {
-      const user = getCurrentUser();
-      const items = getWishlist();
-      const prefs = getPreferences();
-
-      setCurrentUser(user);
-      setWishlist(items);
-      setSortBy(prefs.sortBy || "dateAdded-desc");
-      setStats(getWishlistStats());
-
-      // ✅ NEW: Check if guest with items
-      const isGuestUser = user?.isGuest === true;
-      setIsGuest(isGuestUser);
-      setShowSignUpBanner(isGuestUser && items.length > 0);
-
-      // Check if username matches current user
-      if (user && params.username !== user.username) {
-        // In future, this could load other users' public wishlists
-        // For now, redirect to own wishlist
-        router.push(`/${user.username}/wishlist`);
-      }
-    } catch (error) {
-      console.error("Error loading wishlist:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [params.username, router]);
-
-  // ✅ NEW: Listen for user changes (after guest creation or login)
-  useEffect(() => {
-    const handleUserChanged = () => {
-      const user = getCurrentUser();
-      const items = getWishlist();
+    async function loadData() {
+      if (wishlistGames.length === 0) setLoading(true);
+      setUserNotFound(false); 
       
-      setCurrentUser(user);
-      setWishlist(items);
-      setStats(getWishlistStats());
-      
-      const isGuestUser = user?.isGuest === true;
-      setIsGuest(isGuestUser);
-      setShowSignUpBanner(isGuestUser && items.length > 0);
-    };
+      let gameIds = [];
+      let targetUserId = null;
+      let targetProfileData = null;
 
-    window.addEventListener("userChanged", handleUserChanged);
-    
-    return () => {
-      window.removeEventListener("userChanged", handleUserChanged);
-    };
-  }, []);
+      try {
+        // --- A. DETERMINE TARGET USER ---
+        if (user && (user.user_metadata?.username === targetUsername || profile?.username === targetUsername)) {
+            targetUserId = user.id;
+            targetProfileData = profile;
+        } 
+        else if (targetUsername && targetUsername !== 'guest') {
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('username', targetUsername)
+                .single();
+            
+            if (data) {
+                targetUserId = data.id;
+                targetProfileData = data;
+            }
+        }
 
-  // Apply filters and sorting
-  useEffect(() => {
-    let filtered = [...wishlist];
+        setViewingProfile(targetProfileData);
 
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((game) =>
-        game.title.toLowerCase().includes(query)
-      );
-    }
+        // --- B. FETCH OR FALLBACK ---
+        if (targetUserId) {
+             const { data } = await supabase
+            .from('wishlists')
+            .select('game_id, added_at')
+            .eq('user_id', targetUserId)
+            .order('added_at', { ascending: false });
+            
+            gameIds = data?.map(row => ({ id: row.game_id, addedAt: new Date(row.added_at) })) || [];
+        } 
+        else if (!user) {
+             const localItems = localGet();
+             gameIds = localItems.map(item => ({ 
+                id: item.id || item, 
+                addedAt: item.addedAt || new Date() 
+             }));
+        } else {
+            console.warn(`User ${targetUsername} not found.`);
+            setUserNotFound(true);
+            setLoading(false);
+            return;
+        }
 
-    // Type filter
-    if (filterType === "games") {
-      filtered = filtered.filter((game) => game.type !== "App");
-    } else if (filterType === "apps") {
-      filtered = filtered.filter((game) => game.type === "App");
-    }
+        // --- C. OPTIMIZED HYDRATION ---
+        // 1. Fetch ALL games once (Fast because it hits Snapshot + 1 API call)
+        const allGames = await fetchGames(2000);
+        
+        // 2. Map IDs to Game Objects in Memory
+        const validGames = gameIds.map(item => {
+            // Find game in the big list
+            const game = allGames.find(g => 
+                g.id === item.id || 
+                g.slug === item.id || 
+                g.slug.endsWith(`-${item.id}`)
+            );
+            return game ? { ...game, addedAt: item.addedAt } : null;
+        }).filter(g => g !== null);
+        
+        setWishlistGames(validGames);
+        setFilteredGames(validGames); 
 
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "dateAdded-desc":
-          return (b.addedAt || 0) - (a.addedAt || 0);
-        case "dateAdded-asc":
-          return (a.addedAt || 0) - (b.addedAt || 0);
-        case "alphabetical-asc":
-          return a.title.localeCompare(b.title);
-        case "alphabetical-desc":
-          return b.title.localeCompare(a.title);
-        case "type":
-          return (a.type || "").localeCompare(b.type || "");
-        default:
-          return 0;
+      } catch (err) {
+        console.error("Wishlist Load Error:", err);
+      } finally {
+        setLoading(false);
       }
+    }
+
+    loadData();
+  }, [targetUsername, user?.id, profile]);
+
+  // 2. Filter & Sort Logic
+  useEffect(() => {
+    let result = [...wishlistGames];
+    if (searchQuery) result = result.filter(g => g.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (filterType === 'games') result = result.filter(g => g.type !== 'App');
+    if (filterType === 'apps') result = result.filter(g => g.type === 'App');
+
+    result.sort((a, b) => {
+        if (sortBy === 'dateAdded-desc') return new Date(b.addedAt) - new Date(a.addedAt);
+        if (sortBy === 'dateAdded-asc') return new Date(a.addedAt) - new Date(b.addedAt);
+        return a.title.localeCompare(b.title);
     });
+    setFilteredGames(result);
+  }, [wishlistGames, searchQuery, filterType, sortBy]);
 
-    setFilteredGames(filtered);
-  }, [wishlist, searchQuery, sortBy, filterType]);
+  // 3. Define Context Variables FIRST
+  const isOwner = user && viewingProfile && user.id === viewingProfile.id;
+  const isGuestView = !user; 
 
-  // Handle remove
-  const handleRemove = (gameId) => {
-    removeFromWishlist(gameId);
-    const updated = wishlist.filter((g) => g.id !== gameId);
-    setWishlist(updated);
-    setStats(getWishlistStats());
-    
-    // ✅ NEW: Hide banner if no items left
-    if (updated.length === 0 && isGuest) {
-      setShowSignUpBanner(false);
-    }
+  // 4. Handlers (Now have access to variables)
+  const handleRemove = async (gameId) => {
+    if (!isOwner && !isGuestView) return;
+    if (user) await supabase.from('wishlists').delete().eq('user_id', user.id).eq('game_id', gameId);
+    else localRemove(gameId);
+    setWishlistGames(prev => prev.filter(g => g.id !== gameId));
   };
 
-  // Handle clear all
-  const handleClearAll = () => {
-    clearWishlist();
-    setWishlist([]);
-    setStats({ total: 0, games: 0, apps: 0 });
+  const handleClearAll = async () => {
+    if (!isOwner && !isGuestView) return;
+    if (user) await supabase.from('wishlists').delete().eq('user_id', user.id);
+    else localClear();
+    setWishlistGames([]);
     setShowClearModal(false);
-    
-    // ✅ NEW: Hide banner after clearing
-    if (isGuest) {
-      setShowSignUpBanner(false);
-    }
   };
 
-  // Handle sort change
-  const handleSortChange = (value) => {
-    setSortBy(value);
-    updatePreferences({ sortBy: value });
-  };
-
-  // ✅ UPDATED: Handle share - Block for guests
   const handleShare = async () => {
-    // Block sharing for guest users
-    if (isGuest) {
+    if (isGuestView) {
       setShowAuthModal(true);
       return false;
     }
 
-    // Allow sharing for authenticated users
-    const shareUrl = `${window.location.origin}/${currentUser?.username}/wishlist`;
+    const shareUrl = window.location.href;
     const shareData = {
-      title: `${currentUser?.username}'s Wishlist - Rubies Unleashed`,
-      text: `Check out my game wishlist on Rubies Unleashed!`,
+      title: `${targetUsername}'s Wishlist - Rubies Unleashed`,
+      text: `Check out this wishlist on Rubies Unleashed!`,
       url: shareUrl,
     };
 
-    // Try native share API
     if (navigator.share) {
       try {
         await navigator.share(shareData);
         return true;
-      } catch (error) {
-        // User cancelled or share failed
-        if (error.name !== "AbortError") {
-          console.error("Share failed:", error);
-        }
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error("Share failed", err);
       }
     }
 
-    // Fallback: Copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
       return true;
-    } catch (error) {
-      console.error("Copy failed:", error);
+    } catch (err) {
       return false;
     }
   };
 
-  // ✅ NEW: Handle "Continue as Guest" from auth modal
-  const handleContinueAsGuest = () => {
-    createGuestUser();
-    window.dispatchEvent(new Event("userChanged"));
-    setShowAuthModal(false);
+  const stats = {
+    total: wishlistGames.length,
+    games: wishlistGames.filter(g => g.type !== 'App').length,
+    apps: wishlistGames.filter(g => g.type === 'App').length
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center">
-        <Loader2 className="animate-spin text-ruby" size={48} />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-(--user-accent)" size={48} />
+      </div>
+    );
+  }
+
+  if (userNotFound) {
+    return (
+      <div className="min-h-screen bg-background text-slate-200 font-sans flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="bg-surface border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl">
+                <UserX size={64} className="text-slate-600 mx-auto mb-6" />
+                <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
+                    User Not Found
+                </h1>
+                <p className="text-slate-400 mb-8">
+                    The Architect could not locate a profile for <span className="text-(--user-accent) font-bold">@{targetUsername}</span>.
+                </p>
+                <button 
+                    onClick={() => router.push('/explore')} 
+                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-3 rounded-xl font-bold uppercase tracking-widest transition-all"
+                >
+                    Return to Vault
+                </button>
+            </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans selection:bg-ruby/30 selection:text-white">
+    <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-(--user-accent)/30">
       <BackgroundEffects />
       <Navbar />
 
-      {/* Hero Header */}
       <section className="relative pt-32 pb-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* User Info */}
-          <div className="text-center mb-6">
-            {/* Avatar */}
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-ruby/20 to-ruby/5 backdrop-blur-xl border-2 border-ruby/30 rounded-full text-5xl mb-4 shadow-[0_0_40px_rgba(224,17,95,0.2)]">
-              {currentUser?.avatar || "💎"}
+        <div className="max-w-7xl mx-auto text-center mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-surface/50 backdrop-blur-xl border-2 border-(--user-accent)/30 rounded-full text-5xl mb-4 shadow-lg text-white">
+                  {viewingProfile?.avatar_url ? (
+        <img 
+            src={viewingProfile.avatar_url} 
+            alt="Avatar" 
+            className="w-full h-full object-cover" 
+        />
+    ) : (
+        "💎"
+    )}
             </div>
-
-            {/* Username */}
-            <h2 className="text-2xl font-bold text-ruby mb-1">
-              @{currentUser?.username || "Guest"}
-            </h2>
-
-            {/* Title */}
-            <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-slate-500 uppercase tracking-tighter mb-2">
-              My <span className="text-ruby">Wishlist</span>
+            <h2 className="text-2xl font-bold text-(--user-accent) mb-1">@{viewingProfile?.username || targetUsername || "Guest"}</h2>
+            <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-2">
+              {isOwner || isGuestView ? "My" : `${targetUsername}'s`} <span className="text-(--user-accent)">Wishlist</span>
             </h1>
-          </div>
-
-          {/* Decorative Line */}
-          <div className="w-32 h-1 bg-linear-to-r from-transparent via-ruby to-transparent mx-auto opacity-50" />
         </div>
       </section>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 pb-20">
         
-        {/* ✅ NEW: Sign Up to Share Banner (Guest Users with Items) */}
-        {showSignUpBanner && (
-          <div className="mb-8 animate-in fade-in slide-in-from-top-2 duration-500">
-            <div className="relative overflow-hidden bg-linear-to-r from-ruby/10 via-violet-600/10 to-ruby/10 border border-ruby/20 rounded-2xl p-6 backdrop-blur-xl shadow-[0_0_40px_rgba(224,17,95,0.1)]">
-              {/* Ruby Glow Accent */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-ruby to-transparent opacity-50" />
-              
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
-                {/* Left: Icon + Text */}
-                <div className="flex items-start gap-4 flex-1">
-                  {/* Animated Heart Icon */}
-                  <div className="relative shrink-0">
-                    <div className="absolute inset-0 bg-ruby/30 blur-xl rounded-full animate-pulse" />
-                    <div className="relative p-3 rounded-xl bg-ruby/20 border border-ruby/30">
-                      <Heart size={28} className="text-ruby" fill="currentColor" />
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mb-2 flex items-center gap-2">
-                      Save Your Wishlist <span className="text-ruby">Forever</span>
-                      <Sparkles size={20} className="text-ruby animate-pulse" />
-                    </h3>
-                    <p className="text-sm md:text-base text-slate-300 leading-relaxed max-w-2xl">
-                      You're browsing as a guest. Sign up to save your{" "}
-                      <span className="font-bold text-white">{stats.total} {stats.total === 1 ? "item" : "items"}</span>{" "}
-                      permanently, sync across devices, and unlock sharing features.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right: Action Button */}
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="shrink-0 w-full md:w-auto bg-ruby hover:bg-[#c00e50] text-white px-8 py-4 rounded-xl font-black uppercase text-sm tracking-widest transition-all hover:scale-105 shadow-[0_0_30px_rgba(224,17,95,0.3)] hover:shadow-[0_0_40px_rgba(224,17,95,0.5)] flex items-center justify-center gap-2 group"
-                >
-                  <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                  Sign Up Free
-                </button>
+        {isGuestView && wishlistGames.length > 0 && (
+           <div className="mb-8 p-6 bg-surface/50 border border-(--user-accent)/20 rounded-2xl flex items-center justify-between gap-6 backdrop-blur-md">
+              <div>
+                 <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2"><Sparkles size={18} className="text-(--user-accent)" /> Save Forever</h3>
+                 <p className="text-slate-400 text-sm">Sign up to sync your list across devices.</p>
               </div>
-            </div>
-          </div>
+              <button onClick={() => setShowAuthModal(true)} className="bg-(--user-accent) text-white px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:brightness-110 transition-all">Sign Up</button>
+           </div>
         )}
 
-        {wishlist.length === 0 ? (
+        {wishlistGames.length === 0 ? (
           <EmptyWishlist />
         ) : (
           <>
-            {/* Stats Cards */}
             <WishlistStats stats={stats} />
-
-            {/* Controls Bar */}
             <WishlistControls
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               sortBy={sortBy}
-              onSortChange={handleSortChange}
+              onSortChange={setSortBy}
               filterType={filterType}
               onFilterChange={setFilterType}
               onShare={handleShare}
-              onClearAll={() => setShowClearModal(true)}
-              itemCount={wishlist.length}
+              onClearAll={isOwner || isGuestView ? () => setShowClearModal(true) : null}
+              itemCount={wishlistGames.length}
+              isOwner={isOwner || isGuestView}
             />
-
-            {/* Results Count */}
-            {searchQuery && (
-              <p className="text-slate-400 text-sm mb-4">
-                Found {filteredGames.length} result{filteredGames.length !== 1 ? "s" : ""} for "{searchQuery}"
-              </p>
-            )}
-
-            {/* Grid */}
-            {filteredGames.length > 0 ? (
-              <WishlistGrid games={filteredGames} onRemove={handleRemove} />
-            ) : (
-              <div className="text-center py-20">
-                <p className="text-slate-400 text-lg">No items match your filters</p>
-              </div>
-            )}
+            <WishlistGrid games={filteredGames} onRemove={isOwner || isGuestView ? handleRemove : null} />
           </>
         )}
       </main>
 
       <Footer />
-
-      {/* ✅ UPDATED: Auth Modal (Sign Up to Share or Save Wishlist) */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onContinueAsGuest={handleContinueAsGuest}
-        message={`Sign up to save your ${stats.total} wishlist ${stats.total === 1 ? "item" : "items"} forever and unlock sharing features!`}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        onContinueAsGuest={createGuestUser} 
+        message="Sign up to share your wishlist!"
       />
-
-      {/* Clear All Confirmation Modal */}
+      
+      {/* Clear Modal */}
       {showClearModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans selection:bg-ruby selection:text-white">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-background/95 backdrop-blur-xl animate-in fade-in duration-300"
-            onClick={() => setShowClearModal(false)}
-          />
-
-          {/* Modal */}
-          <div className="relative w-full max-w-md bg-surface border border-red-500/30 rounded-xl shadow-[0_0_60px_rgba(239,68,68,0.2)] p-8 animate-in zoom-in-95 duration-300">
-            {/* Red Scanline */}
-            <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-red-500 to-transparent opacity-50" />
-
-            {/* Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="absolute inset-0 bg-red-500/30 blur-2xl rounded-full animate-pulse" />
-                <div className="relative border border-red-500 p-4 rounded-xl bg-black shadow-[0_0_30px_rgba(239,68,68,0.4)]">
-                  <Trash2 size={48} className="text-red-500" />
-                </div>
-              </div>
-            </div>
-
-            {/* Title */}
-            <h3 className="text-2xl font-black text-white uppercase tracking-tight text-center mb-2">
-              Clear <span className="text-red-500">Everything</span>?
-            </h3>
-
-            {/* Message */}
-            <p className="text-slate-400 text-sm text-center mb-2 leading-relaxed">
-              This will permanently remove <span className="text-white font-bold">all {stats.total} items</span> from your wishlist.
-            </p>
-
-            <p className="text-slate-500 text-xs text-center mb-8">
-              This action cannot be undone.
-            </p>
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleClearAll}
-                className="flex-1 bg-red-500 text-white px-6 py-3 rounded-sm font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] text-xs"
-              >
-                Clear All
-              </button>
-              <button
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop with Blur */}
+            <div 
+                className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
                 onClick={() => setShowClearModal(false)}
-                className="flex-1 px-6 py-3 rounded-sm border border-white/10 hover:bg-white/5 text-slate-400 font-bold uppercase tracking-widest transition-all text-xs"
-              >
-                Cancel
-              </button>
+            />
+            
+            {/* Modal Content - Pop In Animation */}
+            <div className="relative bg-[#161b2c] border border-red-500/30 p-8 rounded-2xl max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in-95 fade-in duration-300">
+               
+               {/* Glowing Icon */}
+               <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                  <Trash2 size={32} className="text-red-500" />
+               </div>
+
+               <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Clear All?</h3>
+               <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+                 This will permanently remove <span className="text-white font-bold">{wishlistGames.length} items</span> from your wishlist. This action cannot be undone.
+               </p>
+               
+               <div className="flex gap-3">
+                  <button 
+                    onClick={handleClearAll} 
+                    className="flex-1 bg-red-600 hover:bg-red-400 py-3.5 rounded-xl font-bold text-white cursor-pointer uppercase tracking-wider text-xs shadow-lg shadow-red-900/20 active:scale-95 transition-all"
+                  >
+                    Yes, Clear
+                  </button>
+                  <button 
+                    onClick={() => setShowClearModal(false)} 
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3.5 rounded-xl cursor-pointer font-bold text-slate-300 uppercase tracking-wider text-xs active:scale-95 transition-all"
+                  >
+                    Cancel
+                  </button>
+               </div>
             </div>
-          </div>
-        </div>
+         </div>
       )}
     </div>
   );

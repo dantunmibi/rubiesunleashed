@@ -55,7 +55,7 @@ export default function WishlistGrid({ games, onRemove }) {
             <Link 
               key={game.id}
               href={`/view/${game.slug}`}
-              className="group relative aspect-[3/4.5] w-full cursor-pointer transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-ruby/10 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="group relative aspect-[3/4.5] w-full cursor-pointer transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-(--user-accent)/10 animate-in fade-in slide-in-from-bottom-4 duration-500"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               {/* Image Layer */}
@@ -78,7 +78,7 @@ export default function WishlistGrid({ games, onRemove }) {
               {/* Remove Button (Top Right - Always Visible) */}
               <button
                 onClick={(e) => handleRemoveClick(game, e)}
-                className="absolute top-2 right-2 z-30 p-2 bg-black/80 backdrop-blur-md border border-ruby/30 rounded-full text-ruby hover:bg-ruby hover:text-white transition-all duration-300 shadow-lg hover:scale-110 active:scale-95"
+                className="absolute top-2 right-2 z-30 p-2 bg-black/80 backdrop-blur-md border border-(--user-accent)/30 rounded-full text-(--user-accent) hover:bg-(--user-accent) hover:text-white transition-all duration-300 shadow-lg hover:scale-110 active:scale-95"
                 aria-label="Remove from wishlist"
               >
                 <Heart size={16} fill="currentColor" />
@@ -89,7 +89,7 @@ export default function WishlistGrid({ games, onRemove }) {
                 <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded w-fit mb-2 border backdrop-blur-md ${tagStyle}`}>
                   {game.type === 'App' ? "SOFTWARE" : "GAME"}
                 </span>
-                <h4 className="text-white font-bold text-sm leading-tight line-clamp-2 drop-shadow-md group-hover:text-ruby-light transition-colors mb-2">
+                <h4 className="text-white font-bold text-sm leading-tight line-clamp-2 drop-shadow-md group-hover:text-(--user-accent)-light transition-colors mb-2">
                   {game.title}
                 </h4>
                 
@@ -101,7 +101,7 @@ export default function WishlistGrid({ games, onRemove }) {
               </div>
               
               {/* Hover Border Glow */}
-              <div className="absolute inset-0 rounded-xl border border-white/5 group-hover:border-ruby/50 transition-colors pointer-events-none" />
+              <div className="absolute inset-0 rounded-xl border border-white/5 group-hover:border-(--user-accent)/50 transition-colors pointer-events-none" />
             </Link>
           );
         })}
@@ -109,7 +109,7 @@ export default function WishlistGrid({ games, onRemove }) {
 
       {/* Confirmation Modal */}
       {confirmingRemove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans selection:bg-ruby selection:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans selection:bg-(--user-accent) selection:text-white">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-background/95 backdrop-blur-xl animate-in fade-in duration-300"
@@ -117,23 +117,23 @@ export default function WishlistGrid({ games, onRemove }) {
           />
 
           {/* Modal */}
-          <div className="relative w-full max-w-md bg-surface border border-ruby/20 rounded-xl shadow-[0_0_60px_rgba(224,17,95,0.2)] p-8 animate-in zoom-in-95 duration-300">
-            {/* Ruby Scanline */}
-            <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-ruby to-transparent opacity-50" />
+          <div className="relative w-full max-w-md bg-surface border border-(--user-accent)/20 rounded-xl shadow-[0_0_60px_rgba(224,17,95,0.2)] p-8 animate-in zoom-in-95 duration-300">
+            {/* (--user-accent) Scanline */}
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-(--user-accent) to-transparent opacity-50" />
 
             {/* Icon */}
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="absolute inset-0 bg-ruby/30 blur-2xl rounded-full animate-pulse" />
-                <div className="relative border border-ruby p-4 rounded-xl bg-black shadow-[0_0_30px_rgba(224,17,95,0.4)]">
-                  <AlertTriangle size={48} className="text-ruby" />
+                <div className="absolute inset-0 bg-(--user-accent)/30 blur-2xl rounded-full animate-pulse" />
+                <div className="relative border border-(--user-accent) p-4 rounded-xl bg-black shadow-[0_0_30px_rgba(224,17,95,0.4)]">
+                  <AlertTriangle size={48} className="text-(--user-accent)" />
                 </div>
               </div>
             </div>
 
             {/* Title */}
             <h3 className="text-2xl font-black text-white uppercase tracking-tight text-center mb-2">
-              Remove <span className="text-ruby">Gem</span>?
+              Remove <span className="text-(--user-accent)">Gem</span>?
             </h3>
 
             {/* Message */}
@@ -149,7 +149,7 @@ export default function WishlistGrid({ games, onRemove }) {
             <div className="flex gap-3">
               <button
                 onClick={confirmRemove}
-                className="flex-1 bg-ruby text-white px-6 py-3 rounded-sm font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_20px_rgba(224,17,95,0.3)] text-xs"
+                className="flex-1 bg-(--user-accent) text-white px-6 py-3 rounded-sm font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_20px_rgba(224,17,95,0.3)] text-xs"
               >
                 Remove
               </button>
