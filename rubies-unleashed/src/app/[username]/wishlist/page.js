@@ -20,6 +20,7 @@ import WishlistStats from "@/components/wishlist/WishlistStats";
 import WishlistControls from "@/components/wishlist/WishlistControls";
 import EmptyWishlist from "@/components/wishlist/EmptyWishlist";
 import AuthModal from "@/components/auth/AuthModal";
+import { getCurrentUser } from "@/lib/userManager";
 
 // Logic Imports
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -94,20 +95,14 @@ export default function WishlistPage() {
             gameIds = data?.map(row => ({ id: row.game_id, addedAt: new Date(row.added_at) })) || [];
         } 
         else if (!user) {
-             // Local Fetch (Guest Fallback)
-             const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ruby_user_data") || '{}') : null;
+             const localUser = getCurrentUser(); // ✅ Use Helper
              
-             // ✅ FIX: Only show local list if URL matches local username
+             // Compare URL param with LocalStorage username
              if (localUser?.username === targetUsername) {
                  const localItems = localGet();
-                 gameIds = localItems.map(item => ({ 
-                    id: item.id || item, 
-                    addedAt: item.addedAt || new Date() 
-                 }));
+                 // ...
              } else {
-                 // User trying to view a guest account that isn't theirs -> Not Found
-                 // Guest accounts are not public/sharable across devices
-                 console.warn(`Guest user ${targetUsername} not found publicly.`);
+                 console.warn("Guest mismatch.");
                  setUserNotFound(true);
                  setLoading(false);
                  return;
@@ -225,7 +220,7 @@ export default function WishlistPage() {
     return (
       <div className="min-h-screen bg-background text-slate-200 font-sans flex flex-col">
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center pt-24">
             <div className="bg-surface border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl">
                 <UserX size={64} className="text-slate-600 mx-auto mb-6" />
                 <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
