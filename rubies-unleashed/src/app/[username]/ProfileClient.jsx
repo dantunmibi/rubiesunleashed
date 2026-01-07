@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
-import { User, Calendar, Edit, Diamond, Cpu, Crown, Ghost, LayoutDashboard, Heart, Share2, Image as ImageIcon } from "lucide-react";
+import { User, Calendar, Edit, Shield, Diamond, Cpu, Crown, Ghost, LayoutDashboard, Heart, Share2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import GameGrid from "@/components/explore/GameGrid"; 
 import { fetchGameById } from "@/lib/blogger";
@@ -94,6 +94,26 @@ export default function ProfilePage() {
   if (!profile) return <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-slate-500">User Not Found</div>;
 
   const isOwner = user && user.id === profile.id;
+
+  // ✅ PRIVACY SHIELD
+  if (profile.profile_visibility === 'private' && !isOwner) {
+      return (
+        <div className="min-h-screen bg-background pt-24 text-slate-200 font-sans selection:bg-(--user-accent)/30 flex flex-col">
+          <BackgroundEffects />
+          <Navbar />
+          <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+             <div className="bg-[#161b2c] border border-white/10 p-10 rounded-3xl max-w-md w-full shadow-2xl">
+                <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center border border-white/10">
+                    <Shield size={40} className="text-slate-500" />
+                </div>
+                <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Private Profile</h1>
+                <p className="text-slate-400">@{profile.username} has restricted access to their profile.</p>
+             </div>
+          </main>
+          <Footer />
+        </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-(--user-accent)/30">

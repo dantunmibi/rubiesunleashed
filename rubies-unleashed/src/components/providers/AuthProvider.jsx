@@ -49,6 +49,11 @@ export default function AuthProvider({ children }) {
       console.error('Profile fetch exception:', error);
     }
   };
+    const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id);
+    }
+  };
 
   useEffect(() => {
     const initSession = async () => {
@@ -101,6 +106,7 @@ export default function AuthProvider({ children }) {
     isArchitect: profile?.role === 'architect' || profile?.role === 'admin',
     isAdmin: profile?.role === 'admin',
     isAuthenticated: !!user,
+    refreshProfile,
     
     signOut: async () => {
       try {

@@ -185,14 +185,19 @@ function UserManager() {
   useEffect(() => { fetchUsers(); }, []);
 
   const promoteUser = async (id) => {
-    if (!confirm("Promote this user to Architect?")) return;
-    try {
-        const { error } = await supabase.from("profiles").update({ role: "architect", archetype: "architect" }).eq("id", id);
-        if (error) throw error;
-        fetchUsers(search);
-    } catch (error) {
-        alert("Promotion failed: " + error.message);
-    }
+    if (!confirm("Promote to Architect?")) return;
+    const { error } = await supabase.from("profiles").update({ role: "architect", archetype: "architect" }).eq("id", id);
+    if (error) alert("Error: " + error.message);
+    else fetchUsers(search); // ✅ Refresh List
+  };
+
+  // ✅ New Demote Function
+  const demoteUser = async (id) => {
+    if (!confirm("Demote to User?")) return;
+    const { error } = await supabase.from("profiles").update({ role: "user", archetype: "hunter" }).eq("id", id); // Reset to default archetype? Or keep current?
+    // Safe bet: Reset role to user. Archetype can stay or reset.
+    if (error) alert("Error: " + error.message);
+    else fetchUsers(search);
   };
 
   return (
@@ -215,8 +220,15 @@ function UserManager() {
                     <p className="text-[10px] text-slate-500 uppercase tracking-wider">{u.role} • {u.archetype}</p>
                 </div>
             </div>
+            {/* Action Buttons */}
             {u.role === "user" && (
-              <button onClick={() => promoteUser(u.id)} className="text-[10px] bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded hover:bg-emerald-500/20 transition-colors font-bold uppercase">Promote</button>
+              <button onClick={() => promoteUser(u.id)} className="...">Promote</button>
+            )}
+            {/* ✅ Demote Button */}
+            {u.role === "architect" && (
+              <button onClick={() => demoteUser(u.id)} className="text-[10px] bg-red-500/10 text-red-500 px-3 py-1.5 rounded hover:bg-red-500/20 font-bold uppercase">
+                Demote
+              </button>
             )}
           </div>
         ))}

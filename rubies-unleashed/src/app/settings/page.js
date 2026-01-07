@@ -20,7 +20,7 @@ const TABS = [
 
 
 export default function SettingsPage() {
-  const { user, profile } = useAuth();
+  const { user, profile , refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -86,6 +86,7 @@ export default function SettingsPage() {
     }
 
     try {
+
       const updates = {
         display_name: formData.displayName,
         bio: formData.bio,
@@ -97,23 +98,22 @@ export default function SettingsPage() {
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      // 2. Perform Update
+      const { error } = await supabase // ❌ REMOVED PROMISE.RACE for now to see real error
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
 
       if (error) throw error;
 
+      // 3. ✅ Update Global State (Instant Theme Change)
+      await refreshProfile();
+
       setSuccessMsg("System Updated Successfully.");
       
-      // Force Theme Update if Archetype Changed
-      if (formData.archetype !== profile.archetype) {
-         window.location.reload();
-      }
-
     } catch (error) {
       console.error("Save Error:", error);
-      alert("Failed to update settings.");
+      alert("Error: " + error.message);
     } finally {
       setLoading(false);
     }
