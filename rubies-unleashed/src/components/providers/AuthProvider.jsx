@@ -71,7 +71,14 @@ export default function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
-        if (event === 'SIGNED_IN' || !profile) {
+        
+        // ✅ OPTIMIZED: Only fetch if needed
+        // 1. If explicit Sign In event
+        // 2. OR if we have no profile
+        // 3. OR if the profile ID doesn't match the new session ID (user switched)
+        const needsFetch = event === 'SIGNED_IN' || !profile || profile.id !== session.user.id;
+        
+        if (needsFetch) {
            await fetchProfile(session.user.id);
         }
       } else {
