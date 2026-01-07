@@ -94,16 +94,24 @@ export default function WishlistPage() {
             gameIds = data?.map(row => ({ id: row.game_id, addedAt: new Date(row.added_at) })) || [];
         } 
         else if (!user) {
-             const localItems = localGet();
-             gameIds = localItems.map(item => ({ 
-                id: item.id || item, 
-                addedAt: item.addedAt || new Date() 
-             }));
-        } else {
-            console.warn(`User ${targetUsername} not found.`);
-            setUserNotFound(true);
-            setLoading(false);
-            return;
+             // Local Fetch (Guest Fallback)
+             const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ruby_user_data") || '{}') : null;
+             
+             // ✅ FIX: Only show local list if URL matches local username
+             if (localUser?.username === targetUsername) {
+                 const localItems = localGet();
+                 gameIds = localItems.map(item => ({ 
+                    id: item.id || item, 
+                    addedAt: item.addedAt || new Date() 
+                 }));
+             } else {
+                 // User trying to view a guest account that isn't theirs -> Not Found
+                 // Guest accounts are not public/sharable across devices
+                 console.warn(`Guest user ${targetUsername} not found publicly.`);
+                 setUserNotFound(true);
+                 setLoading(false);
+                 return;
+             }
         }
 
         // --- C. OPTIMIZED HYDRATION ---
