@@ -1500,8 +1500,11 @@ README.md
  ┃ ┣ 📜robots.js
  ┃ ┗ 📜sitemap.js
  ┣ 📂components
+ ┃ ┣ 📂analytics
+ ┃ ┃ ┗ 📜InternalTrafficGuard.js
  ┃ ┣ 📂auth
- ┃ ┃ ┗ 📜AuthModal.jsx
+ ┃ ┃ ┣ 📜AuthLoadingWrapper.jsx
+ ┃ ┃ ┗ 📜AuthModal.jsx 
  ┃ ┣ 📂explore
  ┃ ┃ ┣ 📜ExploreContent.jsx
  ┃ ┃ ┣ 📜GameGrid.jsx

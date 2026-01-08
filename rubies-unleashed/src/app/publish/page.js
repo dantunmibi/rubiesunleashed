@@ -63,7 +63,7 @@ export default function PublishPage() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/publish"
+              href="https://forms.gle/i7X2sUJ5cnqsUciA6"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2"
@@ -172,7 +172,7 @@ export default function PublishPage() {
             Ready to deploy?
           </h2>
           <Link
-            href="/publish"
+            href="https://forms.gle/i7X2sUJ5cnqsUciA6"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-architect-light hover:text-architect font-bold uppercase tracking-widest border-b border-architect/30 hover:border-architect pb-1 transition-colors"

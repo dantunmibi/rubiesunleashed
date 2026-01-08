@@ -46,6 +46,7 @@ import SearchDropdown from "./SearchDropdown";
 import SearchCommandCenter from "./SearchCommandCenter";
 import { getCurrentUser } from "@/lib/userManager"; // ✅ RESTORED IMPORT
 import { useMigration } from "@/hooks/useMigration"; // ✅ Import
+import { supabase } from "@/lib/supabase"; // ✅ Added missing import for Logout
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -58,36 +59,36 @@ export default function Navbar() {
     useSearch(allGames);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false); // ✅ New State
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // ✅ New
+  const [showLogoutModal, setShowLogoutModal] = useState(false); 
+  const [isLoggingOut, setIsLoggingOut] = useState(false); 
 
   // --- Auth Integration ---
-  const { user, profile, signOut, isArchitect } = useAuth();
+  // ✅ FIX: Grab 'initialized' to prevent UI flicker
+  const { user, profile, signOut, isArchitect, initialized } = useAuth();
   const [guestUser, setGuestUser] = useState(null);
 
   // 1. Listen for Guest Updates (LocalStorage via userManager)
-  // This logic restores your original guest handling exactly
   useEffect(() => {
-    const loadGuest = () => {
-      // Only look for guest data if no Supabase user is active
-      if (!user) {
-        const guest = getCurrentUser(); // ✅ Uses your existing logic
-        setGuestUser(guest);
-      }
-    };
-
-    loadGuest(); // Initial check
-    window.addEventListener("userChanged", loadGuest);
-
-    return () => {
-      window.removeEventListener("userChanged", loadGuest);
-    };
-  }, [user]);
+    // Only look for guest data if we are initialized and NO user is found
+    if (initialized && !user) {
+        const loadGuest = () => {
+          const guest = getCurrentUser(); 
+          setGuestUser(guest);
+        };
+    
+        loadGuest(); // Initial check
+        window.addEventListener("userChanged", loadGuest);
+    
+        return () => {
+          window.removeEventListener("userChanged", loadGuest);
+        };
+    }
+  }, [user, initialized]); // Added initialized dependency
 
   // Construct Unified User Object
+  // ✅ This logic is perfect, keeping it exactly as is.
   const currentUser = user
     ? {
-        // ✅ Fix: Check metadata first, then profile, then email
         username:
           user.user_metadata?.username ||
           profile?.username ||
@@ -156,9 +157,10 @@ export default function Navbar() {
       );
   }, []);
 
-  const updateUnreadCount = () => setUnreadCount(getUnreadCount());
-
+  // 5. Data Prefetch
   useEffect(() => {
+    // Only fetch if search is interacting?
+    // Or fetch reduced payload?
     async function loadNavbarData() {
       try {
         const data = await fetchGames(1000);
@@ -167,20 +169,12 @@ export default function Navbar() {
         console.error("❌ Navbar data load failed:", error);
       }
     }
-    loadNavbarData();
-  }, []);
-
-    // 5. Data Prefetch
-  useEffect(() => {
-    // Only fetch if search is interacting?
-    // Or fetch reduced payload?
-    async function loadNavbarData() {
-       // ...
-    }
+    
     // loadNavbarData(); // Maybe delay this?
     const timeout = setTimeout(loadNavbarData, 2000); // ✅ Delay fetch to unblock paint
     return () => clearTimeout(timeout);
   }, []);
+
 
   const handleLogout = async () => {
     if (confirm("Are you sure you want to log out?")) {
@@ -207,7 +201,7 @@ export default function Navbar() {
     { name: "Vault", href: "/explore" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
-    { name: "Publish", href: "/publish", target: "_blank" },
+    { name: "Publish", href: "/publish" },
   ];
 
   const getNavbarBackground = () => {
@@ -253,7 +247,6 @@ export default function Navbar() {
     }
 
     // 3. Force Reload immediately
-    // Since we cleared tokens manually, the next load MUST be guest
     window.location.href = '/';
   };
 
@@ -385,7 +378,15 @@ export default function Navbar() {
               <Search size={22} />
             </button>
 
-            {currentUser ? (
+            {/* ✅ CRITICAL FIX: Loading State for Identity Section */}
+            {!initialized ? (
+               <div className="flex items-center gap-2 px-2">
+                 {/* Skeleton for Notifications */}
+                 <div className="w-8 h-8 rounded-full bg-white/5 animate-pulse" />
+                 {/* Skeleton for User Avatar */}
+                 <div className="w-9 h-9 rounded-full bg-white/5 animate-pulse border border-white/5" />
+               </div>
+            ) : currentUser ? (
               <>
                 <div className="flex items-center gap-1">
                   <div className="relative" ref={notificationRef}>
@@ -416,13 +417,13 @@ export default function Navbar() {
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                     className="flex items-center gap-2 transition-all group p-1 hover:bg-white/5 rounded-full border border-transparent hover:border-white/10"
                   >
-<div className={`w-9 h-9 rounded-full bg-linear-to-tr ${currentUser.isGuest ? 'from-ruby to-pink-500' : 'from-(--user-accent) to-slate-500'} flex items-center justify-center text-lg shadow-lg transition-transform group-hover:scale-110 text-white overflow-hidden`}>
-  {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
-      <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
-  ) : (
-      currentUser.avatar === '👤' ? <User size={18} /> : currentUser.avatar
-  )}
-</div>
+                    <div className={`w-9 h-9 rounded-full bg-linear-to-tr ${currentUser.isGuest ? 'from-ruby to-pink-500' : 'from-(--user-accent) to-slate-500'} flex items-center justify-center text-lg shadow-lg transition-transform group-hover:scale-110 text-white overflow-hidden`}>
+                      {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                          <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                          currentUser.avatar === '👤' ? <User size={18} /> : currentUser.avatar
+                      )}
+                    </div>
                     <span className="hidden lg:block max-w-32 truncate text-sm font-bold text-slate-300 group-hover:text-white">
                       {currentUser.username}
                     </span>
@@ -438,16 +439,15 @@ export default function Navbar() {
                     <div className="absolute top-full right-0 mt-3 w-64 md:w-56 bg-[#161b2c] border border-(--user-accent)/20 rounded-xl shadow-[0_0_40px_var(--user-accent-glow)] overflow-hidden z-100 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="h-px bg-linear-to-r from-transparent via-(--user-accent) to-transparent" />
                       <div className="px-4 py-3 border-b border-white/10">
-<div className="flex items-center gap-3">
-  <div className={`w-10 h-10 rounded-full bg-linear-to-tr ${currentUser.isGuest ? 'from-ruby to-pink-500' : 'from-(--user-accent) to-slate-500'} flex items-center justify-center text-xl shadow-lg text-white overflow-hidden`}>
-      {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
-          <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
-      ) : (
-          currentUser.avatar === '👤' ? <User size={20} /> : currentUser.avatar
-      )}
-  </div>
-  <div className="flex-1 min-w-0">
-    {/* ... username/role ... */}
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full bg-linear-to-tr ${currentUser.isGuest ? 'from-ruby to-pink-500' : 'from-(--user-accent) to-slate-500'} flex items-center justify-center text-xl shadow-lg text-white overflow-hidden`}>
+                              {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                                  <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                  currentUser.avatar === '👤' ? <User size={20} /> : currentUser.avatar
+                              )}
+                          </div>
+                          <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-white truncate">
                               {currentUser.username}
                             </p>
@@ -476,7 +476,6 @@ export default function Navbar() {
                           label="Wishlist"
                           onClick={() => {
                             setUserDropdownOpen(false);
-                            // ✅ Fix: Always include username
                             router.push(`/${currentUser.username}/wishlist`);
                           }}
                         />
@@ -488,11 +487,7 @@ export default function Navbar() {
                               label="Publish Project"
                               onClick={() => {
                                 setUserDropdownOpen(false);
-                                window.open(
-                                  "/publish",
-                                  "_blank",
-                                  "noopener,noreferrer"
-                                );
+                                router.push("/publish");
                               }}
                             />
                             <DropdownItem
@@ -578,6 +573,7 @@ export default function Navbar() {
         </div>
       </nav>
 
+      {/* Sidebar and Logout Modal logic remains unchanged but now uses safe currentUser */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-45 backdrop-blur-sm transition-opacity duration-300"
@@ -605,16 +601,27 @@ export default function Navbar() {
         </div>
 
         <div className="relative p-4 flex flex-col gap-1 h-[calc(100%-60px)] overflow-y-auto custom-scrollbar">
-          {currentUser && (
+          {/* ✅ SKELETON or USER CHECK in Sidebar */}
+          {!initialized ? (
+             <div className="mb-6 pb-6 border-b border-white/10 animate-pulse">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-white/5" />
+                    <div className="flex-1 space-y-2">
+                        <div className="h-3 bg-white/5 rounded w-24" />
+                        <div className="h-2 bg-white/5 rounded w-16" />
+                    </div>
+                </div>
+             </div>
+          ) : currentUser && (
             <div className="mb-6 pb-6 border-b border-white/10">
               <div className="flex items-center gap-3">
-<div className={`w-9 h-9 rounded-full bg-linear-to-tr ${currentUser.isGuest ? 'from-ruby to-pink-500' : 'from-(--user-accent) to-slate-500'} flex items-center justify-center text-lg shadow-lg transition-transform group-hover:scale-110 text-white overflow-hidden`}>
-  {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
-      <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
-  ) : (
-      currentUser.avatar === '👤' ? <User size={18} /> : currentUser.avatar
-  )}
-</div>
+                <div className={`w-9 h-9 rounded-full bg-linear-to-tr ${currentUser.isGuest ? 'from-ruby to-pink-500' : 'from-(--user-accent) to-slate-500'} flex items-center justify-center text-lg shadow-lg transition-transform group-hover:scale-110 text-white overflow-hidden`}>
+                  {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                      <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                      currentUser.avatar === '👤' ? <User size={18} /> : currentUser.avatar
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white truncate">
                     @{currentUser.username}
@@ -685,7 +692,7 @@ export default function Navbar() {
             label="Publish Project"
             onClick={() => {
               setMenuOpen(false);
-              window.open("/publish", "_blank", "noopener,noreferrer");
+              router.push("/publish");
             }}
             active={false}
           />
@@ -701,7 +708,7 @@ export default function Navbar() {
           )}
 
           <div className="mt-auto pt-6 flex flex-col gap-2 pb-8">
-            {currentUser ? (
+            {!initialized ? null : currentUser ? (
               <>
                 {currentUser.isGuest && (
                   <button
@@ -742,21 +749,18 @@ export default function Navbar() {
           </div>
         </div>
       </aside>
-      {/* ✅ CINEMATIC LOGOUT MODAL */}
+      
+      {/* Logout Modal - Preserved unchanged */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
             onClick={() => setShowLogoutModal(false)}
           />
           
-          {/* Modal Content */}
           <div className="relative w-full max-w-sm bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 shadow-[0_0_60px_rgba(239,68,68,0.2)] text-center animate-in zoom-in-95 duration-300">
-            {/* Red Scanline */}
             <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-red-500 to-transparent opacity-50" />
 
-            {/* Icon */}
             <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                <LogOut size={32} className="text-red-500 ml-1" />
             </div>
@@ -770,23 +774,23 @@ export default function Navbar() {
             </p>
             
             <div className="flex gap-3">
-<button 
-  onClick={confirmLogout} 
-  disabled={isLoggingOut} 
-  className={`
-    flex-1 bg-red-600 hover:bg-red-500 py-3.5 rounded-xl font-bold text-white uppercase tracking-wider text-xs shadow-lg shadow-red-900/20 active:scale-95 transition-all flex items-center justify-center gap-2
-    ${isLoggingOut ? "opacity-70 cursor-not-allowed" : ""}
-  `}
->
-  {isLoggingOut ? (
-    <>
-      <Loader2 size={14} className="animate-spin" />
-      Disconnecting...
-    </>
-  ) : (
-    "Disconnect"
-  )}
-</button>
+              <button 
+                onClick={confirmLogout} 
+                disabled={isLoggingOut} 
+                className={`
+                  flex-1 bg-red-600 hover:bg-red-500 py-3.5 rounded-xl font-bold text-white uppercase tracking-wider text-xs shadow-lg shadow-red-900/20 active:scale-95 transition-all flex items-center justify-center gap-2
+                  ${isLoggingOut ? "opacity-70 cursor-not-allowed" : ""}
+                `}
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Disconnecting...
+                  </>
+                ) : (
+                  "Disconnect"
+                )}
+              </button>
                <button 
                  onClick={() => setShowLogoutModal(false)} 
                  className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3.5 rounded-xl font-bold text-slate-300 uppercase tracking-wider text-xs active:scale-95 transition-all"

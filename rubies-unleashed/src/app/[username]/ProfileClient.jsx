@@ -23,8 +23,9 @@ const ArchetypeIcon = ({ type, size = 20 }) => {
     }
 };
 
-export default function ProfilePage() {
-  const { user } = useAuth();
+export default function ProfileClient() {
+  // ✅ AUTH INTEGRATION: Use 'initialized' to prevent premature 404s
+  const { user, initialized } = useAuth();
   const params = useParams();
   const targetUsername = decodeURIComponent(params.username);
   
@@ -32,18 +33,15 @@ export default function ProfilePage() {
   const [wishlistPreview, setWishlistPreview] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(false); // Track specific fetch errors
 
   // Load Profile Logic
   useEffect(() => {
-    // 1. Reset State immediately when username changes to prevent stale data
-    setProfile(null);
-    setWishlistPreview([]);
-    setLoading(true);
+    if (!targetUsername) return;
 
     let isMounted = true;
-    const safety = setTimeout(() => {
-        if (isMounted) window.location.reload();
-    }, 5000);
+    setLoading(true);
+    setError(false);
 
     async function loadProfile() {
       try {
@@ -53,9 +51,16 @@ export default function ProfilePage() {
             .ilike('username', targetUsername)
             .single();
         
-        if (error) throw error;
+        if (error) {
+            // Only treat as error if it's not a "row not found" (which is just a 404)
+            if (error.code !== 'PGRST116') {
+                console.warn("Profile Load Error:", error.message);
+            }
+            if (isMounted) setError(true);
+            return;
+        }
         
-        if (data) {
+        if (data && isMounted) {
             setProfile(data);
             
             // Fetch Wishlist
@@ -72,18 +77,18 @@ export default function ProfilePage() {
             }
         }
       } catch (err) {
-        console.warn("Profile Load Error:", err.message);
+        console.error("Profile Unexpected Error:", err);
+        if (isMounted) setError(true);
       } finally {
-        if (isMounted) {
-            clearTimeout(safety); // ✅ Stop the reload
-            setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     }
 
+    // Only start fetching once we have the param
     loadProfile();
-    return () => { isMounted = false; clearTimeout(safety); };
-  }, [targetUsername]); // Dependency ensures re-run
+
+    return () => { isMounted = false; };
+  }, [targetUsername]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -99,7 +104,8 @@ export default function ProfilePage() {
     } catch (e) {}
   };
 
-    if (loading) {
+  // ✅ LOADING STATE: Wait for BOTH Profile Fetch AND Auth Initialization
+  if (loading || !initialized) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-ruby" size={48} />
@@ -108,7 +114,21 @@ export default function ProfilePage() {
     );
   }
 
-  if (!profile) return <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-slate-500">User Not Found</div>;
+  // ✅ 404 STATE: Only show if initialized, finished loading, and no profile found
+  if (error || !profile) {
+      return (
+        <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center text-slate-500 gap-4">
+            <Ghost size={48} className="text-slate-700" />
+            <div className="text-center">
+                <h1 className="text-xl font-bold text-slate-400">User Not Found</h1>
+                <p className="text-sm text-slate-600 mt-1">The requested identity could not be resolved.</p>
+            </div>
+            <Link href="/" className="mt-4 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
+                Return to Base
+            </Link>
+        </div>
+      );
+  }
 
   const isOwner = user && user.id === profile.id;
 
@@ -151,7 +171,6 @@ export default function ProfilePage() {
                         className="w-full h-full object-cover object-center opacity-80" // Higher opacity
                         alt="Cover" 
                     />
-                    {/* Darker bottom gradient to ensure text readability against bright images */}
                     <div className="absolute inset-0 bg-linear-to-t from-[#0f131f] via-[#0f131f]/80 via-40% to-transparent" />                </>
               ) : (
                 <div className="w-full h-full bg-(--user-accent)/5" />

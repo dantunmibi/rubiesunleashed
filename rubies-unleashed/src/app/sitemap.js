@@ -70,20 +70,35 @@ export default async function sitemap() {
   try {
     const { data: profiles } = await supabase
         .from('profiles')
-        .select('username, updated_at')
+        .select('username, updated_at, is_public_wishlist')
         .eq('profile_visibility', 'public')
         .limit(1000); // Limit to prevent massive build time
 
     if (profiles) {
-        profileUrls = profiles.map(p => ({
-            url: `${baseUrl}/${p.username}`,
-            lastModified: new Date(p.updated_at || new Date()),
-            changeFrequency: 'weekly',
-            priority: 0.6
-        }));
+        profiles.forEach(p => {
+            const lastMod = new Date(p.updated_at || new Date());
+            
+            // Add Profile URL
+            profileUrls.push({
+                url: `${baseUrl}/${p.username}`,
+                lastModified: lastMod,
+                changeFrequency: 'weekly',
+                priority: 0.6
+            });
+
+            // ✅ Add Wishlist URL
+            if (p.is_public_wishlist !== false) { // Check preference
+                profileUrls.push({
+                    url: `${baseUrl}/${p.username}/wishlist`,
+                    lastModified: lastMod,
+                    changeFrequency: 'weekly',
+                    priority: 0.5
+                });
+            }
+        });
     }
   } catch (error) {
-      console.warn("Sitemap: Failed to fetch profiles", error);
+      console.warn("Sitemap: Failed to fetch profiles and wishlists", error);
   }
 
   // 5. Merge

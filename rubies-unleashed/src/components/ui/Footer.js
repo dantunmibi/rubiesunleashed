@@ -107,8 +107,6 @@ export default function Footer() {
               <li>
                 <a
                   href="/publish"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="hover:text-ruby-light transition-colors flex items-center gap-3"
                 >
                   <span>📜</span> Start Publishing

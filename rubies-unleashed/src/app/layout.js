@@ -4,12 +4,17 @@ import ToastProvider from "@/components/providers/ToastProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import { GoogleAnalytics } from '@next/third-parties/google'
+import InternalTrafficGuard from "@/components/analytics/InternalTrafficGuard";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   // ✅ CRITICAL: Defines the base URL for all relative links (OG images, canonicals)
   metadataBase: new URL('https://rubiesunleashed.netlify.app'),
+
+  verification: {
+    google: 'LBbxq-Qizd1DQakDQ2vUfJrd-PAV8oCJ-ufn20kaRXM',
+  },
   
   title: {
     default: "Rubies Unleashed | Indie Games & App Marketplace",
@@ -45,8 +50,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={inter.className}>
+      <body>
         <AuthProvider> {/* ✅ Outer Wrap */}
           <ThemeProvider> {/* ✅ Inner Wrap */}
             <ToastProvider>
@@ -55,7 +60,9 @@ export default function RootLayout({ children }) {
           </ThemeProvider>
         </AuthProvider>
       </body>
+      {/* Google Analytics - Load always, but filter internally */}
       <GoogleAnalytics gaId="G-DWTBY4B7M6" />
+      <InternalTrafficGuard />
     </html>
   );
 }
