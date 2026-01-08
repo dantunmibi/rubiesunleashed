@@ -1,17 +1,16 @@
 /**
- * DYNAMIC WISHLIST PAGE (Cloud Integrated)
- * ----------------------------------------
- * Fetches wishlist from Supabase (if logged in) or LocalStorage (if guest).
- * Hydrates game details via blogger API/Snapshot.
- * Allows viewing other users' public wishlists.
- * Handles "User Not Found" gracefully.
+ * DYNAMIC WISHLIST PAGE (Optimized)
+ * ---------------------------------
+ * - Fast Initial Paint: Resolves User immediately.
+ * - Lazy Data Load: Shows Skeleton while fetching games.
+ * - Bulk Fetch: Optimized network usage.
  */
 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Heart, Sparkles, Trash2, UserX } from "lucide-react";
+import { Heart, Sparkles, Trash2, UserX } from "lucide-react"; // Loader2 removed (using Skeleton)
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
@@ -20,17 +19,18 @@ import WishlistStats from "@/components/wishlist/WishlistStats";
 import WishlistControls from "@/components/wishlist/WishlistControls";
 import EmptyWishlist from "@/components/wishlist/EmptyWishlist";
 import AuthModal from "@/components/auth/AuthModal";
+import GameSkeleton from "@/components/store/GameSkeleton"; // Or grid skeleton
 
 // Logic Imports
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { fetchGames, fetchGameById } from "@/lib/blogger"; // ✅ Use fetchGames for bulk
+import { fetchGames, fetchGameById } from "@/lib/blogger";
 import { 
   getWishlist as localGet, 
   clearWishlist as localClear,
   removeFromWishlist as localRemove,
   createGuestUser,
-  getCurrentUser // ✅ Ensure imported
+  getCurrentUser
 } from "@/lib/userManager";
 
 export default function WishlistPage() {
@@ -41,11 +41,16 @@ export default function WishlistPage() {
   const targetUsername = decodeURIComponent(params.username); 
   
   const [wishlistGames, setWishlistGames] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filteredGames, setFilteredGames] = useState([]);
+  
+  // Two Loading States
+  const [resolvingUser, setResolvingUser] = useState(true);
+  const [loadingGames, setLoadingGames] = useState(false);
+  
   const [viewingProfile, setViewingProfile] = useState(null); 
   const [userNotFound, setUserNotFound] = useState(false); 
   
+  // Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("dateAdded-desc");
   const [filterType, setFilterType] = useState("all");
@@ -53,24 +58,33 @@ export default function WishlistPage() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // 1. Fetch Data Logic
+  // 1. Resolve Target User (Fast)
   useEffect(() => {
-    async function loadData() {
-      // Only show spinner if we don't have data yet to prevent flashing
-      if (wishlistGames.length === 0) setLoading(true);
-      setUserNotFound(false); 
-      
-      let gameIds = [];
-      let targetUserId = null;
-      let targetProfileData = null;
+    async function resolveUser() {
+      setResolvingUser(true);
+      setUserNotFound(false);
+      setViewingProfile(null);
 
       try {
-        // --- A. DETERMINE TARGET USER ---
+        // A. Own Profile
         if (user && (user.user_metadata?.username === targetUsername || profile?.username === targetUsername)) {
-            targetUserId = user.id;
-            targetProfileData = profile;
-        } 
-        else if (targetUsername && targetUsername.toLowerCase() !== 'guest') {
+            setViewingProfile(profile);
+            setResolvingUser(false);
+            return;
+        }
+
+        // B. Guest Check
+        if (!user) {
+             const localUser = getCurrentUser(); 
+             if (localUser?.username?.toLowerCase() === targetUsername.toLowerCase()) {
+                 setViewingProfile(null); // Guest has no profile obj, but exists
+                 setResolvingUser(false);
+                 return;
+             }
+        }
+
+        // C. Public Lookup
+        if (targetUsername && targetUsername.toLowerCase() !== 'guest') {
             const { data } = await supabase
                 .from('profiles')
                 .select('*')
@@ -78,90 +92,101 @@ export default function WishlistPage() {
                 .single();
             
             if (data) {
-                targetUserId = data.id;
-                targetProfileData = data;
+                setViewingProfile(data);
+                setResolvingUser(false);
+                return;
             }
         }
 
-        setViewingProfile(targetProfileData);
-
-        // --- B. FETCH OR FALLBACK ---
-        if (targetUserId) {
-             const { data } = await supabase
-            .from('wishlists')
-            .select('game_id, added_at')
-            .eq('user_id', targetUserId)
-            .order('added_at', { ascending: false });
-            
-            gameIds = data?.map(row => ({ id: row.game_id, addedAt: new Date(row.added_at) })) || [];
-        } 
-        else if (!user) {
-             // ✅ GUEST CHECK FIX
-             const localUser = getCurrentUser(); 
-             
-             // Compare Case Insensitively to ensure Guest matches URL
-             const isMyGuestAccount = localUser?.username?.toLowerCase() === targetUsername.toLowerCase();
-
-             if (isMyGuestAccount) {
-                 const localItems = localGet();
-                 gameIds = localItems.map(item => ({ 
-                    id: item.id || item, 
-                    addedAt: item.addedAt || new Date() 
-                 }));
-             } else {
-                 // Trying to view a guest URL that isn't mine -> 404
-                 console.warn(`Guest ${targetUsername} not found locally.`);
-                 setUserNotFound(true);
-                 setLoading(false);
-                 return;
-             }
-        } else {
-            // Logged in user trying to view non-existent profile
-            console.warn(`User ${targetUsername} not found.`);
-            setUserNotFound(true);
-            setLoading(false);
-            return;
-        }
-
-        // --- C. OPTIMIZED HYDRATION ---
-        // Fetch ALL games once (Fast because it hits Snapshot + 1 API call)
-        // Fallback to fetchGameById if fetchGames returns empty (rare)
-        const allGames = await fetchGames(2000);
-        
-        let validGames = [];
-        
-        if (allGames && allGames.length > 0) {
-             validGames = gameIds.map(item => {
-                const game = allGames.find(g => 
-                    g.id === item.id || 
-                    g.slug === item.id || 
-                    g.slug.endsWith(`-${item.id}`)
-                );
-                return game ? { ...game, addedAt: item.addedAt } : null;
-            }).filter(Boolean);
-        } else {
-            // Fallback: Individual fetch if bulk failed
-            const detailsPromises = gameIds.map(async (item) => {
-                const game = await fetchGameById(item.id);
-                return game ? { ...game, addedAt: item.addedAt } : null;
-            });
-            validGames = (await Promise.all(detailsPromises)).filter(Boolean);
-        }
-        
-        setWishlistGames(validGames);
-        setFilteredGames(validGames); 
+        // D. Not Found
+        console.warn(`User ${targetUsername} not found.`);
+        setUserNotFound(true);
+        setResolvingUser(false);
 
       } catch (err) {
-        console.error("Wishlist Load Error:", err);
-      } finally {
-        setLoading(false);
+        console.error("User Resolution Error:", err);
+        setResolvingUser(false);
       }
     }
 
-    loadData();
+    resolveUser();
   }, [targetUsername, user?.id, profile]);
 
-  // 2. Filter & Sort Logic
+  // 2. Fetch Wishlist Data (Slow) - Dependent on resolved user
+  useEffect(() => {
+    if (resolvingUser || userNotFound) return;
+
+    let isMounted = true;
+    
+    // ✅ Safety Valve
+    const safety = setTimeout(() => {
+        if (isMounted) setLoadingGames(false);
+    }, 5000);
+
+    async function loadGames() {
+      // ✅ Only skeleton if genuinely empty
+      if (wishlistGames.length === 0) setLoadingGames(true);
+      let gameIds = [];
+      
+      try {
+        // Determine Source
+        if (viewingProfile) {
+             // Cloud Fetch
+             const { data } = await supabase
+            .from('wishlists')
+            .select('game_id, added_at')
+            .eq('user_id', viewingProfile.id)
+            .order('added_at', { ascending: false });
+            gameIds = data?.map(row => ({ id: row.game_id, addedAt: new Date(row.added_at) })) || [];
+        } else if (!user) {
+             // Guest Local Fetch
+             const localItems = localGet();
+             gameIds = localItems.map(item => ({ id: item.id || item, addedAt: item.addedAt || new Date() }));
+        }
+
+        // Hydrate
+        if (gameIds.length > 0) {
+            const allGames = await fetchGames(2000);
+            let validGames = [];
+            
+            if (allGames && allGames.length > 0) {
+                 validGames = gameIds.map(item => {
+                    const game = allGames.find(g => 
+                        g.id === item.id || g.slug === item.id || g.slug.endsWith(`-${item.id}`)
+                    );
+                    return game ? { ...game, addedAt: item.addedAt } : null;
+                }).filter(Boolean);
+            } else {
+                const detailsPromises = gameIds.map(async (item) => {
+                    const game = await fetchGameById(item.id);
+                    return game ? { ...game, addedAt: item.addedAt } : null;
+                });
+                validGames = (await Promise.all(detailsPromises)).filter(Boolean);
+            }
+        if (isMounted) {
+            setWishlistGames(validGames);
+            setFilteredGames(validGames);
+        }
+        } else {
+            setWishlistGames([]);
+            setFilteredGames([]);
+        }
+
+
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoadingGames(false);
+        clearTimeout(safety);
+      }
+    }
+
+    loadGames();
+    return () => { isMounted = false; clearTimeout(safety); };
+  }, [resolvingUser, userNotFound, viewingProfile, user]);
+
+  // ... (Sort/Filter/Handlers same as before) ...
+  // [Copy useEffect for Filter & Sort]
   useEffect(() => {
     let result = [...wishlistGames];
     if (searchQuery) result = result.filter(g => g.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -176,14 +201,13 @@ export default function WishlistPage() {
     setFilteredGames(result);
   }, [wishlistGames, searchQuery, filterType, sortBy]);
 
-  // 3. Permissions Logic
-  const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ruby_user_data") || '{}') : null;
+  // [Copy Handlers: handleRemove, handleClearAll, handleShare]
   const isOwner = user && viewingProfile && user.id === viewingProfile.id;
+  const isGuestView = !user; 
+  const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ruby_user_data") || '{}') : null;
   const isGuestOwner = !user && localUser?.username?.toLowerCase() === targetUsername.toLowerCase();
-  
   const canEdit = isOwner || isGuestOwner;
 
-  // 4. Handlers
   const handleRemove = async (gameId) => {
     if (!canEdit) return;
     if (user) await supabase.from('wishlists').delete().eq('user_id', user.id).eq('game_id', gameId);
@@ -204,29 +228,16 @@ export default function WishlistPage() {
       setShowAuthModal(true);
       return false;
     }
-
     const shareUrl = window.location.href;
     const shareData = {
       title: `${targetUsername}'s Wishlist - Rubies Unleashed`,
       text: `Check out this wishlist on Rubies Unleashed!`,
       url: shareUrl,
     };
-
     if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return true;
-      } catch (err) {
-        if (err.name !== 'AbortError') console.error("Share failed", err);
-      }
+      try { await navigator.share(shareData); return true; } catch (err) { if (err.name !== 'AbortError') console.error("Share failed", err); }
     }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      return true;
-    } catch (err) {
-      return false;
-    }
+    try { await navigator.clipboard.writeText(shareUrl); return true; } catch (err) { return false; }
   };
 
   const stats = {
@@ -235,46 +246,43 @@ export default function WishlistPage() {
     apps: wishlistGames.filter(g => g.type === 'App').length
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="animate-spin text-(--user-accent)" size={48} />
-      </div>
-    );
+  // Render Logic
+  if (resolvingUser) {
+     // Show Skeleton Page (Header + Grid)
+     return (
+       <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-(--user-accent)/30">
+         <BackgroundEffects />
+         <Navbar />
+         <div className="pt-32 pb-12 px-6 flex flex-col items-center">
+            <div className="w-20 h-20 bg-white/5 rounded-full animate-pulse mb-4" />
+            <div className="h-8 w-48 bg-white/5 rounded animate-pulse mb-2" />
+            <div className="h-12 w-64 bg-white/5 rounded animate-pulse" />
+         </div>
+         <main className="max-w-7xl mx-auto px-6 pb-20">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[1,2,3,4,5,6,7,8].map(i => <div key={i} className="aspect-3/4 bg-white/5 rounded-xl animate-pulse" />)}
+            </div>
+         </main>
+         <Footer />
+       </div>
+     );
   }
 
-  // User Not Found Screen
+  // User Not Found
   if (userNotFound) {
+    // ... (Keep existing User Not Found UI) ...
     return (
       <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans flex flex-col relative overflow-hidden selection:bg-red-500/30">
         <BackgroundEffects />
         <Navbar />
-        
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10 pt-24">
-            {/* Ambient Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/10 blur-[120px] rounded-full pointer-events-none" />
-
             <div className="bg-[#161b2c]/80 backdrop-blur-xl border border-white/10 p-10 rounded-3xl max-w-md w-full shadow-[0_0_60px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-500">
-                
-                {/* Icon */}
                 <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
                     <UserX size={40} className="text-red-500" />
                 </div>
-
-                <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-3">
-                    Signal Lost
-                </h1>
-                
-                <p className="text-slate-400 mb-8 text-sm leading-relaxed">
-                    The profile <span className="text-white font-bold font-mono bg-white/5 px-2 py-0.5 rounded">@{targetUsername}</span> could not be located in the Vault database.
-                </p>
-                
-                <button 
-                    onClick={() => router.push('/explore')} 
-                    className="w-full bg-white text-black hover:bg-slate-200 px-6 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
-                >
-                    Return to Exploration
-                </button>
+                <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-3">Signal Lost</h1>
+                <p className="text-slate-400 mb-8 text-sm leading-relaxed">The profile <span className="text-white font-bold font-mono bg-white/5 px-2 py-0.5 rounded">@{targetUsername}</span> could not be located in the Vault database.</p>
+                <button onClick={() => router.push('/explore')} className="w-full bg-white text-black hover:bg-slate-200 px-6 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95">Return to Exploration</button>
             </div>
         </main>
         <Footer />
@@ -311,7 +319,12 @@ export default function WishlistPage() {
            </div>
         )}
 
-        {wishlistGames.length === 0 ? (
+        {/* LOADING GRID vs CONTENT */}
+        {loadingGames ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[1,2,3,4,5,6,7,8].map(i => <div key={i} className="aspect-3/4 bg-white/5 rounded-xl animate-pulse" />)}
+            </div>
+        ) : wishlistGames.length === 0 ? (
           <EmptyWishlist />
         ) : (
           <>
@@ -334,20 +347,8 @@ export default function WishlistPage() {
       </main>
 
       <Footer />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onContinueAsGuest={createGuestUser} message="Sign up to share your wishlist!" />
       
-      {/* Full AuthModal Component */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-        onContinueAsGuest={() => {
-            createGuestUser();
-            window.dispatchEvent(new Event("userChanged"));
-            setShowAuthModal(false);
-        }} 
-        message="Sign up to share your wishlist!"
-      />
-      
-      {/* Clear Modal */}
       {showClearModal && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="bg-surface border border-red-500/30 p-8 rounded-xl max-w-sm w-full text-center">

@@ -164,6 +164,12 @@ export default function InitializePage() {
           </button>
         </div>
 
+        <div>
+          <p className="flex justify-center animate-in fade-in duration-1000 delay-500 text-white p-5">
+            You can change your directive at any time.
+          </p>
+        </div>
+
       </div>
     </div>
   );

@@ -11,10 +11,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserPlus, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Check, X, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
@@ -29,6 +29,33 @@ export default function SignupPage() {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [otp, setOtp] = useState("");
   const [passwordError, setPasswordError] = useState(""); // ✅ New State
+
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(null); // null = unseen, true = available, false = taken
+
+  // ✅ DEBOUNCED VALIDATION EFFECT
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!username || username.length < 3) {
+        setUsernameAvailable(null);
+        return;
+      }
+
+      setIsCheckingUsername(true);
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('username', username)
+        .maybeSingle();
+
+      setUsernameAvailable(!data); // If no data, username is free
+      setIsCheckingUsername(false);
+    };
+
+    const timer = setTimeout(checkUsername, 500);
+    return () => clearTimeout(timer);
+  }, [username]);
 
   const validatePassword = (pwd) => {
     if (pwd.length < 8) return "Password must be at least 8 characters.";
@@ -186,19 +213,29 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Username */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
               Username
+              {/* Feedback Label */}
+              {isCheckingUsername ? (
+                 <span className="text-slate-500 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Checking...</span>
+              ) : usernameAvailable === true ? (
+                 <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Available</span>
+              ) : usernameAvailable === false ? (
+                 <span className="text-red-400 flex items-center gap-1"><X size={10} /> Taken</span>
+              ) : null}
             </label>
             <div className="relative">
-              <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <User size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${usernameAvailable === false ? "text-red-500" : usernameAvailable === true ? "text-emerald-500" : "text-slate-500"}`} />
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/\s+/g, '_'))} 
-                // ✅ Allow caps, still replace spaces with underscore
+                onChange={(e) => setUsername(e.target.value.replace(/\s+/g, '_'))}
                 placeholder="RubyHunter_42"
                 required
-                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl py-3 px-12 text-white placeholder:text-slate-600 focus:border-ruby/50 focus:outline-none transition-colors"
+                className={`w-full bg-[#0b0f19] border rounded-xl py-3 px-12 text-white placeholder:text-slate-600 focus:outline-none transition-colors 
+                  ${usernameAvailable === false ? "border-red-500/50 focus:border-red-500" : 
+                    usernameAvailable === true ? "border-emerald-500/50 focus:border-emerald-500" : 
+                    "border-white/10 focus:border-ruby/50"}`}
               />
             </div>
           </div>

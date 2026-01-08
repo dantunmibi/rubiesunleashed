@@ -49,7 +49,7 @@ export default function AdminClient() {
         </div>
 
         {/* Content (Conditional Rendering for Performance) */}
-        <div className="bg-[#161b2c] border border-white/5 rounded-2xl p-6 min-h-[500px]">
+        <div className="bg-[#161b2c] border border-white/5 rounded-2xl p-6 min-h-125">
             {activeTab === 'reports' && <ReportManager />}
             {activeTab === 'users' && <UserManager />}
             {activeTab === 'content' && <ContentManager />}
@@ -288,7 +288,7 @@ function ContentManager() {
                     <label className="text-[10px] font-bold text-red-400 uppercase tracking-widest block mb-2">Ban Game ID</label>
                     <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="e.g. 123456789" className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-red-500 outline-none" />
                 </div>
-                <button onClick={manualHide} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase h-[38px]">Hide</button>
+                <button onClick={manualHide} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase h-9.5">Hide</button>
             </div>
             <div>
                 <h3 className="font-bold text-white mb-4 flex items-center gap-2"><EyeOff size={18} /> Hidden Content ({hidden.length})</h3>

@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
-import { User, Calendar, Edit, Shield, Diamond, Cpu, Crown, Ghost, LayoutDashboard, Heart, Share2, Image as ImageIcon } from "lucide-react";
+import { User, Calendar, Edit, Shield, Diamond, Loader2, Cpu, Crown, Ghost, LayoutDashboard, Heart, Share2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import GameGrid from "@/components/explore/GameGrid"; 
 import { fetchGameById } from "@/lib/blogger";
@@ -40,6 +40,11 @@ export default function ProfilePage() {
     setWishlistPreview([]);
     setLoading(true);
 
+    let isMounted = true;
+    const safety = setTimeout(() => {
+        if (isMounted) window.location.reload();
+    }, 5000);
+
     async function loadProfile() {
       try {
         const { data, error } = await supabase
@@ -69,11 +74,15 @@ export default function ProfilePage() {
       } catch (err) {
         console.warn("Profile Load Error:", err.message);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+            clearTimeout(safety); // ✅ Stop the reload
+            setLoading(false);
+        }
       }
     }
 
     loadProfile();
+    return () => { isMounted = false; clearTimeout(safety); };
   }, [targetUsername]); // Dependency ensures re-run
 
   const handleShare = async () => {
@@ -90,7 +99,15 @@ export default function ProfilePage() {
     } catch (e) {}
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0b0f19]" />;
+    if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-ruby" size={48} />
+        <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Initializing Profile...</p>
+      </div>
+    );
+  }
+
   if (!profile) return <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-slate-500">User Not Found</div>;
 
   const isOwner = user && user.id === profile.id;
