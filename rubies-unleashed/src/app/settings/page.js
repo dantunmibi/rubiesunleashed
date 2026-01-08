@@ -10,6 +10,7 @@ import {
   User, Shield, Cpu, AlertTriangle, Save, Loader2, Check, Eye, EyeOff
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // --- TABS CONFIG ---
 const TABS = [
@@ -20,7 +21,9 @@ const TABS = [
 
 
 export default function SettingsPage() {
-  const { user, profile , refreshProfile } = useAuth();
+  // ✅ AUTH GUARD: initialized
+  const { user, profile, refreshProfile, initialized } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -36,6 +39,13 @@ export default function SettingsPage() {
     archetype: "hunter"
   });
 
+  // Redirect if not logged in (handled mostly by wrapper, but explicit safe guard)
+  useEffect(() => {
+    if (initialized && !user) {
+        router.push('/login');
+    }
+  }, [initialized, user, router]);
+
   // Load Data
   useEffect(() => {
     if (profile) {
@@ -43,7 +53,7 @@ export default function SettingsPage() {
         displayName: profile.display_name || profile.username || "",
         bio: profile.bio || "",
         avatarUrl: profile.avatar_url || "",
-        coverUrl: profile.cover_url || "", // ✅ Ensure empty string fallback
+        coverUrl: profile.cover_url || "", 
         isPublicProfile: profile.profile_visibility === 'public',
         isPublicWishlist: profile.is_public_wishlist ?? true,
         archetype: profile.archetype || "hunter"
@@ -99,7 +109,7 @@ export default function SettingsPage() {
       };
 
       // 2. Perform Update
-      const { error } = await supabase // ❌ REMOVED PROMISE.RACE for now to see real error
+      const { error } = await supabase 
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
@@ -110,6 +120,7 @@ export default function SettingsPage() {
       await refreshProfile();
 
       setSuccessMsg("System Updated Successfully.");
+      setTimeout(() => setSuccessMsg(""), 3000);
       
     } catch (error) {
       console.error("Save Error:", error);
@@ -119,7 +130,15 @@ export default function SettingsPage() {
     }
   };
 
-  if (!user) return null; // AuthProvider redirects
+  // ✅ LOADING SKELETON: Wait for Auth Init
+  if (!initialized || !user) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-ruby" size={48} />
+        <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Authenticating...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-(--user-accent)/30">
@@ -164,7 +183,7 @@ export default function SettingsPage() {
             
             {/* Success Toast */}
             {successMsg && (
-                <div className="absolute top-0 left-0 w-full bg-emerald-500 text-white text-center text-xs font-bold py-2 animate-in slide-in-from-top-full">
+                <div className="absolute top-0 left-0 w-full bg-emerald-500 text-white text-center text-xs font-bold py-2 animate-in slide-in-from-top-full z-10">
                     {successMsg}
                 </div>
             )}
@@ -244,7 +263,7 @@ function ProfileSettings({ formData, setFormData, profile }) {
                     />
                 </div>
 
-                {/* ✅ NEW: Cover URL */}
+                {/* Cover URL */}
                 <div>
                     <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Cover Image URL</label>
                     <input 

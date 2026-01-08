@@ -9,6 +9,7 @@
  * UPGRADE:
  * - Filters out hidden content (Ban Hammer)
  * - Caches Blogger fetch for 60s to improve performance
+ * - ✅ FIX: Updates propagate even for old posts (Live Overwrites Snapshot)
  */
 
 import { NextResponse } from 'next/server';
@@ -26,12 +27,10 @@ export async function GET(request) {
   try {
     const timestamp = Date.now();
     
-    // ✅ Check backup blog for posts NEWER than snapshot
-    const snapshotDate = new Date(BACKUP_DATA.feed._metadata?.generatedAt || 0);
-    
     // Optimized: Cache external fetch for 60s
+    // ✅ Fetch MORE items (100) to ensure we catch recent edits to older posts
     const backupResult = await fetch(
-      `https://${BACKUP_BLOG}/feeds/posts/default?alt=json&max-results=50`,
+      `https://${BACKUP_BLOG}/feeds/posts/default?alt=json&max-results=100`,
       { 
         next: { revalidate: 60 } // Cache for 1 min
       }
@@ -41,29 +40,31 @@ export async function GET(request) {
     
     if (backupResult.ok) {
       const backupData = await backupResult.json();
-      const allBackupPosts = backupData.feed?.entry || [];
-      
-      // Only include posts newer than snapshot
-      realtimePosts = allBackupPosts.filter(post => {
-        const postDate = new Date(post.published?.$t || post.published);
-        return postDate > snapshotDate;
-      });
-      
-      console.log(`✅ Found ${realtimePosts.length} new posts since last build`);
+      realtimePosts = backupData.feed?.entry || [];
+      console.log(`✅ Live Feed: Fetched ${realtimePosts.length} posts`);
     }
     
-    // ✅ Merge snapshot + realtime posts
-    const snapshotPosts = BACKUP_DATA.feed?.entry || [];
-    const allPosts = [...snapshotPosts, ...realtimePosts];
+    // ✅ MERGE STRATEGY: Live Data Overwrites Snapshot
+    // This ensures that if you edit a link in an old post, the live version takes precedence
     
-    // Deduplicate
-    const seen = new Set();
-    const uniquePosts = allPosts.filter(post => {
-      const id = post.id?.$t || post.id;
-      if (seen.has(id)) return false;
-      seen.add(id);
-      return true;
+    const postMap = new Map();
+
+    // 1. Load Snapshot Data into Map
+    const snapshotPosts = BACKUP_DATA.feed?.entry || [];
+    snapshotPosts.forEach(post => {
+        const id = post.id?.$t || post.id;
+        postMap.set(id, post);
     });
+
+    // 2. Overwrite with Live Data
+    // If ID exists, this replaces the old snapshot version with the fresh one
+    realtimePosts.forEach(post => {
+        const id = post.id?.$t || post.id;
+        postMap.set(id, post);
+    });
+
+    // 3. Convert Map back to Array
+    const uniquePosts = Array.from(postMap.values());
 
     // ✅ NEW: Fetch Hidden List from Supabase
     // Note: Supabase fetch is fast, but adds ~50-100ms. 
@@ -87,7 +88,7 @@ export async function GET(request) {
       return dateB - dateA; // Descending (newest first)
     });
     
-    console.log(`✅ Total posts available: ${uniquePosts.length} -> Visible: ${visiblePosts.length} (Hidden: ${uniquePosts.length - visiblePosts.length})`);
+    console.log(`✅ Total merged: ${uniquePosts.length} -> Visible: ${visiblePosts.length} (Hidden: ${uniquePosts.length - visiblePosts.length})`);
     
     // ✅ Apply limit from query params
     const limitedPosts = limit < visiblePosts.length 

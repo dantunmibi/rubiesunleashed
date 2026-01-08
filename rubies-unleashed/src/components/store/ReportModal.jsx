@@ -1,38 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { X, Flag, AlertTriangle, Check, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/components/providers/AuthProvider";
+import { X, Flag, Check, Loader2 } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider"; // Just for user ID
 
 export default function ReportModal({ game, onClose }) {
   const { user } = useAuth();
+  
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  if (!game || !game.id) return null;
 
   const handleSubmit = async () => {
     if (!issueType) return;
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('reports')
-        .insert({
+      // ✅ SEND TO OUR API ROUTE (Bypasses Supabase Client issues)
+      const response = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           game_id: game.id,
           user_id: user?.id || null,
           issue_type: issueType,
-          description: description,
-          status: 'pending'
-        });
+          description: description
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Server rejected report');
+      }
+
       setSuccess(true);
       setTimeout(onClose, 2000);
+      
     } catch (err) {
       console.error("Report Failed:", err);
-      alert("Failed to submit report.");
+      alert("Failed to submit report. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -51,7 +59,6 @@ export default function ReportModal({ game, onClose }) {
       <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
       
       <div className="relative w-full max-w-md bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 shadow-[0_0_60px_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-300 overflow-hidden">
-        {/* Red Scanline */}
         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-red-600 to-transparent opacity-80" />
         
         {success ? (

@@ -144,6 +144,10 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userDropdownOpen, notificationPanelOpen]);
 
+
+    // ✅ ADD THIS MISSING HELPER FUNCTION
+  const updateUnreadCount = () => setUnreadCount(getUnreadCount());
+
   useEffect(() => {
     updateUnreadCount();
     const handleNotificationChange = () => {

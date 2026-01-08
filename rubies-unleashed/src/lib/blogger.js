@@ -1528,38 +1528,39 @@ export async function fetchGames(limit = 500) {
 
 export async function fetchGameById(id) {
     
-    // 1️⃣ FAST PATH: Check snapshot first
-    const backupGames = getBackupGames(500);
-    
-    // ✅ FIX: Strict Matching Only
+    // ✅ STEP 1: Define Match Logic
     const findMatch = (list) => {
         return list.find(g => 
-            g.id === id ||                   // Exact ID Match (e.g. "123456")
-            g.slug === id ||                 // Exact Slug Match (e.g. "game-title-123456")
-            g.slug.endsWith(`-${id}`)        // Standard Slug End Match
-            // ❌ REMOVED: g.slug.includes(id) -> This was causing random text to match
+            g.id === id ||                   
+            g.slug === id ||                 
+            g.slug.endsWith(`-${id}`)
         );
     };
 
-    let game = findMatch(backupGames);
-    if (game) {
-        return game;
-    }
-    
-    // 2️⃣ LIVE PATH: Use the working fetchGames logic
-    
+    // ✅ STEP 2: TRY LIVE DATA FIRST (The Fix)
+    // We call fetchGames() which hits your /api/games route.
+    // Your API route is already configured to merge Live + Snapshot.
     try {
-        const freshGames = await fetchGames(500);
-        game = findMatch(freshGames);
+        const freshGames = await fetchGames(500); 
+        const game = findMatch(freshGames);
         
         if (game) {
-            return game;
+            return game; // ✅ Returns fresh data (new links/text)
         }
         
-        console.warn('⚠️ Post not found in snapshot or live data.');
+        console.warn(`⚠️ Game ${id} not found in live feed.`);
         
     } catch (error) {
-        console.error('❌ Live fetch failed:', error.message);
+        console.error('❌ Live fetch failed, attempting fallback:', error.message);
+    }
+    
+    // ✅ STEP 3: FALLBACK TO SNAPSHOT (Only if live failed)
+    const backupGames = getBackupGames(500);
+    const backupGame = findMatch(backupGames);
+    
+    if (backupGame) {
+        console.log(`⚠️ Serving ${id} from Snapshot (Stale).`);
+        return backupGame;
     }
     
     return null;

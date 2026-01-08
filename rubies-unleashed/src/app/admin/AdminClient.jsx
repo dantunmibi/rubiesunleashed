@@ -14,16 +14,29 @@ import { useServiceStatus } from "@/hooks/useServiceStatus";
 import { SERVICES } from "@/lib/status/services";
 
 export default function AdminClient() {
-  const { user, isAdmin, loading } = useAuth();
+  // ✅ AUTH GUARD: initialized added
+  const { user, isAdmin, loading, initialized } = useAuth();
   const [activeTab, setActiveTab] = useState("reports");
 
   useEffect(() => {
     if (isAdmin) document.title = "Admin Console | Rubies Unleashed";
   }, [isAdmin]);
 
-  if (loading) return <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center"><Loader2 className="animate-spin text-red-500" size={48} /></div>;
+  // ✅ 1. INITIALIZATION & LOADING STATE
+  // Wait until Auth is settled.
+  if (!initialized || loading) {
+      return (
+        <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center">
+            <Loader2 className="animate-spin text-red-500" size={48} />
+        </div>
+      );
+  }
 
-  if (!user || !isAdmin) return <NotFound />;
+  // ✅ 2. ACCESS DENIED (Stealth Mode)
+  // Only show this AFTER initialization is complete.
+  if (!user || !isAdmin) {
+      return <NotFound />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-white font-sans selection:bg-red-500/30">

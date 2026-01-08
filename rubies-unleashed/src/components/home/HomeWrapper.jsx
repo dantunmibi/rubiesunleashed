@@ -5,7 +5,8 @@ import LandingPage from './LandingPage';
 import UserDashboard from './UserDashboard';
 import { Loader2 } from 'lucide-react';
 
-export default function HomeWrapper() {
+// ✅ Accept 'games' prop from Server Component
+export default function HomeWrapper({ games }) {
   const { user, loading, initialized } = useAuth();
 
   // Prevent flicker: Wait until we know for sure if user is logged in
@@ -19,8 +20,10 @@ export default function HomeWrapper() {
 
   // Once initialized, make the binary choice
   if (user) {
-    return <UserDashboard />;
+    // ✅ PASS THE GAMES DATA HERE
+    return <UserDashboard initialGames={games} />;
   }
 
-  return <LandingPage />;
+  // ✅ Pass games to Landing Page too (optional optimization)
+  return <LandingPage games={games} />;
 }
