@@ -67,7 +67,7 @@ export default function InitializePage() {
 
       if (error) throw error;
 
-      window.location.href = '/explore'; 
+      window.location.href = '/'; 
       
     } catch (err) {
       console.error("Initialization Failed:", err.message);

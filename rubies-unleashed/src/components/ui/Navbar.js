@@ -129,7 +129,16 @@ export default function Navbar() {
     }
   }, [isHomePage]);
 
+  // 3. Scroll Lock & Click Outside
   useEffect(() => {
+    // A. Handle Body Scroll Lock
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // B. Handle Click Outside
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target))
         setUserDropdownOpen(false);
@@ -139,10 +148,17 @@ export default function Navbar() {
       )
         setNotificationPanelOpen(false);
     };
-    if (userDropdownOpen || notificationPanelOpen)
+
+    if (userDropdownOpen || notificationPanelOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [userDropdownOpen, notificationPanelOpen]);
+    }
+
+    // Cleanup
+    return () => {
+      document.body.style.overflow = ''; // Ensure scroll is restored
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen, userDropdownOpen, notificationPanelOpen]);
 
 
     // ✅ ADD THIS MISSING HELPER FUNCTION

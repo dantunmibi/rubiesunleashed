@@ -5,6 +5,8 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import InternalTrafficGuard from "@/components/analytics/InternalTrafficGuard";
+import Script from "next/script";
+import SessionErrorOverlay from "@/components/auth/SessionErrorOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,7 +33,7 @@ export const metadata = {
     siteName: 'Rubies Unleashed',
     images: [
       {
-        url: '/rubieslogo.png', // Resolves to https://rubiesunleashed.netlify.app/rulogo.png
+        url: '/rubieslogo.png',
         width: 800,
         height: 600,
         alt: 'Rubies Unleashed Logo',
@@ -51,18 +53,33 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.className}>
+      <head>
+        {/* ✅ Block GA in development/localhost BEFORE it loads */}
+        <Script id="ga-blocker" strategy="beforeInteractive">
+          {`
+            // Block localhost/dev traffic
+            if (window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.port === '3000') {
+              window['ga-disable-G-DWTBY4B7M6'] = true;
+              console.log('🚫 Analytics disabled: Development environment');
+            }
+          `}
+        </Script>
+      </head>
       <body>
-        <AuthProvider> {/* ✅ Outer Wrap */}
-          <ThemeProvider> {/* ✅ Inner Wrap */}
+        <AuthProvider>
+          <ThemeProvider>
             <ToastProvider>
+              <InternalTrafficGuard />
               {children}
+              <SessionErrorOverlay />
             </ToastProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>
-      {/* Google Analytics - Load always, but filter internally */}
+      {/* ✅ GA loads AFTER the guard is set */}
       <GoogleAnalytics gaId="G-DWTBY4B7M6" />
-      <InternalTrafficGuard />
     </html>
   );
 }

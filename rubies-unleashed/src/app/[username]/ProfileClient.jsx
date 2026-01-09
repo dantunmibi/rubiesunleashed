@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
-import { User, Calendar, Edit, Shield, Diamond, Loader2, Cpu, Crown, Ghost, LayoutDashboard, Heart, Share2, Image as ImageIcon } from "lucide-react";
+import { User, Calendar, Edit, Shield, Diamond, Loader2, Cpu, Crown, Ghost, LayoutDashboard, Heart, Share2, AlertTriangle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import GameGrid from "@/components/explore/GameGrid"; 
 import { fetchGameById } from "@/lib/blogger";
@@ -24,27 +24,39 @@ const ArchetypeIcon = ({ type, size = 20 }) => {
 };
 
 export default function ProfileClient() {
-  // ✅ AUTH INTEGRATION: Use 'initialized' to prevent premature 404s
   const { user, initialized } = useAuth();
   const params = useParams();
   const targetUsername = decodeURIComponent(params.username);
   
   const [profile, setProfile] = useState(null);
   const [wishlistPreview, setWishlistPreview] = useState([]);
+  const [wishlistCount, setWishlistCount] = useState(0); // ✅ NEW: Total count
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState(false); // Track specific fetch errors
+  const [error, setError] = useState(false);
+  const [timeout, setTimeoutState] = useState(false);
 
   // Load Profile Logic
   useEffect(() => {
     if (!targetUsername) return;
+    
+    if (!initialized) return;
 
     let isMounted = true;
     setLoading(true);
     setError(false);
+    setTimeoutState(false);
+
+    const safetyTimer = setTimeout(() => {
+        if (isMounted && loading) {
+            setTimeoutState(true);
+            setLoading(false); 
+        }
+    }, 5000);
 
     async function loadProfile() {
       try {
+        // 1. Fetch Profile
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -52,7 +64,6 @@ export default function ProfileClient() {
             .single();
         
         if (error) {
-            // Only treat as error if it's not a "row not found" (which is just a 404)
             if (error.code !== 'PGRST116') {
                 console.warn("Profile Load Error:", error.message);
             }
@@ -63,32 +74,48 @@ export default function ProfileClient() {
         if (data && isMounted) {
             setProfile(data);
             
-            // Fetch Wishlist
-            const { data: wishData } = await supabase
-                .from('wishlists')
-                .select('game_id')
-                .eq('user_id', data.id)
-                .order('added_at', { ascending: false })
-                .limit(4);
+            // 2. Fetch Wishlist (Only if public)
+            if (data.is_public_wishlist !== false || (user && user.id === data.id)) {
+                // ✅ Get total count first
+                const { count } = await supabase
+                    .from('wishlists')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', data.id);
                 
-            if (wishData) {
-                const games = await Promise.all(wishData.map(item => fetchGameById(item.game_id)));
-                setWishlistPreview(games.filter(Boolean));
+                setWishlistCount(count || 0);
+
+                // ✅ Get preview (4 items)
+                const { data: wishData } = await supabase
+                    .from('wishlists')
+                    .select('game_id')
+                    .eq('user_id', data.id)
+                    .order('added_at', { ascending: false })
+                    .limit(4);
+                    
+                if (wishData) {
+                    const games = await Promise.all(wishData.map(item => fetchGameById(item.game_id)));
+                    setWishlistPreview(games.filter(Boolean));
+                }
             }
         }
       } catch (err) {
         console.error("Profile Unexpected Error:", err);
         if (isMounted) setError(true);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+            setLoading(false);
+            clearTimeout(safetyTimer);
+        }
       }
     }
 
-    // Only start fetching once we have the param
     loadProfile();
 
-    return () => { isMounted = false; };
-  }, [targetUsername]);
+    return () => { 
+        isMounted = false; 
+        clearTimeout(safetyTimer);
+    };
+  }, [targetUsername, initialized, user?.id]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -104,17 +131,46 @@ export default function ProfileClient() {
     } catch (e) {}
   };
 
-  // ✅ LOADING STATE: Wait for BOTH Profile Fetch AND Auth Initialization
-  if (loading || !initialized) {
+  // ✅ 1. INITIALIZING STATE (Global Auth)
+  if (!initialized) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="animate-spin text-ruby" size={48} />
-        <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Initializing Profile...</p>
+        <Loader2 className="animate-spin text-slate-600" size={48} />
+        <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Establishing Link...</p>
       </div>
     );
   }
 
-  // ✅ 404 STATE: Only show if initialized, finished loading, and no profile found
+  // ✅ 2. LOADING STATE (Data Fetch)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-ruby" size={48} />
+        <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Decrypting Identity...</p>
+      </div>
+    );
+  }
+
+  // ✅ 3. TIMEOUT STATE (Manual Recovery)
+  if (timeout) {
+      return (
+        <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
+            <AlertTriangle className="text-amber-500" size={48} />
+            <div>
+                <h2 className="text-xl font-bold text-white mb-2">Connection Interrupted</h2>
+                <p className="text-slate-400 text-sm">The network is unresponsive.</p>
+            </div>
+            <button 
+                onClick={() => window.location.reload()} 
+                className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold uppercase text-xs tracking-widest transition-all"
+            >
+                <RefreshCw size={16} /> Retry Connection
+            </button>
+        </div>
+      );
+  }
+
+  // ✅ 4. ERROR / 404 STATE
   if (error || !profile) {
       return (
         <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center text-slate-500 gap-4">
@@ -132,7 +188,6 @@ export default function ProfileClient() {
 
   const isOwner = user && user.id === profile.id;
 
-  // ✅ PRIVACY SHIELD
   if (profile.profile_visibility === 'private' && !isOwner) {
       return (
         <div className="min-h-screen bg-background pt-24 text-slate-200 font-sans selection:bg-(--user-accent)/30 flex flex-col">
@@ -168,10 +223,11 @@ export default function ProfileClient() {
                 <>
                     <img 
                         src={profile.cover_url} 
-                        className="w-full h-full object-cover object-center opacity-80" // Higher opacity
+                        className="w-full h-full object-cover object-center opacity-80"
                         alt="Cover" 
                     />
-                    <div className="absolute inset-0 bg-linear-to-t from-[#0f131f] via-[#0f131f]/80 via-40% to-transparent" />                </>
+                    <div className="absolute inset-0 bg-linear-to-t from-[#0f131f] via-[#0f131f]/80 via-40% to-transparent" />
+                </>
               ) : (
                 <div className="w-full h-full bg-(--user-accent)/5" />
               )}
@@ -254,7 +310,10 @@ export default function ProfileClient() {
                         <Heart size={24} />
                     </div>
                     <div>
-                        <p className="text-2xl font-black text-white">{wishlistPreview.length}</p>
+                        {/* ✅ Show "4+" if count > 4, otherwise exact count */}
+                        <p className="text-2xl font-black text-white">
+                            {wishlistCount > 4 ? '4+' : wishlistCount}
+                        </p>
                         <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Saved Items</p>
                     </div>
                 </div>

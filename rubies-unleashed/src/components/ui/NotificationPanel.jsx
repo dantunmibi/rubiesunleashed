@@ -33,14 +33,38 @@ import {
 } from "@/lib/notificationManager";
 import { removeFromWishlist, addToWishlist } from "@/lib/userManager";
 import { useToastContext } from "@/components/providers/ToastProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { supabase } from "@/lib/supabase"; 
 
 export default function NotificationPanel({ isOpen, onClose }) {
   const [notifications, setNotifications] = useState([]);
   const router = useRouter();
   const { showToast } = useToastContext();
+  const { user } = useAuth();
+  const [confirmClear, setConfirmClear] = useState(false); // New State
+// Helper to check recency
+const isRecent = (timestamp) => {
+    return (Date.now() - timestamp) < 5000; // 60 seconds
+};
+
+
+  useEffect(() => {
+    if (confirmClear) {
+      const timer = setTimeout(() => setConfirmClear(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [confirmClear]);
 
   useEffect(() => {
     loadNotifications();
+  }, []);
+
+  useEffect(() => {
+    // Refresh UI every 10s to update "Time Ago" and hide expired Undo buttons
+    const interval = setInterval(() => {
+        setNotifications(prev => [...prev]); // Force re-render
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   // Listen for notification changes
@@ -76,38 +100,60 @@ export default function NotificationPanel({ isOpen, onClose }) {
   };
 
   const handleClearAll = () => {
-    if (confirm("Clear all notifications?")) {
+    if (confirmClear) {
       clearAllNotifications();
       loadNotifications();
+      setConfirmClear(false);
+    } else {
+      setConfirmClear(true);
     }
   };
 
-const handleUndo = (notification) => {
-  if (notification.actionData?.type === "wishlist_add") {
-    // Undo add to wishlist
-    removeFromWishlist(notification.actionData.gameId);
-    showToast("Removed from wishlist", "info");
-    deleteNotification(notification.id);
-    loadNotifications();
-    
-    // ✅ NEW: Dispatch event to update UI
-    window.dispatchEvent(new CustomEvent("wishlistChanged", { 
-      detail: { gameId: notification.actionData.gameId, action: 'removed' }
-    }));
-  } else if (notification.actionData?.type === "wishlist_remove") {
-    // Undo remove from wishlist
-    addToWishlist(notification.actionData.game);
-    showToast("Added back to wishlist", "wishlist");
-    deleteNotification(notification.id);
-    loadNotifications();
-    
-    // ✅ NEW: Dispatch event to update UI
-    window.dispatchEvent(new CustomEvent("wishlistChanged", { 
-      detail: { gameId: notification.actionData.game.id, action: 'added' }
-    }));
-  }
+
+const performUndoAction = async (action, gameId) => {
+    if (user) {
+        // API Call for Auth User
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            await fetch('/api/wishlist', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ action, game_id: gameId })
+            });
+        }
+    } else {
+        // Local Call for Guest
+        if (action === 'remove') removeFromWishlist(gameId);
+        else addToWishlist({ id: gameId }); // We need full game object for add?
+    }
 };
 
+const handleUndo = async (notification) => {
+    const { gameId, game } = notification.actionData;
+    
+    if (notification.actionData?.type === "wishlist_add") {
+        // Undo Add -> Remove
+        await performUndoAction('remove', gameId);
+        showToast("Removed from wishlist", "info");
+    } else if (notification.actionData?.type === "wishlist_remove") {
+        // Undo Remove -> Add
+        // Note: For guest local add, we need the whole game object. 
+        // Ensure actionData.game is present in addNotification call.
+        if (!user && !game) {
+             showToast("Cannot undo: Missing game data", "error");
+             return;
+        }
+        await performUndoAction('add', gameId); // or game for local
+        showToast("Added back to wishlist", "wishlist");
+    }
+    
+    deleteNotification(notification.id);
+    loadNotifications();
+    window.dispatchEvent(new Event("wishlistUpdated")); // Standardize event name
+};
   const handleView = (notification) => {
     if (notification.actionData?.gameSlug) {
       router.push(`/view/${notification.actionData.gameSlug}`);
@@ -217,17 +263,12 @@ const handleUndo = (notification) => {
                       {/* Action Buttons */}
                       {notif.actionData && (
                         <div className="flex gap-2 mt-2">
-                          {notif.actionData.type?.includes("wishlist") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUndo(notif);
-                              }}
-                              className="text-xs font-bold text-ruby hover:underline"
-                            >
-                              Undo
-                            </button>
-                          )}
+    {/* Only show Undo if recent */}
+    {isRecent(notif.timestamp) && notif.actionData?.type?.includes("wishlist") && (
+        <button onClick={(e) => { e.stopPropagation(); handleUndo(notif); }} className="text-xs font-bold text-ruby hover:underline">
+            Undo
+        </button>
+    )}
                           {notif.actionData.gameSlug && (
                             <button
                               onClick={(e) => {
@@ -268,15 +309,25 @@ const handleUndo = (notification) => {
 
       {/* Footer */}
       {notifications.length > 0 && (
-        <div className="px-4 py-3 border-t border-white/10 bg-white/5">
+        <div className="px-4 py-3">
           <button
             onClick={handleClearAll}
-            className="w-full text-xs font-bold text-slate-400 hover:text-red-400 uppercase tracking-wider transition-colors"
+            className={`
+              group w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl border transition-all duration-300
+              ${confirmClear 
+                ? "bg-red-500/10 border-red-500/50 text-red-400" 
+                : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+              }
+            `}
           >
-            Clear All
+            <Trash2 size={14} className={confirmClear ? "animate-pulse" : "group-hover:text-red-400 transition-colors"} />
+            <span className="text-xs font-black uppercase tracking-widest transition-colors">
+              {confirmClear ? "Confirm Clear?" : "Clear All"}
+            </span>
           </button>
         </div>
       )}
     </div>
   );
+  window.dispatchEvent(new Event("wishlistUpdated"));
 }

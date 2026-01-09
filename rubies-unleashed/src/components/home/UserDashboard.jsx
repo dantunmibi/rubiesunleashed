@@ -177,7 +177,8 @@ export default function UserDashboard({ initialGames = [] }) {
       <section className="pt-32 px-6 pb-4">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">
-            Welcome back, <span className="text-(--user-accent)">{profile?.username || "Traveler"}</span>
+            {/* ✅ Prefer Display Name, fallback to Username, fallback to Traveler */}
+            Welcome back, <span className="text-(--user-accent)">{profile?.display_name || profile?.username || "Traveler"}</span>
           </h1>
           <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
             {archetype} Protocol Active

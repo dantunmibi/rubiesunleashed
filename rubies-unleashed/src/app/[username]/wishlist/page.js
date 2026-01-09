@@ -4,14 +4,13 @@
  * - Fast Initial Paint: Resolves User immediately.
  * - Lazy Data Load: Shows Skeleton while fetching games.
  * - Bulk Fetch: Optimized network usage.
- * - Resilience: Waits for Auth Initialization.
  */
 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Heart, Sparkles, Trash2, UserX } from "lucide-react"; 
+import { Heart, Sparkles, Trash2, UserX } from "lucide-react"; // Loader2 removed (using Skeleton)
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
@@ -20,7 +19,7 @@ import WishlistStats from "@/components/wishlist/WishlistStats";
 import WishlistControls from "@/components/wishlist/WishlistControls";
 import EmptyWishlist from "@/components/wishlist/EmptyWishlist";
 import AuthModal from "@/components/auth/AuthModal";
-// removed GameSkeleton import as we use manual div skeletons
+import GameSkeleton from "@/components/store/GameSkeleton"; // Or grid skeleton
 
 // Logic Imports
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -35,8 +34,8 @@ import {
 } from "@/lib/userManager";
 
 export default function WishlistPage() {
-  // ✅ AUTH GUARD: initialized
-  const { user, profile, initialized } = useAuth(); 
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { user, profile } = useAuth(); 
   const params = useParams(); 
   const router = useRouter();
   
@@ -47,7 +46,7 @@ export default function WishlistPage() {
   
   // Two Loading States
   const [resolvingUser, setResolvingUser] = useState(true);
-  const [loadingGames, setLoadingGames] = useState(false);
+  const [loadingGames, setLoadingGames] = useState(true);
   
   const [viewingProfile, setViewingProfile] = useState(null); 
   const [userNotFound, setUserNotFound] = useState(false); 
@@ -62,9 +61,6 @@ export default function WishlistPage() {
 
   // 1. Resolve Target User (Fast)
   useEffect(() => {
-    // ✅ Wait for Auth to settle before assuming user identity
-    if (!initialized) return;
-
     async function resolveUser() {
       setResolvingUser(true);
       setUserNotFound(false);
@@ -115,11 +111,11 @@ export default function WishlistPage() {
     }
 
     resolveUser();
-  }, [targetUsername, user?.id, profile, initialized]);
+  }, [targetUsername, user?.id, profile]);
 
   // 2. Fetch Wishlist Data (Slow) - Dependent on resolved user
   useEffect(() => {
-    if (!initialized || resolvingUser || userNotFound) return;
+    if (resolvingUser || userNotFound) return;
 
     let isMounted = true;
     
@@ -168,10 +164,10 @@ export default function WishlistPage() {
                 });
                 validGames = (await Promise.all(detailsPromises)).filter(Boolean);
             }
-            if (isMounted) {
-                setWishlistGames(validGames);
-                setFilteredGames(validGames);
-            }
+        if (isMounted) {
+            setWishlistGames(validGames);
+            setFilteredGames(validGames);
+        }
         } else {
             setWishlistGames([]);
             setFilteredGames([]);
@@ -188,9 +184,20 @@ export default function WishlistPage() {
 
     loadGames();
     return () => { isMounted = false; clearTimeout(safety); };
-  }, [resolvingUser, userNotFound, viewingProfile, user, initialized]);
+  }, [resolvingUser, userNotFound, viewingProfile, user, refreshKey]);
 
-  // ... (Sort/Filter/Handlers) ...
+  // ✅ EVENT LISTENER (Add this block)
+  useEffect(() => {
+    const handleUpdate = () => {
+        console.log("♻️ Syncing Wishlist...");
+        setRefreshKey(k => k + 1);
+    };
+    window.addEventListener("wishlistUpdated", handleUpdate);
+    return () => window.removeEventListener("wishlistUpdated", handleUpdate);
+  }, []);
+
+  // ... (Sort/Filter/Handlers same as before) ...
+  // [Copy useEffect for Filter & Sort]
   useEffect(() => {
     let result = [...wishlistGames];
     if (searchQuery) result = result.filter(g => g.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -205,6 +212,7 @@ export default function WishlistPage() {
     setFilteredGames(result);
   }, [wishlistGames, searchQuery, filterType, sortBy]);
 
+  // [Copy Handlers: handleRemove, handleClearAll, handleShare]
   const isOwner = user && viewingProfile && user.id === viewingProfile.id;
   const isGuestView = !user; 
   const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ruby_user_data") || '{}') : null;
@@ -249,8 +257,9 @@ export default function WishlistPage() {
     apps: wishlistGames.filter(g => g.type === 'App').length
   };
 
-  // ✅ LOADING STATE: Wait for BOTH Auth and User Resolution
-  if (!initialized || resolvingUser) {
+  // Render Logic
+  if (resolvingUser) {
+     // Show Skeleton Page (Header + Grid)
      return (
        <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-(--user-accent)/30">
          <BackgroundEffects />
@@ -272,6 +281,7 @@ export default function WishlistPage() {
 
   // User Not Found
   if (userNotFound) {
+    // ... (Keep existing User Not Found UI) ...
     return (
       <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans flex flex-col relative overflow-hidden selection:bg-red-500/30">
         <BackgroundEffects />

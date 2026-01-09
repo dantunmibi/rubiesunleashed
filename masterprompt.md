@@ -1629,6 +1629,38 @@ Follows: Database Schema (follows table), UI Buttons.
 Engagement: Comments & Ratings System.
 Feed: "New from creators you follow".
 
+The Core Issue
+supabase.auth.getSession() hangs when called after the tab has been idle, causing infinite loading states.
+The Solution Pattern
+Cache the auth token once, reuse it for all operations:
+javascript// 1. Cache token when user loads
+const [authToken, setAuthToken] = useState(null);
+
+useEffect(() => {
+  const getToken = async () => {
+    if (user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      setAuthToken(session?.access_token);
+    }
+  };
+  getToken();
+}, [user]);
+
+// 2. Use cached token for API calls
+fetch('/api/endpoint', {
+  headers: {
+    'Authorization': `Bearer ${authToken}`
+  }
+});
+What We Fixed
+
+✅ Wishlist: Token cached, no more rapid-click hangs
+✅ Settings: Token cached + API route, page reload for fresh data
+✅ Loading states: Always reset in finally blocks
+✅ Error handling: Proper timeouts and user feedback
+
+Great work troubleshooting this together! 🚀
+
 
 ## 🔐 16. Environment Variables
 **`next.config.mjs` MUST include:**

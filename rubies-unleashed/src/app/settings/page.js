@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import { 
-  User, Shield, Cpu, AlertTriangle, Save, Loader2, Check, Eye, EyeOff
+  User, Shield, Cpu, AlertTriangle, Save, Loader2, Check, Eye, EyeOff, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useToastContext } from "@/components/providers/ToastProvider";
 
 // --- TABS CONFIG ---
 const TABS = [
@@ -27,6 +29,11 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [authToken, setAuthToken] = useState(null);
+  
+  const { showToast } = useToastContext();
+
+  const [showSessionError, setShowSessionError] = useState(false); // ✅ New State
 
   // Form State
   const [formData, setFormData] = useState({
@@ -38,6 +45,19 @@ export default function SettingsPage() {
     isPublicWishlist: true,
     archetype: "hunter"
   });
+
+  // ✅ CACHE AUTH TOKEN (same as wishlist fix)
+  useEffect(() => {
+    const getToken = async () => {
+      if (user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        setAuthToken(session?.access_token);
+      } else {
+        setAuthToken(null);
+      }
+    };
+    getToken();
+  }, [user]);
 
   // Redirect if not logged in (handled mostly by wrapper, but explicit safe guard)
   useEffect(() => {
@@ -75,27 +95,27 @@ export default function SettingsPage() {
     setLoading(true);
     setSuccessMsg("");
 
-    // 1. Validate Avatar
-    if (formData.avatarUrl && formData.avatarUrl.length > 0) {
-        const isValid = await validateImage(formData.avatarUrl);
-        if (!isValid) {
-            alert("Avatar URL is invalid or unreachable.");
-            setLoading(false);
-            return;
-        }
-    }
-
-    // 2. Validate Cover
-    if (formData.coverUrl && formData.coverUrl.length > 0) {
-        const isValid = await validateImage(formData.coverUrl);
-        if (!isValid) {
-            alert("Cover Image URL is invalid or unreachable.");
-            setLoading(false);
-            return;
-        }
-    }
-
     try {
+      // 1. Validate Avatar
+      if (formData.avatarUrl && formData.avatarUrl.length > 0) {
+          const isValid = await validateImage(formData.avatarUrl);
+          if (!isValid) {
+              throw new Error("Avatar URL is invalid or unreachable.");
+          }
+      }
+
+      // 2. Validate Cover
+      if (formData.coverUrl && formData.coverUrl.length > 0) {
+          const isValid = await validateImage(formData.coverUrl);
+          if (!isValid) {
+              throw new Error("Cover Image URL is invalid or unreachable.");
+          }
+      }
+
+      // ✅ Check we have a valid token
+      if (!authToken) {
+        throw new Error("Session expired. Please refresh the page.");
+      }
 
       const updates = {
         display_name: formData.displayName,
@@ -108,23 +128,66 @@ export default function SettingsPage() {
         updated_at: new Date().toISOString(),
       };
 
-      // 2. Perform Update
-      const { error } = await supabase 
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
+      console.log("Calling API with token:", authToken ? "exists" : "missing");
 
-      if (error) throw error;
+      // ✅ Use API route with cached token and timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      // 3. ✅ Update Global State (Instant Theme Change)
-      await refreshProfile();
+      const response = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(updates),
+        signal: controller.signal
+      });
 
+      clearTimeout(timeoutId);
+
+      console.log("API Response status:", response.status);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("API Error:", error);
+        throw new Error(error.error || "Update failed");
+      }
+
+      const result = await response.json();
+      console.log("API Success:", result);
+
+      // 3. ✅ Update local state immediately
+      if (result.data && result.data[0]) {
+        const updatedProfile = result.data[0];
+        setFormData({
+          displayName: updatedProfile.display_name || updatedProfile.username || "",
+          bio: updatedProfile.bio || "",
+          avatarUrl: updatedProfile.avatar_url || "",
+          coverUrl: updatedProfile.cover_url || "",
+          isPublicProfile: updatedProfile.profile_visibility === 'public',
+          isPublicWishlist: updatedProfile.is_public_wishlist ?? true,
+          archetype: updatedProfile.archetype || "hunter"
+        });
+      }
+
+      showToast("Settings saved! Refreshing page...", "success");
       setSuccessMsg("System Updated Successfully.");
-      setTimeout(() => setSuccessMsg(""), 3000);
+      
+      // ✅ Always reload to apply theme change
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
     } catch (error) {
       console.error("Save Error:", error);
-      alert("Error: " + error.message);
+      
+      // ✅ TRIGGER OVERLAY
+      if (error.message.includes("expired") || error.message.includes("Unauthorized")) {
+          setShowSessionError(true);
+      } else {
+          showToast(error.message, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -206,7 +269,7 @@ export default function SettingsPage() {
                 <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="bg-(--user-accent) text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:brightness-110 transition-all shadow-lg"
+                    className="bg-(--user-accent) text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:brightness-110 transition-all shadow-lg disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="animate-spin" /> : <Save size={16} />}
                     Save Changes
@@ -216,6 +279,24 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
+      {/* ✅ SESSION EXPIRED OVERLAY */}
+      {showSessionError && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+                <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 animate-pulse">
+                    <AlertTriangle size={32} className="text-red-500" />
+                </div>
+                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Link Severed</h3>
+                <p className="text-slate-400 mb-8 text-sm">Your security token has expired. Re-initialization required.</p>
+                <button 
+                    onClick={() => window.location.reload()}
+                    className="w-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
+                >
+                    <RefreshCw size={18} /> Reconnect
+                </button>
+            </div>
+        </div>
+      )}
       
       <Footer />
     </div>

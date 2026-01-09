@@ -13,7 +13,7 @@ export default function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
-  const [initialized, setInitialized] = useState(false); // Tracks if initial auth check is done
+  const [initialized, setInitialized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -45,7 +45,6 @@ export default function AuthProvider({ children }) {
 
       if (error) {
         console.error('Error fetching profile:', error.message);
-        // Keep cached profile if fetch fails
         return;
       }
 
@@ -70,35 +69,43 @@ export default function AuthProvider({ children }) {
     }
   }, [user?.id, fetchProfile]);
 
-  // Initialize auth session
+  // ✅ Initialize auth session with timeout protection
   useEffect(() => {
     const initSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session timeout')), 15000)
+        );
+
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]);
         
-        // STRICT CHECK: If error OR no session exists, we must clear state
+        // 1. VALID LOGOUT (No session or Auth Error)
         if (error || !session) {
           if (error) console.error('Session error:', error);
           clearAuthState();
+          setLoading(false);
+          setInitialized(true);
           return;
         }
 
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Fetch fresh profile in background
-          // UI shows cached profile immediately
-          await fetchProfile(session.user.id);
-        } else {
-          // No session - clear everything
-          clearAuthState();
-        }
-      } catch (error) {
-        console.error('Init session error:', error);
-        clearAuthState();
-      } finally {
+        // 2. SUCCESS
+        setUser(session.user);
+        await fetchProfile(session.user.id);
         setLoading(false);
-        setInitialized(true); // Mark initialization as complete
+        setInitialized(true);
+
+      } catch (error) {
+        // 3. TIMEOUT (Network Hang)
+        console.error('Init timeout:', error);
+        // Do NOT clear auth. Do NOT set loading false.
+        // Just show overlay.
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event("sessionExpired"));
+        }
       }
     };
 
@@ -131,7 +138,6 @@ export default function AuthProvider({ children }) {
             await fetchProfile(session.user.id);
           }
         } else {
-          // Signed out
           clearAuthState();
         }
 
@@ -173,7 +179,6 @@ export default function AuthProvider({ children }) {
     // State
     user,
     profile,
-    // Loading is true if we are still running initial checks OR explicit loading
     loading: loading || !initialized, 
     profileLoading,
     initialized,
