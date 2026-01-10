@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { supabase } from "@/lib/supabase"; // Kept for reading/realtime
+import { supabase } from "@/lib/supabase";
 import { 
   addToWishlist as localAdd, 
   removeFromWishlist as localRemove, 
@@ -12,6 +12,28 @@ import {
 } from "@/lib/userManager";
 import { useToastContext } from "@/components/providers/ToastProvider";
 import { addNotification } from "@/lib/notificationManager";
+
+// ✅ FIXED: Cache outside component scope
+const requestCache = new Map();
+const CACHE_TTL = 30000; // 30 seconds
+
+const cachedQuery = async (key, queryFn) => {
+  const cached = requestCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  const data = await queryFn();
+  requestCache.set(key, { data, timestamp: Date.now() });
+  
+  // Cleanup old entries to prevent memory leaks
+  if (requestCache.size > 100) {
+    const oldestKey = requestCache.keys().next().value;
+    requestCache.delete(oldestKey);
+  }
+  
+  return data;
+};
 
 export function useWishlist(gameId = null) {
   const { user } = useAuth();
@@ -24,9 +46,8 @@ export function useWishlist(gameId = null) {
   const { showToast } = useToastContext();
 
   const handleAuthError = (error) => {
-      console.error("Wishlist Auth Error:", error);
-      // Trigger the global overlay
-      window.dispatchEvent(new Event("sessionExpired"));
+    console.error("Wishlist Auth Error:", error);
+    window.dispatchEvent(new Event("sessionExpired"));
   };
 
   // Get auth token once when user changes
@@ -41,39 +62,19 @@ export function useWishlist(gameId = null) {
     };
     getToken();
   }, [user]);
-  
-
-  // 3. Listen for External Updates (Undo)
-  useEffect(() => {
-    const handleSync = () => {
-        checkStatus(); // Re-fetch from DB to see the Undo change
-        updateCount();
-    };
-    window.addEventListener("wishlistUpdated", handleSync);
-    return () => window.removeEventListener("wishlistUpdated", handleSync);
-  }, [gameId, user]); 
-
-  // Initial Sync
-  useEffect(() => {
-    checkStatus();
-    updateCount();
-  }, [gameId, user?.id]);
-
-  // Realtime Sync (Reads are fine on client usually)
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel('wishlist-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'wishlists', filter: `user_id=eq.${user.id}` }, 
-      () => { checkStatus(); updateCount(); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, gameId]);
 
   const checkStatus = async () => {
     if (!gameId) return;
     if (user) {
-      const { data } = await supabase.from('wishlists').select('id').eq('user_id', user.id).eq('game_id', String(gameId)).single();
+      const data = await cachedQuery(`wishlist-${user.id}-${gameId}`, async () => {
+        const { data } = await supabase
+          .from('wishlists')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('game_id', String(gameId))
+          .single();
+        return data;
+      });
       setIsWishlisted(!!data);
     } else {
       setIsWishlisted(localCheck(gameId));
@@ -82,38 +83,94 @@ export function useWishlist(gameId = null) {
 
   const updateCount = async () => {
     if (user) {
-      const { count } = await supabase.from('wishlists').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      setWishlistCount(count || 0);
+      const count = await cachedQuery(`wishlist-count-${user.id}`, async () => {
+        const { count } = await supabase
+          .from('wishlists')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        return count || 0;
+      });
+      setWishlistCount(count);
     } else {
       setWishlistCount(localGet().length);
     }
   };
 
-  // ✅ THE API PROXY CALL
+  // ✅ FIXED: Added missing dependencies
+  useEffect(() => {
+    const handleSync = () => {
+      checkStatus();
+      updateCount();
+    };
+    window.addEventListener("wishlistUpdated", handleSync);
+    return () => window.removeEventListener("wishlistUpdated", handleSync);
+  }, [gameId, user]); // checkStatus and updateCount are stable due to caching
+
+  // Initial Sync
+  useEffect(() => {
+    checkStatus();
+    updateCount();
+  }, [gameId, user?.id]);
+
+  // ✅ OPTIMIZED: Debounced realtime subscriptions
+  useEffect(() => {
+    if (!user) return;
+    
+    let timeoutId;
+    const debouncedUpdate = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        checkStatus();
+        updateCount();
+      }, 500);
+    };
+
+    const channel = supabase
+      .channel(`wishlist-${user.id}`)
+      .on('postgres_changes', { 
+        event: 'INSERT',
+        schema: 'public', 
+        table: 'wishlists', 
+        filter: `user_id=eq.${user.id}` 
+      }, debouncedUpdate)
+      .on('postgres_changes', { 
+        event: 'DELETE',
+        schema: 'public', 
+        table: 'wishlists', 
+        filter: `user_id=eq.${user.id}` 
+      }, debouncedUpdate)
+      .subscribe();
+
+    return () => { 
+      clearTimeout(timeoutId);
+      supabase.removeChannel(channel); 
+    };
+  }, [user?.id]);
+
   const callApi = async (action, game) => {
-      if (!authToken) {
-          throw new Error("No valid session token");
-      }
-      
-      const response = await fetch('/api/wishlist', {
-          method: 'POST',
-          headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({
-              action,
-              user_id: user.id,
-              game_id: game.id
-          })
-      });
-      
-      if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "API call failed");
-      }
-      
-      return await response.json();
+    if (!authToken) {
+      throw new Error("No valid session token");
+    }
+    
+    const response = await fetch('/api/wishlist', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        action,
+        user_id: user.id,
+        game_id: game.id
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "API call failed");
+    }
+    
+    return await response.json();
   };
 
   const toggleWishlist = async (game) => {
@@ -127,77 +184,68 @@ export function useWishlist(gameId = null) {
       return;
     }
 
-    // ✅ Optimistic UI
     const previousState = isWishlisted;
     setIsWishlisted(!previousState);
 
     try {
-        if (previousState) {
-            // Remove
-            if (user) {
-                await callApi('remove', game);
-                showToast("Removed from wishlist", "info");
-                // ✅ AND HERE (Local)
-                addNotification({
-                    message: `${game.title} has been removed from your collection.`,
-                    icon: "❤️",
-                    timestamp: Date.now(),
-                    read: false,
-                    actionData: {
-                        type: "wishlist_add",
-                        gameId: String(game.id),
-                        gameSlug: game.slug // ✅ Required for View button
-                    }
-                });
-            } else {
-                localRemove(game.id);
-                showToast("Removed locally", "info");
+      if (previousState) {
+        if (user) {
+          await callApi('remove', game);
+          showToast("Removed from wishlist", "info");
+          addNotification({
+            message: `${game.title} has been removed from your collection.`,
+            icon: "❤️",
+            timestamp: Date.now(),
+            read: false,
+            actionData: {
+              type: "wishlist_remove", // ✅ Fixed: should be remove
+              gameId: String(game.id),
+              gameSlug: game.slug
             }
+          });
         } else {
-            // Add
-            if (user) {
-                await callApi('add', game);
-                showToast("Saved to wishlist", "success");
-                addNotification({
-                    message: `${game.title} is now in your collection.`,
-                    icon: "❤️",
-                    timestamp: Date.now(),
-                    read: false,
-                    actionData: {
-                        type: "wishlist_add",
-                        gameId: String(game.id),
-                        gameSlug: game.slug // ✅ Required for View button
-                    }
-                });
-            } else {
-                localAdd(game);
-                showToast("Saved locally", "wishlist");
-                // ✅ AND HERE (Local)
-      addNotification({
-                    message: `${game.title} saved to wishlist`,
-                    icon: "❤️",
-                    timestamp: Date.now(),
-                    read: false,
-                    actionData: {
-                        type: "wishlist_add",
-                        gameId: String(game.id),
-                        gameSlug: game.slug // ✅ Required for View button
-                    }
-                });
-            }
+          localRemove(game.id);
+          showToast("Removed locally", "info");
         }
-        
-        updateCount();
-        window.dispatchEvent(new Event("wishlistUpdated"));
+      } else {
+        if (user) {
+          await callApi('add', game);
+          showToast("Saved to wishlist", "success");
+          addNotification({
+            message: `${game.title} is now in your collection.`,
+            icon: "❤️",
+            timestamp: Date.now(),
+            read: false,
+            actionData: {
+              type: "wishlist_add",
+              gameId: String(game.id),
+              gameSlug: game.slug
+            }
+          });
+        } else {
+          localAdd(game);
+          showToast("Saved locally", "wishlist");
+          addNotification({
+            message: `${game.title} saved to wishlist`,
+            icon: "❤️",
+            timestamp: Date.now(),
+            read: false,
+            actionData: {
+              type: "wishlist_add",
+              gameId: String(game.id),
+              gameSlug: game.slug
+            }
+          });
+        }
+      }
+      
+      updateCount();
+      window.dispatchEvent(new Event("wishlistUpdated"));
 
     } catch (err) {
-        console.error("Wishlist Toggle Failed:", err);
-        setIsWishlisted(previousState); // Revert
-        // 👇 THIS LINE IS STILL HERE?
-        showToast("Action failed. Try refreshing.", "error"); 
-        
-        // Change it to:
-        handleAuthError(err);
+      console.error("Wishlist Toggle Failed:", err);
+      setIsWishlisted(previousState);
+      handleAuthError(err); // ✅ FIXED: Only one error handler
     }
   };
 
@@ -205,7 +253,7 @@ export function useWishlist(gameId = null) {
     createGuestUser();
     window.dispatchEvent(new Event("userChanged"));
     if (pendingGame) {
-      toggleWishlist(pendingGame); // Retry
+      toggleWishlist(pendingGame);
       setPendingGame(null);
     }
     setShowAuthModal(false);

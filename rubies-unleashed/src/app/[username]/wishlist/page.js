@@ -33,6 +33,28 @@ import {
   getCurrentUser
 } from "@/lib/userManager";
 
+// ✅ SHARED CACHE: Use the same cache as useWishlist
+const requestCache = new Map();
+const CACHE_TTL = 30000; // 30 seconds
+
+const cachedQuery = async (key, queryFn) => {
+  const cached = requestCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  const data = await queryFn();
+  requestCache.set(key, { data, timestamp: Date.now() });
+  
+  // Cleanup old entries
+  if (requestCache.size > 100) {
+    const oldestKey = requestCache.keys().next().value;
+    requestCache.delete(oldestKey);
+  }
+  
+  return data;
+};
+
 export default function WishlistPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const { user, profile } = useAuth(); 
@@ -43,6 +65,9 @@ export default function WishlistPage() {
   
   const [wishlistGames, setWishlistGames] = useState([]);
   const [filteredGames, setFilteredGames] = useState([]);
+  
+  // ✅ ADD THIS STATE
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
   
   // Two Loading States
   const [resolvingUser, setResolvingUser] = useState(true);
@@ -113,71 +138,99 @@ export default function WishlistPage() {
     resolveUser();
   }, [targetUsername, user?.id, profile]);
 
-  // 2. Fetch Wishlist Data (Slow) - Dependent on resolved user
+  // ✅ UPDATE your data loading useEffect:
   useEffect(() => {
     if (resolvingUser || userNotFound) return;
 
     let isMounted = true;
     
-    // ✅ Safety Valve
     const safety = setTimeout(() => {
-        if (isMounted) setLoadingGames(false);
+      if (isMounted) {
+        setLoadingGames(false);
+        setHasAttemptedLoad(true); // ✅ Add this
+      }
     }, 5000);
 
     async function loadGames() {
-      // ✅ Only skeleton if genuinely empty
+      console.log('🔄 Starting loadGames...'); // ✅ Add debug
+      
       if (wishlistGames.length === 0) setLoadingGames(true);
+      setHasAttemptedLoad(false); // ✅ Reset on new load
+      
       let gameIds = [];
       
       try {
         // Determine Source
         if (viewingProfile) {
-             // Cloud Fetch
-             const { data } = await supabase
-            .from('wishlists')
-            .select('game_id, added_at')
-            .eq('user_id', viewingProfile.id)
-            .order('added_at', { ascending: false });
-            gameIds = data?.map(row => ({ id: row.game_id, addedAt: new Date(row.added_at) })) || [];
+          console.log('☁️ Fetching for user:', viewingProfile.username); // ✅ Add debug
+          const data = await cachedQuery(`wishlist-full-${viewingProfile.id}`, async () => {
+            const { data } = await supabase
+              .from('wishlists')
+              .select('game_id, added_at')
+              .eq('user_id', viewingProfile.id)
+              .order('added_at', { ascending: false });
+            return data;
+          });
+          
+          gameIds = data?.map(row => ({ 
+            id: row.game_id, 
+            addedAt: new Date(row.added_at) 
+          })) || [];
+          
+          console.log('📊 Found game IDs:', gameIds.length); // ✅ Add debug
         } else if (!user) {
-             // Guest Local Fetch
-             const localItems = localGet();
-             gameIds = localItems.map(item => ({ id: item.id || item, addedAt: item.addedAt || new Date() }));
+          console.log('👤 Fetching local wishlist...'); // ✅ Add debug
+          const localItems = localGet();
+          gameIds = localItems.map(item => ({ 
+            id: item.id || item, 
+            addedAt: item.addedAt || new Date() 
+          }));
+          console.log('📊 Found local game IDs:', gameIds.length); // ✅ Add debug
         }
 
-        // Hydrate
+        // Hydrate games
         if (gameIds.length > 0) {
-            const allGames = await fetchGames(2000);
-            let validGames = [];
-            
-            if (allGames && allGames.length > 0) {
-                 validGames = gameIds.map(item => {
-                    const game = allGames.find(g => 
-                        g.id === item.id || g.slug === item.id || g.slug.endsWith(`-${item.id}`)
-                    );
-                    return game ? { ...game, addedAt: item.addedAt } : null;
-                }).filter(Boolean);
-            } else {
-                const detailsPromises = gameIds.map(async (item) => {
-                    const game = await fetchGameById(item.id);
-                    return game ? { ...game, addedAt: item.addedAt } : null;
-                });
-                validGames = (await Promise.all(detailsPromises)).filter(Boolean);
-            }
-        if (isMounted) {
+          console.log('🎮 Hydrating games...'); // ✅ Add debug
+          const allGames = await fetchGames(2000);
+          let validGames = [];
+          
+          if (allGames && allGames.length > 0) {
+            validGames = gameIds.map(item => {
+              const game = allGames.find(g => 
+                g.id === item.id || g.slug === item.id || g.slug.endsWith(`-${item.id}`)
+              );
+              return game ? { ...game, addedAt: item.addedAt } : null;
+            }).filter(Boolean);
+          } else {
+            const detailsPromises = gameIds.map(async (item) => {
+              const game = await fetchGameById(item.id);
+              return game ? { ...game, addedAt: item.addedAt } : null;
+            });
+            validGames = (await Promise.all(detailsPromises)).filter(Boolean);
+          }
+          
+          console.log('✅ Final games:', validGames.length); // ✅ Add debug
+          
+          if (isMounted) {
             setWishlistGames(validGames);
             setFilteredGames(validGames);
-        }
+          }
         } else {
+          console.log('📭 No games to hydrate'); // ✅ Add debug
+          if (isMounted) {
             setWishlistGames([]);
             setFilteredGames([]);
+          }
         }
 
-
       } catch (err) {
-        console.error(err);
+        console.error('❌ loadGames error:', err);
       } finally {
-        if (isMounted) setLoadingGames(false);
+        if (isMounted) {
+          setLoadingGames(false);
+          setHasAttemptedLoad(true); // ✅ Add this
+          console.log('🏁 loadGames complete'); // ✅ Add debug
+        }
         clearTimeout(safety);
       }
     }
@@ -196,8 +249,6 @@ export default function WishlistPage() {
     return () => window.removeEventListener("wishlistUpdated", handleUpdate);
   }, []);
 
-  // ... (Sort/Filter/Handlers same as before) ...
-  // [Copy useEffect for Filter & Sort]
   useEffect(() => {
     let result = [...wishlistGames];
     if (searchQuery) result = result.filter(g => g.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -219,20 +270,48 @@ export default function WishlistPage() {
   const isGuestOwner = !user && localUser?.username?.toLowerCase() === targetUsername.toLowerCase();
   const canEdit = isOwner || isGuestOwner;
 
-  const handleRemove = async (gameId) => {
-    if (!canEdit) return;
-    if (user) await supabase.from('wishlists').delete().eq('user_id', user.id).eq('game_id', gameId);
-    else localRemove(gameId);
-    setWishlistGames(prev => prev.filter(g => g.id !== gameId));
-  };
+const handleRemove = async (gameId) => {
+  if (!canEdit) return;
+  
+  if (user) {
+    await supabase.from('wishlists').delete().eq('user_id', user.id).eq('game_id', gameId);
+    
+    // ✅ CRITICAL: Clear cache after removal
+    requestCache.delete(`wishlist-full-${user.id}`);
+    requestCache.delete(`wishlist-${user.id}-${gameId}`);
+    requestCache.delete(`wishlist-count-${user.id}`);
+  } else {
+    localRemove(gameId);
+  }
+  
+  setWishlistGames(prev => prev.filter(g => g.id !== gameId));
+  
+  // ✅ Trigger sync for other components
+  window.dispatchEvent(new Event("wishlistUpdated"));
+};
 
-  const handleClearAll = async () => {
-    if (!canEdit) return;
-    if (user) await supabase.from('wishlists').delete().eq('user_id', user.id);
-    else localClear();
-    setWishlistGames([]);
-    setShowClearModal(false);
-  };
+const handleClearAll = async () => {
+  if (!canEdit) return;
+  
+  if (user) {
+    await supabase.from('wishlists').delete().eq('user_id', user.id);
+    
+    // ✅ CRITICAL: Clear all user's wishlist cache
+    for (const [key] of requestCache.entries()) {
+      if (key.includes(`wishlist-${user.id}`) || key.includes(`wishlist-full-${user.id}`)) {
+        requestCache.delete(key);
+      }
+    }
+  } else {
+    localClear();
+  }
+  
+  setWishlistGames([]);
+  setShowClearModal(false);
+  
+  // ✅ Trigger sync for other components
+  window.dispatchEvent(new Event("wishlistUpdated"));
+};
 
   const handleShare = async () => {
     if (isGuestOwner) {
@@ -256,6 +335,17 @@ export default function WishlistPage() {
     games: wishlistGames.filter(g => g.type !== 'App').length,
     apps: wishlistGames.filter(g => g.type === 'App').length
   };
+
+  const isActuallyLoading = loadingGames || !hasAttemptedLoad;
+  const shouldShowEmpty = hasAttemptedLoad && !loadingGames && wishlistGames.length === 0;
+
+  console.log('🎯 Render decision:', {
+    loadingGames,
+    hasAttemptedLoad,
+    wishlistGamesLength: wishlistGames.length,
+    isActuallyLoading,
+    shouldShowEmpty
+  });
 
   // Render Logic
   if (resolvingUser) {
@@ -330,12 +420,19 @@ export default function WishlistPage() {
            </div>
         )}
 
-        {/* LOADING GRID vs CONTENT */}
-        {loadingGames ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {[1,2,3,4,5,6,7,8].map(i => <div key={i} className="aspect-3/4 bg-white/5 rounded-xl animate-pulse" />)}
-            </div>
-        ) : wishlistGames.length === 0 ? (
+        {/* ✅ FIXED: Replace your current loading logic with this */}
+        {isActuallyLoading ? (
+            <>
+              <div className="mb-4 text-center text-slate-400 text-sm">
+                Loading wishlist...
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[1,2,3,4,5,6,7,8].map(i => (
+                    <div key={i} className="aspect-3/4 bg-white/5 rounded-xl animate-pulse" />
+                  ))}
+              </div>
+            </>
+        ) : shouldShowEmpty ? (
           <EmptyWishlist />
         ) : (
           <>

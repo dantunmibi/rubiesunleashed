@@ -17,6 +17,47 @@ export default function AuthProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
+// ✅ ENHANCED: Better token caching with expiry
+const [authToken, setAuthToken] = useState(null);
+const [tokenExpiry, setTokenExpiry] = useState(null);
+
+const getValidToken = useCallback(async () => {
+  // Check if cached token is still valid (with 5min buffer)
+  if (authToken && tokenExpiry && Date.now() < tokenExpiry - 300000) {
+    return authToken;
+  }
+
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    
+    if (session?.access_token) {
+      setAuthToken(session.access_token);
+      // JWT tokens typically expire in 1 hour
+      setTokenExpiry(Date.now() + 3600000);
+      return session.access_token;
+    }
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    setAuthToken(null);
+    setTokenExpiry(null);
+  }
+  return null;
+}, [authToken, tokenExpiry]);
+
+// Update the useEffect to use the new function
+useEffect(() => {
+  const updateToken = async () => {
+    if (user) {
+      await getValidToken();
+    } else {
+      setAuthToken(null);
+      setTokenExpiry(null);
+    }
+  };
+  updateToken();
+}, [user, getValidToken]);
+
   // Load cached profile on mount for instant UI
   useEffect(() => {
     if (typeof window !== 'undefined') {
