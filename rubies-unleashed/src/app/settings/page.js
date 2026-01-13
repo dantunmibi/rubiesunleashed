@@ -9,7 +9,7 @@ import { useSessionGuard } from "@/hooks/useSessionGuard";
 import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import { 
-  User, Shield, Cpu, AlertTriangle, Save, Loader2, RefreshCw, LayoutDashboard, Plus, X
+  User, Shield, Cpu, AlertTriangle, Save, Loader2, RefreshCw, LayoutDashboard, Plus, X, Ghost
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToastContext } from "@/components/providers/ToastProvider";
@@ -578,6 +578,20 @@ function SecuritySettings({ formData, setFormData }) {
         <div className="space-y-8">
             <div>
                 <h2 className="text-xl font-bold text-white mb-4">Privacy & Visibility</h2>
+
+                {formData.archetype === 'phantom' && (
+                    <div className="mb-6 p-4 bg-violet-500/10 border border-violet-500/30 rounded-xl">
+                        <div className="flex items-start gap-3">
+                            <Ghost size={20} className="text-violet-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-sm font-bold text-violet-400 mb-1">Phantom Protocol Active</h4>
+                                <p className="text-xs text-slate-400">
+                                    As a Phantom, your profile defaults to private. You can make it public below if you choose.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 
                 <div className="flex items-center justify-between py-4 border-b border-white/5">
                     <div>

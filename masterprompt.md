@@ -956,7 +956,7 @@ ratings (user_id, project_id, rating, created_at)
 1. Basic follow system
 2. Simple rating (1-5 stars)
 3. Comments with basic moderation
-4. Creator activity feeds
+4. Personalized user feeds
 
 **Analytics MVP:**
 1. View/download counting

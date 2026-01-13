@@ -252,22 +252,23 @@ export default function ProfileClient() {
                  </div>
               </div>
 
-              {/* Info Block */}
-              <div className="flex-1 text-center md:text-left space-y-1 pb-2">
-                 <div className="flex items-center justify-center md:justify-start gap-3">
+                {/* Info Block */}
+                <div className="flex-1 text-center md:text-left space-y-1 pb-2">
+                <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap">
                     <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter drop-shadow-lg">
-                       {profile.display_name || profile.username}
+                        {profile.display_name || profile.username}
                     </h1>
+                    {profile.role === 'architect' && (
+                        <span className="px-3 py-1 bg-linear-to-r from-emerald-500/20 to-emerald-400/20 border border-emerald-500/30 rounded-full text-emerald-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
+                            <LayoutDashboard size={12} /> Developer
+                        </span>
+                    )}
                     {isOwner && (
                         <Link href="/settings" className="p-2 text-slate-400 hover:text-white transition-colors bg-black/40 backdrop-blur-md rounded-full border border-white/10 hover:border-white/30">
                             <Edit size={16} />
                         </Link>
                     )}
-                 </div>
-                 
-                 {profile.display_name && (
-                    <p className="text-sm font-bold text-slate-300 mb-3 opacity-80">@{profile.username}</p>
-                 )}
+                </div>
 
                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
                     <span className="flex items-center gap-2 bg-(--user-accent)/10 text-(--user-accent) border border-(--user-accent)/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_var(--user-accent-glow)] backdrop-blur-md">

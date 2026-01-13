@@ -151,12 +151,24 @@ export const getSocialIcon = (label) => {
   return <ExternalLink size={16} />;
 };
 
-export const getDownloadLabel = (platform) => {
+export const getDownloadLabel = (platform, tags = [], url = '') => {
   if (!platform) return 'Download';
   
   const lower = platform.toLowerCase();
+  const urlLower = url.toLowerCase();
   
-  // PC Game Stores - "View on"
+  // 🔍 SMART DETECTION: Check URL first for specific platforms
+  if (urlLower.includes('itch.io')) return 'View on Itch.io';
+  if (urlLower.includes('steampowered.com') || urlLower.includes('store.steampowered')) return 'View on Steam';
+  if (urlLower.includes('gog.com')) return 'View on GOG';
+  if (urlLower.includes('epicgames.com')) return 'View on Epic Games';
+  if (urlLower.includes('gamejolt.com')) return 'View on Game Jolt';
+  if (urlLower.includes('humblebundle.com')) return 'View on Humble Bundle';
+  if (urlLower.includes('play.google.com')) return 'Get on Google Play';
+  if (urlLower.includes('apps.apple.com')) return 'Download on App Store';
+  if (urlLower.includes('microsoft.com/store')) return 'Get in Microsoft Store';
+  
+  // PC Game Stores - "View on" (Fallback to platform label)
   if (lower === 'steam') return 'View on Steam';
   if (lower === 'itch.io') return 'View on Itch.io';
   if (lower === 'gog') return 'View on GOG';
@@ -183,8 +195,10 @@ export const getDownloadLabel = (platform) => {
   if (lower === 'xbox') return 'Get for Xbox';
   if (lower === 'playstation') return 'Get for PlayStation';
   
-  // Web
-  if (lower === 'web') return isApp ? 'Visit Site' : 'Play Online';
+  // Web - Generic fallback (only if URL doesn't match known platforms)
+  if (lower === 'web') {
+    return isApp(tags) ? 'Visit Site' : 'Play Online';
+  }
   
   // Generic fallback
   if (lower === 'download') return 'Download';

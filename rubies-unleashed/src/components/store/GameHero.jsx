@@ -182,38 +182,19 @@ const handleDownloadClick = (e, url) => {
     }
   };
 
-  // ✅ UNIFIED BUTTON LABEL LOGIC (Shared between desktop and mobile)
-  const getButtonLabel = () => {
-    const primaryLink = game.downloadLinks && game.downloadLinks.length > 0 
-      ? game.downloadLinks[0] 
-      : { platform: 'Download', url: game.downloadUrl || '#' };
-    const platform = (primaryLink.platform || '').toLowerCase().trim();
-    const url = (primaryLink.url || '').toLowerCase();
-    
-    const storePatterns = {
-      'steam': /steam/i,
-      'itch.io': /itch\.io/i,
-      'gog': /gog\.com/i,
-      'epic games': /epicgames/i,
-      'google play': /play\.google\.com/i,
-      'app store': /apps\.apple\.com/i,
-      'microsoft store': /microsoft\.com\/store/i,
-      'game jolt': /gamejolt\.com/i,
-      'humble bundle': /humblebundle\.com/i
-    };
-    
-    for (const [storeName, pattern] of Object.entries(storePatterns)) {
-      if (platform.includes(storeName.toLowerCase()) || pattern.test(url)) {
-        return getDownloadLabel(primaryLink.platform).toUpperCase();
-      }
-    }
-    
-    if (platform === 'web' || platform.includes('html5') || platform.includes('browser')) {
-      return isApp ? 'VISIT SITE' : 'PLAY NOW';
-    }
-    
-    return isApp ? 'GET APP' : 'GET GAME';
+// ✅ UNIFIED BUTTON LABEL LOGIC - Delegates to game-utils.js
+const getButtonLabel = () => {
+  const primaryLink = game.downloadLinks?.[0] || { 
+    platform: 'Download', 
+    url: game.downloadUrl || '#' 
   };
+  
+  return getDownloadLabel(
+    primaryLink.platform, 
+    game.tags, 
+    primaryLink.url
+  ).toUpperCase();
+};
 
   return (
     <>
@@ -367,7 +348,7 @@ const handleDownloadClick = (e, url) => {
           onClick={(e) => handleDownloadClick(e, link.url)}
           className={`${theme.bg} hover:brightness-110 text-white px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1 shadow-lg cursor-pointer`}
         >
-          {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform)}
+          {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform, game.tags)}
         </button>
       ))}
     </div>

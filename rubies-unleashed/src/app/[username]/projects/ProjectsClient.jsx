@@ -128,34 +128,55 @@ export default function ProjectsClient({ username: propUsername }) {
     );
   }
 
-  // --- ERROR / ACCESS DENIED ---
-  if (
-    error ||
-    !profile ||
-    (profile.archetype !== "architect" && profile.role !== "admin")
-  ) {
-    return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
-        <div className="w-16 h-16 rounded-full border border-red-500/20 bg-red-500/5 flex items-center justify-center">
-          <AlertTriangle size={24} className="text-red-500" />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-2">
-            Access Restricted
-          </h2>
-          <p className="text-slate-500 text-xs font-mono">
-            User identity unverified or non-architect class.
-          </p>
-        </div>
-        <Link
-          href="/"
-          className="px-6 py-2 border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-full"
-        >
-          Return to Base
-        </Link>
+// ✅ FIXED - Check role properly with better message
+if (error || !profile) {
+  return (
+    <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
+      <div className="w-16 h-16 rounded-full border border-red-500/20 bg-red-500/5 flex items-center justify-center">
+        <AlertTriangle size={24} className="text-red-500" />
       </div>
-    );
-  }
+      <div>
+        <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-2">
+          Profile Not Found
+        </h2>
+        <p className="text-slate-500 text-xs font-mono">
+          The requested user does not exist.
+        </p>
+      </div>
+      <Link
+        href="/"
+        className="px-6 py-2 border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-full"
+      >
+        Return to Base
+      </Link>
+    </div>
+  );
+}
+
+// ✅ SEPARATE CHECK: Show different message for non-architects
+if (profile.role !== "architect" && profile.role !== "admin") {
+  return (
+    <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
+      <div className="w-16 h-16 rounded-full border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center">
+        <Package size={24} className="text-emerald-500" />
+      </div>
+      <div>
+        <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-2">
+          No Public Projects
+        </h2>
+        <p className="text-slate-500 text-xs font-mono">
+          {profile.username} hasn't published any projects yet.
+        </p>
+      </div>
+      <Link
+        href={`/${profile.username}`}
+        className="px-6 py-2 border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-full"
+      >
+        View Profile
+      </Link>
+    </div>
+  );
+}
 
   const isOwner = user && user.id === profile.id;
 
@@ -285,13 +306,26 @@ export default function ProjectsClient({ username: propUsername }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {projects.length === 0 ? (
-                <div className="col-span-full border border-dashed border-white/5 rounded-2xl p-20 flex flex-col items-center justify-center text-slate-600 gap-4">
-                  <Package size={32} className="opacity-50" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    No projects Found
+            {projects.length === 0 ? (
+              <div className="col-span-full border border-dashed border-emerald-500/10 rounded-2xl p-20 flex flex-col items-center justify-center gap-4 bg-emerald-500/2">
+                <Package size={48} className="text-emerald-500/30" />
+                <div className="text-center">
+                  <span className="text-sm font-bold uppercase tracking-widest text-white block mb-2">
+                    No Projects Yet
                   </span>
+                  <p className="text-xs text-slate-500">
+                    {isOwner ? "Publish your first project from The Forge" : "Check back soon for updates"}
+                  </p>
                 </div>
+                {isOwner && (
+                  <Link 
+                    href={`/${profile.username}/dashboard`}
+                    className="mt-4 px-6 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold uppercase tracking-widest transition-all rounded-full flex items-center gap-2"
+                  >
+                    <Zap size={12} /> Create First Project
+                  </Link>
+                )}
+              </div>
               ) : (
                 projects.map((item) => (
                   <div

@@ -37,46 +37,52 @@ export default function GameModal({ game, onClose }) {
   const [isBlurred, setIsBlurred] = useState(hasWarnings);
   const [warningUrl, setWarningUrl] = useState(null); // ✅ Add warning state
 
-  // ✅ Add download handler with warning logic
-  const handleDownloadClick = (e, url) => {
-    e.preventDefault();
+// ✅ UPDATED: Only warn for actual download links
+const handleDownloadClick = (e, url, linkType = 'download') => {
+  e.preventDefault();
+  
+  if (!url || url === "#") return;
+  
+  // ✅ Skip warning for video/screenshot links
+  if (linkType === 'video' || linkType === 'screenshots') {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  
+  // Only MAJOR OFFICIAL STORES are trusted (for downloads only)
+  const trustedDomains = [
+    'steam.com', 'steampowered.com', 'microsoft.com', 'apple.com', 'apps.apple.com',
+    'google.com', 'play.google.com', 'epicgames.com', 'gog.com'
+  ];
+  
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname.toLowerCase();
+    const pathname = urlObj.pathname.toLowerCase();
     
-    if (!url || url === "#") return;
+    // Check for direct file downloads (always warn)
+    const fileExtensions = ['.exe', '.msi', '.dmg', '.pkg', '.deb', '.rpm', '.apk', '.ipa', '.zip', '.rar', '.7z', '.tar.gz'];
+    const hasFileExtension = fileExtensions.some(ext => pathname.endsWith(ext));
     
-    // Only MAJOR OFFICIAL STORES are trusted
-    const trustedDomains = [
-      'steam.com', 'steampowered.com', 'microsoft.com', 'apple.com', 'apps.apple.com',
-      'google.com', 'play.google.com', 'epicgames.com', 'gog.com'
-    ];
+    if (hasFileExtension) {
+      setWarningUrl(url);
+      return;
+    }
     
-    try {
-      const urlObj = new URL(url);
-      const domain = urlObj.hostname.toLowerCase();
-      const pathname = urlObj.pathname.toLowerCase();
-      
-      // Check for direct file downloads (always warn)
-      const fileExtensions = ['.exe', '.msi', '.dmg', '.pkg', '.deb', '.rpm', '.apk', '.ipa', '.zip', '.rar', '.7z', '.tar.gz'];
-      const hasFileExtension = fileExtensions.some(ext => pathname.endsWith(ext));
-      
-      if (hasFileExtension) {
-        setWarningUrl(url);
-        return;
-      }
-      
-      // Check if it's a trusted official store
-      const isTrusted = trustedDomains.some(trusted => 
-        domain === trusted || domain.endsWith(`.${trusted}`)
-      );
-      
-      if (isTrusted) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      } else {
-        setWarningUrl(url);
-      }
-    } catch (error) {
+    // Check if it's a trusted official store
+    const isTrusted = trustedDomains.some(trusted => 
+      domain === trusted || domain.endsWith(`.${trusted}`)
+    );
+    
+    if (isTrusted) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
       setWarningUrl(url);
     }
-  };
+  } catch (error) {
+    setWarningUrl(url);
+  }
+};
 
   // ✅ Add confirm/cancel handlers
   const confirmDownload = () => {
@@ -265,78 +271,39 @@ export default function GameModal({ game, onClose }) {
           onClick={(e) => handleDownloadClick(e, link.url)}
           className={`flex-1 bg-background border border-white/10 ${theme.borderHover} hover:bg-white/5 text-white font-bold uppercase tracking-wider py-3 px-3 flex items-center justify-center gap-2 transition-all text-[9px] whitespace-nowrap rounded-sm cursor-pointer`}
         >
-          {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform)}
+          {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform, game.tags)}
         </button>
       ))}
     </div>
   ) 
   
-  /* PRIORITY 2: Single Download */
-  : hasDownloads ? (
-    <button
-      onClick={(e) => handleDownloadClick(e, primaryLink.url)}
-      className={`flex-4 bg-background border border-white/10 ${theme.borderHover} hover:bg-white/5 text-white font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm cursor-pointer`}
-    >
-      <theme.icon size={14} className={theme.text} />
-      {(() => {
-        const platform = (primaryLink.platform || '').toLowerCase().trim();
-        const url = (primaryLink.url || '').toLowerCase();
-        
-        // Store patterns (PRESERVED LOGIC)
-        const storePatterns = {
-          'steam': /steam/i,
-          'itch.io': /itch\.io/i,
-          'gog': /gog\.com/i,
-          'epic games': /epicgames/i,
-          'google play': /play\.google\.com/i,
-          'app store': /apps\.apple\.com/i,
-          'microsoft store': /microsoft\.com\/store/i,
-          'game jolt': /gamejolt\.com/i,
-          'humble bundle': /humblebundle\.com/i
-        };
-        
-        for (const [storeName, pattern] of Object.entries(storePatterns)) {
-          if (platform.includes(storeName.toLowerCase()) || pattern.test(url)) {
-            return getDownloadLabel(primaryLink.platform).toUpperCase();
-          }
-        }
-        
-        if (platform === 'web' || platform.includes('html5') || platform.includes('browser')) {
-          return theme.isApp ? 'VISIT SITE' : 'PLAY NOW';
-        }
-        
-        return theme.isApp ? 'GET APP' : 'GET GAME';
-      })()}
-    </button>
-  )
+/* PRIORITY 2: Single Download */
+: hasDownloads ? (
+  <button
+    onClick={(e) => handleDownloadClick(e, primaryLink.url, 'download')} // ✅ Added type
+    className={`flex-4 bg-background border border-white/10 ${theme.borderHover} hover:bg-white/5 text-white font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm cursor-pointer`}
+  >
+    <theme.icon size={20} className="text-white" />
+    {getDownloadLabel(
+      game.downloadLinks[0].platform, 
+      game.tags, 
+      game.downloadLinks[0].url
+    ).toUpperCase()}
+  </button>
+)
   
-  /* PRIORITY 3: Video Demo */
-  : hasVideo ? (
-    <a
-      href={game.videoUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex-4 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm"
-    >
-      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-      </svg>
-      WATCH DEMO
-    </a>
-  )
-  
-  /* PRIORITY 4: Screenshots */
-  : hasScreenshots ? (
-    <button
-      onClick={onClose} // Close modal and let user see screenshots on main page
-      className="flex-4 bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30 text-purple-400 font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm"
-    >
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-      VIEW GALLERY
-    </button>
-  )
+/* PRIORITY 3: Video Demo */
+: hasVideo ? (
+  <button
+    onClick={(e) => handleDownloadClick(e, game.videoUrl, 'video')} // ✅ Changed to button with type
+    className="flex-4 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 font-black uppercase tracking-widest py-3 flex items-center justify-center gap-2 transition-all text-[10px] rounded-sm"
+  >
+    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+    </svg>
+    WATCH DEMO
+  </button>
+)
   
   /* PRIORITY 5: Fallback */
   : (

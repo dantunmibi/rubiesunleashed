@@ -118,7 +118,7 @@ return (
               onClick={(e) => handleDownloadClick(e, link.url)}
               className={`${theme.bg} hover:brightness-110 text-white px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1 shadow-lg cursor-pointer`}
             >
-              {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform)}
+              {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform, game.tags, link.url)}
             </button>
           ))}
         </div>
@@ -127,41 +127,12 @@ return (
           onClick={(e) => handleDownloadClick(e, playButtonLink)}
           className={`w-full md:w-auto ${theme.bg} hover:brightness-110 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:scale-105 ${theme.glow} cursor-pointer`}
         >
-          <theme.icon size={20} className="text-white" />
-          {(() => {
-            const primaryLink = game.downloadLinks[0];
-            const platform = (primaryLink.platform || '').toLowerCase().trim();
-            const url = (primaryLink.url || '').toLowerCase();
-            
-            // Store platforms
-            const storePatterns = {
-              'steam': /steam/i,
-              'itch.io': /itch\.io/i,
-              'gog': /gog\.com/i,
-              'epic games': /epicgames/i,
-              'google play': /play\.google\.com/i,
-              'app store': /apps\.apple\.com/i,
-              'microsoft store': /microsoft\.com\/store/i,
-              'game jolt': /gamejolt\.com/i,
-              'humble bundle': /humblebundle\.com/i
-            };
-            
-            // Check if it's a store link
-for (const [storeName, pattern] of Object.entries(storePatterns)) {
-  if (platform.includes(storeName.toLowerCase()) || pattern.test(url)) {
-// Direct downloads
-return getDownloadLabel(primaryLink.platform, isApp).toUpperCase(); // ✅ Pass isApp here too
-  }
-}
-            
-            // Web-based detection
-            if (platform === 'web' || platform.includes('html5') || platform.includes('browser')) {
-              return isApp ? 'VISIT SITE' : 'PLAY NOW';
-            }
-            
-            // Direct downloads
-            return isApp ? 'GET APP' : 'GET GAME';
-          })()}
+<theme.icon size={20} className="text-white" />
+{getDownloadLabel(
+  game.downloadLinks[0].platform, 
+  game.tags, 
+  game.downloadLinks[0].url
+).toUpperCase()}
         </button>
       )
       

@@ -45,7 +45,7 @@ const ARCHETYPES = [
     colorKey: 'phantom',
     name: 'The Phantom',
     icon: Ghost,
-    desc: 'Observe & Vanish. Privacy and the underground.',
+    desc: 'Observe & Vanish. Privacy and the underground. Your profile is private by default.', 
     quote: 'Leave no trace.'
   }
 ];
