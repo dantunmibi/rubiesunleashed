@@ -42,11 +42,51 @@ function ContactFormLogic() {
     message: "",
   });
   
-  // Update if params change
-  useEffect(() => {
-    const subj = searchParams.get('subject');
-    if (subj) setFormData(prev => ({ ...prev, subject: subj }));
-  }, [searchParams]);
+// ✅ Updated useEffect to handle subject dropdown and auto-fill message
+useEffect(() => {
+  const subj = searchParams.get('subject');
+  
+  // Check if it's a claim request (subject contains "Claim Request:")
+  const isClaimRequest = subj && subj.includes('Claim Request:');
+  
+  // Auto-fill message template for claim requests
+  let autoMessage = "";
+  let dropdownSubject = "";
+  
+  if (isClaimRequest) {
+    // Set dropdown to "Claim Request" option
+    dropdownSubject = "Claim Request";
+    
+    // Extract game info from subject
+    const gameInfo = subj.replace('Claim Request:', '').trim();
+    
+    autoMessage = `Hello,
+
+I would like to claim this game listing: ${gameInfo}
+
+USERNAME/DEVELOPER NAME: [Enter your username/developer name here]
+
+PROOF OF OWNERSHIP: 
+[Please describe how you can prove this is your game. For example:
+- Link to your developer profile
+- Original source code repository
+- Social media accounts showing development
+- Other verification methods]
+
+Additional Information:
+[Any other details you'd like to share]
+
+Thank you!`;
+  } else {
+    dropdownSubject = subj || "";
+  }
+  
+  setFormData(prev => ({ 
+    ...prev, 
+    subject: dropdownSubject,
+    message: autoMessage || prev.message
+  }));
+}, [searchParams]);
 
   const [status, setStatus] = useState("idle");
   const { showToast } = useToastContext();
@@ -166,6 +206,7 @@ function ContactFormLogic() {
                     className="w-full px-5 py-4 bg-background/60 border border-slate-700 focus:border-ruby rounded-lg text-white transition-all font-medium focus:outline-none focus:ring-1 focus:ring-ruby/50"
                   >
                     <option value="">Select a topic...</option>
+                    <option value="Claim Request">Claim Request</option>
                     <option value="Creator Support">Creator Support - The Forge</option>
                     <option value="Publishing Inquiry">Publishing Inquiry</option>
                     <option value="Technical Support">Technical Support</option>
@@ -176,24 +217,24 @@ function ContactFormLogic() {
                   </select>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest"
-                  >
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={6}
-                    required
-                    value={formData.message}
-                    onChange={handleChange}
-                    className="w-full px-5 py-4 bg-background/60 border border-slate-700 focus:border-ruby rounded-lg text-white placeholder-slate-600 transition-all font-medium resize-none focus:outline-none focus:ring-1 focus:ring-ruby/50"
-                    placeholder="How can we help you today?"
-                  ></textarea>
-                </div>
+<div>
+  <label
+    htmlFor="message"
+    className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest"
+  >
+    Message
+  </label>
+  <textarea
+    id="message"
+    name="message"
+    rows={12}
+    required
+    value={formData.message}
+    onChange={handleChange}
+    className="w-full px-5 py-4 bg-background/60 border border-slate-700 focus:border-ruby rounded-lg text-white placeholder-slate-600 transition-all font-medium resize-y focus:outline-none focus:ring-1 focus:ring-ruby/50 min-h-50"
+    placeholder="How can we help you today?"
+  ></textarea>
+</div>
 
                 <button
                   type="submit"

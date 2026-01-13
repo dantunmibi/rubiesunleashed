@@ -248,10 +248,10 @@ export default function GameSidebar({ game }) {
         <span className="text-[10px] font-bold text-slate-500 group-hover:text-red-400 uppercase tracking-widest">Report</span>
     </button>
 
-    {/* ✅ FIXED: Conditional Claim Button */}
+    {/* ✅ Conditional Claim Button */}
     {isBloggerProject ? (
       <Link 
-          href={`/contact?subject=Claim Request: ${game.title} (ID: ${game.id})`}
+          href={`/contact?subject=Claim%20Request:%20${encodeURIComponent(game.title)}%20(ID:%20${game.id})`}
           className="flex flex-col items-center justify-center gap-2 p-4 bg-black/20 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all group"
       >
           <ShieldCheck size={18} className="text-slate-500 group-hover:text-emerald-500 transition-colors" />
