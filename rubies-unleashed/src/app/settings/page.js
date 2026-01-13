@@ -1,50 +1,60 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
-import { useSessionGuard } from "@/hooks/useSessionGuard"; // ✅ NEW
-import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay"; // ✅ NEW
+import { useSessionGuard } from "@/hooks/useSessionGuard";
+import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import { 
-  User, Shield, Cpu, AlertTriangle, Save, Loader2, Check, Eye, EyeOff, RefreshCw, LayoutDashboard, Globe, Github, Twitter, Youtube, Plus, X
+  User, Shield, Cpu, AlertTriangle, Save, Loader2, RefreshCw, LayoutDashboard, Plus, X
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation"; // ✅ ADD useSearchParams
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToastContext } from "@/components/providers/ToastProvider";
 
 // --- TABS CONFIG ---
 const TABS = [
   { id: 'profile', label: 'Identity', icon: User },
   { id: 'archetype', label: 'Protocol', icon: Cpu },
-  { id: 'architect', label: 'Architect Profile', icon: LayoutDashboard, role: 'architect' }, // ✅ NEW TAB
+  { id: 'architect', label: 'Architect Profile', icon: LayoutDashboard, role: 'architect' },
   { id: 'security', label: 'Security & Privacy', icon: Shield },
 ];
 
+// --- 1. MAIN EXPORT (WRAPPER) ---
 export default function SettingsPage() {
-  const { user, profile, refreshProfile, initialized } = useAuth();
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-red-500" size={48} />
+        <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Loading System...</p>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+// --- 2. LOGIC COMPONENT ---
+function SettingsContent() {
+  const { user, profile, initialized } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams(); 
-    // ✅ READ TAB FROM URL (Default to 'profile')
+  
   const initialTab = searchParams.get('tab') || 'profile';
   
-  // ✅ INITIALIZE STATE WITH URL PARAM
   const [activeTab, setActiveTab] = useState(initialTab);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   
-  // ✅ USE HOOK
   const { showSessionError, checkApiError, validateSession, triggerError } = useSessionGuard();
-  
   const { showToast } = useToastContext();
 
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     displayName: "",
     bio: "",
-    developerName: "", // ✅ ADD THIS
+    developerName: "",
     avatarUrl: "",
     coverUrl: "", 
     isPublicProfile: true,
@@ -52,7 +62,7 @@ const [formData, setFormData] = useState({
     archetype: "hunter",
     socialLinks: [],
     architectBio: ""
-});
+  });
 
   // Redirect if not logged in
   useEffect(() => {
@@ -60,12 +70,12 @@ const [formData, setFormData] = useState({
   }, [initialized, user, router]);
 
   // Load Data
-useEffect(() => {
+  useEffect(() => {
     if (profile) {
       setFormData({
         displayName: profile.display_name || profile.username || "",
         bio: profile.bio || "",
-        developerName: profile.developer_name || "", // ✅ ADD THIS
+        developerName: profile.developer_name || "",
         avatarUrl: profile.avatar_url || "",
         coverUrl: profile.cover_url || "", 
         isPublicProfile: profile.profile_visibility === 'public',
@@ -75,10 +85,9 @@ useEffect(() => {
         architectBio: profile.architect_bio || ""
       });
     }
-}, [profile]);
+  }, [profile]);
 
-
-  // ✅ SAFETY VALVE
+  // Safety Valve
   useEffect(() => {
     let timer;
     if (loading) {
@@ -91,12 +100,12 @@ useEffect(() => {
     return () => clearTimeout(timer);
   }, [loading, triggerError]);
 
-    // Initial Load Safety Valve
+  // Initial Load Safety Valve
   useEffect(() => {
     const timer = setTimeout(() => {
         if (!initialized) {
             console.warn("Auth initialization timed out (5s).");
-            triggerError(); // Show overlay
+            triggerError(); 
         }
     }, 5000);
     return () => clearTimeout(timer);
@@ -111,8 +120,7 @@ useEffect(() => {
     });
   };
 
-const handleSave = async () => {
-    // ✅ VALIDATE SESSION FIRST
+  const handleSave = async () => {
     if (!(await validateSession())) return;
 
     setLoading(true);
@@ -125,7 +133,6 @@ const handleSave = async () => {
           if (!(await validateImage(formData.coverUrl))) throw new Error("Invalid Cover URL.");
       }
 
-      // Get fresh token
       const { data: { session } } = await supabase.auth.getSession();
 
       const updates = {
@@ -142,7 +149,6 @@ const handleSave = async () => {
         updated_at: new Date().toISOString(),
       };
 
-      // 1. Update profile
       const response = await fetch('/api/profile/update', {
         method: 'POST',
         headers: {
@@ -161,7 +167,6 @@ const handleSave = async () => {
 
       const result = await response.json();
 
-      // ✅ 2. UPDATE ALL PROJECTS IF DEVELOPER NAME CHANGED
       if (formData.developerName && formData.developerName.trim()) {
         try {
           const projectsResponse = await fetch('/api/projects/update-developer', {
@@ -183,11 +188,9 @@ const handleSave = async () => {
           }
         } catch (projectError) {
           console.warn('Project update failed:', projectError);
-          // Don't fail the whole save for this
         }
       }
 
-      // Update local state
       if (result.data && result.data[0]) {
         const updated = result.data[0];
         setFormData(prev => ({
@@ -217,17 +220,16 @@ const handleSave = async () => {
     }
   };
 
-  // ✅ LOADING SKELETON (Only if no error yet)
+  // LOADING SKELETON
   if ((!initialized || !user) && !showSessionError) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="animate-spin text-ruby" size={48} />
+        <Loader2 className="animate-spin text-red-500" size={48} />
         <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Authenticating...</p>
       </div>
     );
   }
 
-  // If we fell through here without user/initialized, show overlay
   if (showSessionError) {
       return (
         <div className="min-h-screen bg-background">
@@ -244,7 +246,6 @@ const handleSave = async () => {
 
       <main className="pt-32 px-6 max-w-6xl mx-auto pb-20">
         
-        {/* Header */}
         <div className="mb-12">
           <h1 className="text-4xl font-black text-white uppercase tracking-tight mb-2">
             Control <span className="text-(--user-accent)">Panel</span>
@@ -257,8 +258,6 @@ const handleSave = async () => {
           {/* --- SIDEBAR TABS --- */}
           <aside className="lg:w-64 shrink-0 space-y-2">
             {TABS.map((tab) => {
-              // ✅ FIX: Check profile.role instead of archetype
-              // This ensures Hunters/Netrunners who are Architects can still see the tab
               const isHidden = 
                 tab.role === 'architect' && 
                 profile?.role !== 'architect' && 
@@ -285,20 +284,19 @@ const handleSave = async () => {
               );
             })}
           </aside>
+
           {/* --- MAIN CONTENT --- */}
           <div className="flex-1 bg-[#161b2c] border border-white/5 rounded-3xl p-8 relative overflow-hidden">
             
-            {/* Success Toast */}
             {successMsg && (
                 <div className="absolute top-0 left-0 w-full bg-emerald-500 text-white text-center text-xs font-bold py-2 animate-in slide-in-from-top-full z-10">
                     {successMsg}
                 </div>
             )}
 
-            {/* Content Switcher */}
             <div className="space-y-8">
                 {activeTab === 'profile' && (
-                    <ProfileSettings formData={formData} setFormData={setFormData}  profile={profile}  />
+                    <ProfileSettings formData={formData} setFormData={setFormData} profile={profile} />
                 )}
                 {activeTab === 'archetype' && (
                     <ArchetypeSettings formData={formData} setFormData={setFormData} />
@@ -311,7 +309,6 @@ const handleSave = async () => {
                 )}
             </div>
 
-            {/* Save Bar */}
             <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-end">
                 <button
                     onClick={handleSave}
@@ -326,25 +323,8 @@ const handleSave = async () => {
           </div>
         </div>
       </main>
-      {/* ✅ SESSION EXPIRED OVERLAY */}
-      {showSessionError && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
-                <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 animate-pulse">
-                    <AlertTriangle size={32} className="text-red-500" />
-                </div>
-                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Link Severed</h3>
-                <p className="text-slate-400 mb-8 text-sm">Your security token has expired. Re-initialization required.</p>
-                <button 
-                    onClick={() => window.location.reload()}
-                    className="w-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
-                >
-                    <RefreshCw size={18} /> Reconnect
-                </button>
-            </div>
-        </div>
-      )}
-      {/* ✅ SESSION ERROR OVERLAY */}
+
+      {/* ✅ SINGLE SESSION ERROR OVERLAY */}
       <SessionErrorOverlay show={showSessionError} />
       
       <Footer />
@@ -359,7 +339,6 @@ function ProfileSettings({ formData, setFormData, profile }) {
         <div className="space-y-6">
             <h2 className="text-xl font-bold text-white mb-4">Public Identity</h2>
             
-            {/* Display Name */}
             <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Display Name</label>
                 <input 
@@ -370,7 +349,6 @@ function ProfileSettings({ formData, setFormData, profile }) {
                 />
             </div>
 
-            {/* Bio */}
             <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Bio</label>
                 <textarea 
@@ -381,7 +359,6 @@ function ProfileSettings({ formData, setFormData, profile }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Avatar URL */}
                 <div>
                     <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Avatar URL</label>
                     <input 
@@ -393,7 +370,6 @@ function ProfileSettings({ formData, setFormData, profile }) {
                     />
                 </div>
 
-                {/* Cover URL */}
                 <div>
                     <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Cover Image URL</label>
                     <input 
@@ -406,12 +382,10 @@ function ProfileSettings({ formData, setFormData, profile }) {
                 </div>
             </div>
             
-            {/* Live Preview */}
             <div className="mt-8">
                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4">Live Preview</p>
                 
                 <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#0f131f] h-48 group">
-                    {/* Cover Background */}
                     <div className="absolute inset-0">
                         {formData.coverUrl ? (
                             <>
@@ -423,7 +397,6 @@ function ProfileSettings({ formData, setFormData, profile }) {
                         )}
                     </div>
 
-                    {/* Avatar & Info Composition */}
                     <div className="absolute bottom-6 left-6 flex items-end gap-4 z-10">
                         <div className="w-20 h-20 rounded-full bg-linear-to-tr from-(--user-accent) to-slate-600 p-1 shadow-2xl overflow-hidden">
                             {formData.avatarUrl ? (
@@ -447,16 +420,14 @@ function ProfileSettings({ formData, setFormData, profile }) {
     );
 }
 
-// ✅ UPDATED COMPONENT: Architect Profile Settings
 function ArchitectProfileSettings({ formData, setFormData }) {
     const [inputs, setInputs] = useState({ label: "Website", url: "" });
 
-    // ✅ AUTO-DETECT LABEL ON URL PASTE
     const handleUrlChange = (e) => {
         const val = e.target.value;
-        let detectedLabel = inputs.label;
         
         const lower = val.toLowerCase();
+        let detectedLabel = "Website";
         if (lower.includes('twitter.com') || lower.includes('x.com')) detectedLabel = 'Twitter';
         else if (lower.includes('github.com')) detectedLabel = 'GitHub';
         else if (lower.includes('linkedin.com')) detectedLabel = 'LinkedIn';
@@ -467,33 +438,33 @@ function ArchitectProfileSettings({ formData, setFormData }) {
         setInputs({ label: detectedLabel, url: val });
     };
 
-const detectLabelFromUrl = (url) => {
-  const lower = url.toLowerCase();
-  if (lower.includes('twitter.com') || lower.includes('x.com')) return 'Twitter';
-  if (lower.includes('github.com')) return 'GitHub';
-  if (lower.includes('linkedin.com')) return 'LinkedIn';
-  if (lower.includes('discord')) return 'Discord';
-  if (lower.includes('youtube.com')) return 'YouTube';
-  if (lower.includes('instagram.com')) return 'Instagram';
-  return 'Website';
-};
+    const detectLabelFromUrl = (url) => {
+      const lower = url.toLowerCase();
+      if (lower.includes('twitter.com') || lower.includes('x.com')) return 'Twitter';
+      if (lower.includes('github.com')) return 'GitHub';
+      if (lower.includes('linkedin.com')) return 'LinkedIn';
+      if (lower.includes('discord')) return 'Discord';
+      if (lower.includes('youtube.com')) return 'YouTube';
+      if (lower.includes('instagram.com')) return 'Instagram';
+      return 'Website';
+    };
 
-const handleAddSocial = () => {
-  if (!inputs.url) return;
+    const handleAddSocial = () => {
+      if (!inputs.url) return;
 
-  setFormData({
-    ...formData,
-    socialLinks: [
-      ...(formData.socialLinks || []),
-      {
-        url: inputs.url,
-        label: detectLabelFromUrl(inputs.url),
-      },
-    ],
-  });
+      setFormData({
+        ...formData,
+        socialLinks: [
+          ...(formData.socialLinks || []),
+          {
+            url: inputs.url,
+            label: detectLabelFromUrl(inputs.url),
+          },
+        ],
+      });
 
-  setInputs({ label: "Website", url: "" });
-};
+      setInputs({ label: "Website", url: "" });
+    };
 
     const handleRemoveSocial = (index) => {
         setFormData({
@@ -509,7 +480,6 @@ const handleAddSocial = () => {
                 <p className="text-sm text-slate-400">Configure your public developer presence.</p>
             </div>
 
-            {/* Developer Name */}
             <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-2">
                     Developer Name (Universal)
@@ -526,7 +496,6 @@ const handleAddSocial = () => {
                 </p>
             </div>
 
-            {/* Architect Bio */}
             <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Developer Bio</label>
                 <textarea 
@@ -537,7 +506,6 @@ const handleAddSocial = () => {
                 />
             </div>
 
-            {/* Social Links Editor */}
             <div className="space-y-3">
                 <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Connect Links</label>
                 <div className="flex gap-2">
@@ -551,7 +519,7 @@ const handleAddSocial = () => {
                     <input 
                         type="url" 
                         value={inputs.url} 
-                        onChange={handleUrlChange} // ✅ Using Auto-Detect
+                        onChange={handleUrlChange} 
                         className="flex-1 bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-mono focus:border-(--user-accent) focus:outline-none"
                         placeholder="https://..."
                     />
@@ -577,7 +545,6 @@ const handleAddSocial = () => {
 }
 
 function ArchetypeSettings({ formData, setFormData }) {
-    // Reusing the Archetype definitions, but simplified for settings
     const archetypes = ['hunter', 'netrunner', 'curator', 'phantom'];
     
     return (
@@ -609,7 +576,6 @@ function ArchetypeSettings({ formData, setFormData }) {
 function SecuritySettings({ formData, setFormData }) {
     return (
         <div className="space-y-8">
-            {/* Privacy Toggles */}
             <div>
                 <h2 className="text-xl font-bold text-white mb-4">Privacy & Visibility</h2>
                 
@@ -636,7 +602,6 @@ function SecuritySettings({ formData, setFormData }) {
                 </div>
             </div>
 
-            {/* Danger Zone */}
             <div>
                 <h2 className="text-xl font-bold text-red-500 mb-4 flex items-center gap-2">
                     <AlertTriangle size={20} /> Danger Zone

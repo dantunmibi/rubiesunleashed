@@ -5,20 +5,21 @@
  * ✅ PHASE 4: Uses getSitemapData() for optimized performance
  * ✅ PHASE 3: Includes Public Profiles & Wishlists
  * ✅ SEO: Proper priority hierarchy and change frequencies
+ * ✅ FIX: No cookies usage - direct Supabase connection
  */
 
 import { getSitemapData } from '@/lib/game-service';
-import { createServerClient } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 
-// Revalidate every 6 hours (more frequent for active content creation)
-export const revalidate = 21600;
+// ✅ FIX: Make this route dynamic to avoid build-time issues
+export const dynamic = 'force-dynamic';
+export const revalidate = 21600; // Revalidate every 6 hours
 
 export default async function sitemap() {
   const baseUrl = 'https://rubiesunleashed.netlify.app';
 
   try {
     // 1. Get Optimized Sitemap Data (Unified Feed - Supabase + Blogger)
-    // This function is specifically designed for sitemap generation (minimal data)
     const content = await getSitemapData();
 
     const contentUrls = content.map((item) => ({
@@ -30,15 +31,15 @@ export default async function sitemap() {
 
     // 2. Core Static Routes (Hierarchical Priority)
     const staticRoutes = [
-      { route: '', priority: 1.0, freq: 'daily' },      // Home (highest)
-      { route: '/explore', priority: 0.9, freq: 'daily' }, // The Vault (discovery)
-      { route: '/publish', priority: 0.7, freq: 'weekly' }, // Creator onboarding
-      { route: '/about', priority: 0.6, freq: 'monthly' },  // Manifesto
-      { route: '/status', priority: 0.5, freq: 'weekly' },  // Health monitoring
-      { route: '/contact', priority: 0.4, freq: 'monthly' }, // Support
-      { route: '/help', priority: 0.4, freq: 'monthly' },   // Documentation
-      { route: '/terms', priority: 0.3, freq: 'yearly' },   // Legal (low change)
-      { route: '/privacy', priority: 0.3, freq: 'yearly' }, // Legal (low change)
+      { route: '', priority: 1.0, freq: 'daily' },
+      { route: '/explore', priority: 0.9, freq: 'daily' },
+      { route: '/publish', priority: 0.7, freq: 'weekly' },
+      { route: '/about', priority: 0.6, freq: 'monthly' },
+      { route: '/status', priority: 0.5, freq: 'weekly' },
+      { route: '/contact', priority: 0.4, freq: 'monthly' },
+      { route: '/help', priority: 0.4, freq: 'monthly' },
+      { route: '/terms', priority: 0.3, freq: 'yearly' },
+      { route: '/privacy', priority: 0.3, freq: 'yearly' },
     ].map(({ route, priority, freq }) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
@@ -47,16 +48,20 @@ export default async function sitemap() {
     }));
 
     // 3. Public Profiles & Social Layer (Phase 3 Feature)
+    // ✅ FIX: Use direct Supabase client instead of createServerClient (which uses cookies)
     let profileUrls = [];
     try {
-      const supabase = await createServerClient();
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      );
       
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('username, updated_at, is_public_wishlist')
         .eq('profile_visibility', 'public')
-        .not('username', 'is', null) // Ensure username exists
-        .limit(1000); // Performance safety limit
+        .not('username', 'is', null)
+        .limit(1000);
 
       if (error) {
         console.warn('Sitemap: Profile fetch error:', error.message);

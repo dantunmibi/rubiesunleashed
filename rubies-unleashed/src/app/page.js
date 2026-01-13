@@ -1,11 +1,13 @@
-import { getUnifiedFeed } from '@/lib/game-service'; // ✅ Server version
+import { getUnifiedFeed } from '@/lib/game-service';
 import HomeWrapper from "@/components/home/HomeWrapper";
 
-// Ensure fresh data on server render
-export const revalidate = 3600; 
+// ✅ FIX: Remove revalidate to make this dynamic
+// This prevents Next.js from trying to fetch at build time
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // ✅ Load unified feed on server
+  // ✅ This now runs at request time, not build time
+  // No network calls during `npm run build`
   const games = await getUnifiedFeed({ 
     limit: 500,
     includeArchived: false 
