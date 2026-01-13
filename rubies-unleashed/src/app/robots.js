@@ -10,7 +10,7 @@ export default function robots() {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/_next/', '/private/', '/admin/'], // Security exclusions
+      disallow: ['/api/', '/private/', '/admin/'], // Security exclusions
     },
     sitemap: 'https://rubiesunleashed.netlify.app/sitemap.xml',
   }

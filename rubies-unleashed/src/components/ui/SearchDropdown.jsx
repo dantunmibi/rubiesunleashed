@@ -86,11 +86,11 @@ export default function SearchDropdown({
                 const smartTag = getSmartTag(game.tags);
                 const tagStyle = getTagStyle(smartTag);
                 const isApp = ['App', 'Tool', 'Software', 'Utility'].includes(smartTag);
-                const targetLink = `/view/${game.id || game.slug}`;
+                const targetLink = `/view/${game.slug || game.id}`;
 
                 return (
                   <Link
-                    key={game.id || game.slug}
+                    key={game.slug || game.id}
                     href={targetLink}
                     onClick={onClose}
                     className="group flex items-center gap-4 px-4 py-3 hover:bg-white/5 border-b border-white/5 last:border-0 transition-all"

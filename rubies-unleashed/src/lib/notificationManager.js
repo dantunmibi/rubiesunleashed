@@ -184,6 +184,8 @@ export function getUnreadCount() {
 /**
  * Get default icon based on type
  */
+// Add these to your existing getDefaultIcon function in notificationManager.js
+
 function getDefaultIcon(type) {
   const icons = {
     wishlist: "❤️",
@@ -193,7 +195,13 @@ function getDefaultIcon(type) {
     download: "📥",
     success: "✅",
     error: "❌",
-    info: "ℹ️"
+    info: "ℹ️",
+    // ✅ ADD THESE PROJECT NOTIFICATION TYPES
+    project_created: "🚀",
+    project_updated: "💾",
+    project_deleted: "🗑️",
+    project_published: "🌟",
+    project_archived: "📦"
   };
   
   return icons[type] || "🔔";

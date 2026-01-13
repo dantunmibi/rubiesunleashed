@@ -5,13 +5,14 @@
   -------------------------------------------
   - Handles interactivity (Wishlist, Modals)
   - Accepts server-fetched data (initialGame) for instant hydration
-  - Preserves all original UI logic and smart recommendations
+  - Uses new smart similar games engine
 */
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
-import { fetchGameById, fetchGames } from "@/lib/blogger";
+import { fetchGameById } from "@/lib/blogger"; // ✅ Remove fetchGames import
+import { getSimilarGames } from '@/lib/game-service-client';
 import { Loader2, PackageOpen } from "lucide-react"; 
 import Link from "next/link";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -25,20 +26,11 @@ import DownloadCallout from "@/components/store/DownloadCallout";
 import SimilarGames from "@/components/store/SimilarGames";
 import ContentWarningModal from "@/components/store/ContentWarningModal";
 
-// Helper: Fisher-Yates Shuffle
-function shuffleArray(array) {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
 export default function ViewClient({ slug, initialGame }) {
   // ✅ Initialize with server data immediately
   const [game, setGame] = useState(initialGame || null);
   const [similarGames, setSimilarGames] = useState([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false); // ✅ Add separate loading state
   
   // ✅ Only loading if we truly have nothing
   const [loading, setLoading] = useState(!initialGame);
@@ -75,36 +67,30 @@ export default function ViewClient({ slug, initialGame }) {
           }
         }
 
-        // --- 🧠 SMART RECOMMENDATION LOGIC (Preserved) ---
-        // Runs for both Server & Client fetched games
-        if (currentGame && isMounted) {
-            const allGames = await fetchGames(1000); 
-
-            // Priority A: Developer Matches
-            const devMatches = allGames.filter((g) => 
-                g.id !== currentGame.id &&
-                g.developer && 
-                currentGame.developer && 
-                g.developer !== "Unknown" &&
-                g.developer.trim().toLowerCase() === currentGame.developer.trim().toLowerCase()
-            );
-
-            // Priority B: Tag Matches
-            const currentTags = Array.isArray(currentGame.tags) ? currentGame.tags : [];
-            const tagMatches = allGames.filter((g) => {
-                if (g.id === currentGame.id) return false;
-                if (devMatches.some(dm => dm.id === g.id)) return false; 
-                if (!Array.isArray(g.tags)) return false;
-                return g.tags.some(t => currentTags.includes(t));
+        // ✅ NEW: Smart Similar Games Logic
+        if (currentGame && isMounted && similarGames.length === 0) {
+          setLoadingSimilar(true);
+          
+          try {
+            const smartSimilarGames = await getSimilarGames({
+              currentGameId: currentGame.id,
+              currentGameType: currentGame.type,
+              currentGameTags: currentGame.tags,
+              currentGameDeveloper: currentGame.developer,
+              limit: 4 // Get more for better variety
             });
-            
-            // Merge
-            const finalSelection = [
-                ...shuffleArray(devMatches),
-                ...shuffleArray(tagMatches)
-            ].slice(0, 4);
 
-            if (isMounted) setSimilarGames(finalSelection);
+            if (isMounted) {
+              setSimilarGames(smartSimilarGames);
+              console.log(`🎯 Found ${smartSimilarGames.length} similar games for "${currentGame.title}"`);
+            }
+          } catch (error) {
+            console.error('❌ Similar games fetch failed:', error);
+            // Fallback: empty array (component will handle gracefully)
+            if (isMounted) setSimilarGames([]);
+          } finally {
+            if (isMounted) setLoadingSimilar(false);
+          }
         }
 
       } catch (err) {
@@ -156,10 +142,10 @@ export default function ViewClient({ slug, initialGame }) {
       {/* ✅ Content Warning Modal */}
       {game.contentWarnings && game.contentWarnings.length > 0 && (
         <ContentWarningModal 
-  warnings={game.contentWarnings} 
-  gameId={game.id} 
-  gameType={game.type} // ✅ ADD THIS
-/>
+          warnings={game.contentWarnings} 
+          gameId={game.id} 
+          gameType={game.type}
+        />
       )}
 
       <div className="hidden md:block">
@@ -183,7 +169,12 @@ export default function ViewClient({ slug, initialGame }) {
         {game && typeof game === "object" && <GameSidebar game={game} />}
       </main>
 
-      <SimilarGames games={similarGames} currentGameType={game.type} />
+      {/* ✅ Updated SimilarGames with loading state */}
+      <SimilarGames 
+        games={similarGames} 
+        currentGameType={game.type}
+        loading={loadingSimilar} // ✅ Pass loading state
+      />
       
       <AuthModal
         isOpen={showAuthModal}

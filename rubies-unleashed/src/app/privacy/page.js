@@ -1,4 +1,3 @@
-// app/privacy/page.js
 "use client";
 
 import React from "react";
@@ -13,6 +12,7 @@ import {
   Shield,
   Cookie,
   Mail,
+  Wrench,
 } from "lucide-react";
 
 export default function PrivacyPage() {
@@ -23,19 +23,19 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: "Account Information",
-          text: "When you create an account, we collect your email address, username, and password. This information is necessary to provide you with access to our platform and personalized features.",
+          text: "When you create an account, we collect your email address, username, display name, and chosen archetype. This information enables access to creator tools, wishlists, and personalized features.",
+        },
+        {
+          subtitle: "Creator Content",
+          text: "If you use The Forge to publish projects, we collect project details, descriptions, images, and download links you provide. This content is used to display your projects on the platform.",
         },
         {
           subtitle: "Usage Data",
-          text: "We automatically collect information about how you interact with our platform, including game downloads, playtime, preferences, and device information. This helps us improve our services and recommendations.",
-        },
-        {
-          subtitle: "Payment Information",
-          text: "If you make purchases, we collect necessary payment details. However, sensitive payment information is processed by secure third-party payment processors and not stored on our servers.",
+          text: "We automatically collect information about how you interact with our platform, including pages visited, projects viewed, and wishlist activity. This helps us improve our services and recommendations.",
         },
         {
           subtitle: "Communication Data",
-          text: "When you contact us or participate in community features, we collect the content of your messages and communications to provide support and improve our services.",
+          text: "When you contact us through our support forms or report content issues, we collect the content of your messages to provide support and maintain platform safety.",
         },
       ],
     },
@@ -45,19 +45,19 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: "Service Delivery",
-          text: "We use your information to operate, maintain, and provide Rubies Unleashed features, including personalized game recommendations, account management, and customer support.",
+          text: "We use your information to operate Rubies Unleashed features, including personalized content discovery, creator dashboards, wishlist management, and customer support.",
+        },
+        {
+          subtitle: "Creator Platform",
+          text: "For creators using The Forge, we use your data to enable project publishing, asset management, portfolio display, and creator analytics.",
         },
         {
           subtitle: "Platform Improvement",
-          text: "Your usage data helps us understand how users interact with our platform, identify bugs, develop new features, and enhance overall user experience.",
-        },
-        {
-          subtitle: "Communications",
-          text: "We may send you service-related emails, notifications about new games, platform updates, and promotional content. You can opt out of marketing communications at any time.",
+          text: "Your usage data helps us understand user behavior, identify issues, develop new features, and enhance the overall experience for both creators and users.",
         },
         {
           subtitle: "Safety & Security",
-          text: "We use your information to detect and prevent fraud, abuse, and other harmful activities, ensuring a safe environment for all treasure hunters.",
+          text: "We use your information to detect and prevent spam, abuse, and other harmful activities, ensuring a safe environment for our community.",
         },
       ],
     },
@@ -67,19 +67,19 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: "Security Measures",
-          text: "We implement industry-standard security measures including encryption, secure servers, and regular security audits to protect your personal information from unauthorized access or disclosure.",
+          text: "We implement industry-standard security measures including encryption, secure servers, and Row Level Security (RLS) policies to protect your personal information from unauthorized access.",
         },
         {
           subtitle: "Data Encryption",
-          text: "All sensitive data transmitted between your device and our servers is encrypted using SSL/TLS protocols. Passwords are hashed and salted before storage.",
+          text: "All data transmitted between your device and our servers is encrypted using SSL/TLS protocols. Passwords are securely hashed before storage.",
         },
         {
           subtitle: "Access Controls",
-          text: "We limit access to personal information to authorized employees and contractors who need it to perform their duties. All personnel are bound by confidentiality agreements.",
+          text: "We use database-level security policies to ensure users can only access their own data. Creator content is protected by ownership verification.",
         },
         {
-          subtitle: "Regular Audits",
-          text: "We conduct regular security assessments and vulnerability testing to identify and address potential security risks proactively.",
+          subtitle: "External Link Safety",
+          text: "We provide warnings before redirecting to external download links, helping you make informed decisions about file downloads.",
         },
       ],
     },
@@ -89,63 +89,63 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: "Access Your Data",
-          text: "You have the right to request a copy of all personal information we hold about you. We'll provide this in a portable format within 30 days of your request.",
+          text: "You can view and manage your account information, projects, and wishlists through your profile and dashboard. Contact us for a complete data export.",
         },
         {
           subtitle: "Update or Correct",
-          text: "You can update your account information at any time through your profile settings. If you notice any inaccuracies, contact us for assistance.",
+          text: "You can update your profile information, project details, and preferences at any time through your account settings and creator dashboard.",
         },
         {
           subtitle: "Delete Your Account",
-          text: "You can request deletion of your account and associated data at any time. Note that some information may be retained for legal or legitimate business purposes.",
+          text: "You can delete your account and associated data through your settings. Published projects may remain visible unless specifically removed.",
         },
         {
-          subtitle: "Opt-Out Options",
-          text: "You can opt out of marketing communications, targeted advertising, and certain data collection practices through your account settings or by contacting us.",
+          subtitle: "Content Control",
+          text: "As a creator, you have full control over your published projects - edit, update, or remove them at any time through The Forge dashboard.",
         },
       ],
     },
     {
       icon: Cookie,
-      title: "Cookies & Tracking",
+      title: "Cookies & Local Storage",
       content: [
         {
-          subtitle: "Essential Cookies",
-          text: "We use essential cookies to enable core functionality like user authentication, session management, and security features. These cannot be disabled without affecting site functionality.",
+          subtitle: "Essential Storage",
+          text: "We use browser storage for essential functionality like user authentication, session management, and maintaining your wishlist while browsing.",
         },
         {
-          subtitle: "Analytics Cookies",
-          text: "We use analytics cookies to understand how users interact with our platform, which pages are most popular, and where improvements are needed.",
+          subtitle: "Guest Data",
+          text: "If you browse without an account, your wishlist is stored locally on your device. This data migrates to your account when you sign up.",
         },
         {
-          subtitle: "Preference Cookies",
-          text: "These cookies remember your settings and preferences to provide a more personalized experience on future visits.",
+          subtitle: "Preferences",
+          text: "We store your theme preferences, archetype selection, and other settings to provide a consistent experience across visits.",
         },
         {
-          subtitle: "Managing Cookies",
-          text: "You can control cookie preferences through your browser settings. Note that disabling certain cookies may limit platform functionality.",
+          subtitle: "Managing Storage",
+          text: "You can clear browser data through your browser settings. Note that this may reset your preferences and guest wishlist.",
         },
       ],
     },
     {
       icon: Mail,
-      title: "Third-Party Sharing",
+      title: "Data Sharing",
       content: [
         {
           subtitle: "Service Providers",
-          text: "We share data with trusted third-party service providers who help us operate the platform, including hosting, payment processing, and analytics services. All providers are contractually bound to protect your data.",
+          text: "We share data with trusted service providers including Supabase (database), Netlify (hosting), and email services. All providers are contractually bound to protect your data.",
         },
         {
-          subtitle: "Game Developers",
-          text: "When you download or interact with games, basic analytics may be shared with developers to help them improve their games. We never share personally identifiable information without consent.",
+          subtitle: "Public Content",
+          text: "Content you publish through The Forge (projects, profiles, public wishlists) is visible to other users as intended. You control what information is public.",
         },
         {
           subtitle: "Legal Requirements",
-          text: "We may disclose your information if required by law, court order, or government regulation, or to protect the rights, property, or safety of Rubies Unleashed and its users.",
+          text: "We may disclose information if required by law, court order, or to protect the rights, property, or safety of Rubies Unleashed and its users.",
         },
         {
-          subtitle: "Business Transfers",
-          text: "In the event of a merger, acquisition, or sale of assets, your information may be transferred. We'll notify you via email and platform notice before this occurs.",
+          subtitle: "No Data Sales",
+          text: "We never sell your personal information to third parties. Your data is used solely to operate and improve our platform.",
         },
       ],
     },
@@ -170,11 +170,11 @@ export default function PrivacyPage() {
               </span>
             </h1>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-              Your treasure is safe with us! Here's how we protect your data on
-              this legendary quest. 🛡️✨
+              Your data is protected with enterprise-grade security. Here's how we 
+              safeguard your information on our creator platform.
             </p>
             <p className="text-sm text-slate-500 mt-4 font-bold">
-              Last Updated: December 31, 2025
+              Last Updated: January 13, 2026
             </p>
           </div>
 
@@ -197,26 +197,31 @@ export default function PrivacyPage() {
               <li className="flex items-start gap-3">
                 <span className="text-ruby text-xl">🔒</span>
                 <span>
-                  We collect only what's necessary to run an awesome platform
+                  We collect only what's necessary to operate the platform and creator tools
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-ruby text-xl">🛡️</span>
+                <span className="text-emerald-400 text-xl">🛡️</span>
                 <span>
-                  Your data is encrypted and protected with industry-standard
-                  security
+                  Your data is protected with Row Level Security and encryption
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-ruby text-xl">✋</span>
+                <span className="text-cyan-400 text-xl">✋</span>
                 <span>
                   We never sell your personal information to third parties
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-ruby text-xl">👑</span>
+                <span className="text-amber-400 text-xl">👑</span>
                 <span>
                   You control your data - access, update, or delete it anytime
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-violet-400 text-xl">🔨</span>
+                <span>
+                  Creators have full control over their published content and portfolios
                 </span>
               </li>
             </ul>
@@ -257,7 +262,8 @@ export default function PrivacyPage() {
           {/* Additional Info */}
           <div className="mt-12 grid md:grid-cols-2 gap-6">
             <div className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-              <h3 className="text-xl font-black text-white mb-4">
+              <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                <Shield size={20} className="text-emerald-400" />
                 Children's Privacy
               </h3>
               <p className="text-slate-300 font-medium leading-relaxed">
@@ -269,14 +275,14 @@ export default function PrivacyPage() {
             </div>
 
             <div className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-              <h3 className="text-xl font-black text-white mb-4">
-                International Users
+              <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                <Wrench size={20} className="text-emerald-400" />
+                Creator Rights
               </h3>
               <p className="text-slate-300 font-medium leading-relaxed">
-                Rubies Unleashed operates globally. By using our service, you
-                consent to the transfer of your information to countries where
-                we operate, which may have different data protection laws than
-                your country.
+                As a creator using The Forge, you retain ownership of your content.
+                We only use your project information to display it on our platform.
+                You can modify or remove your content at any time.
               </p>
             </div>
           </div>
@@ -288,7 +294,7 @@ export default function PrivacyPage() {
             </h2>
             <p className="text-slate-300 font-medium mb-6">
               Have concerns about your privacy or data? Want to exercise your
-              rights? We're here to help! Reach out to our privacy team.
+              rights? Need help with creator account settings? We're here to help!
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a

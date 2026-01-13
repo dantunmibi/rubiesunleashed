@@ -6,7 +6,7 @@ import ThemeProvider from "@/components/providers/ThemeProvider";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import InternalTrafficGuard from "@/components/analytics/InternalTrafficGuard";
 import Script from "next/script";
-import SessionErrorOverlay from "@/components/auth/SessionErrorOverlay";
+import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -1,38 +1,40 @@
 /**
- * 💎 RUBIES UNLEASHED - Item Details Page (Server Entry)
+ * 💎 RUBIES UNLEASHED - Item Details Page (Hybrid Server Entry)
  * ------------------------------------------------------
- * - Server-Side Rendering for SEO & Performance
- * - Generates JSON-LD Schema (Rich Snippets)
- * - Passes initial data to Client View for instant load
+ * - Supports both Legacy (Blogger) and Forge (Supabase) content.
+ * - Server-Side Rendering for SEO & Performance.
  */
 
-import { fetchGameById } from '@/lib/blogger';
+import { getGame } from '@/lib/game-service'; // ✅ Hybrid Service
 import { generateJsonLd, generateMetaTags } from '@/lib/seo-utils';
 import ViewClient from '@/components/store/ViewClient';
+import { notFound } from 'next/navigation';
 
 // 1. Dynamic Metadata Generation (SEO)
 export async function generateMetadata({ params }) {
-  
   const { slug } = await params; // Next.js 15 async params
   
-  // Extract ID
-  const parts = slug.split("-");
-  const gameId = parts[parts.length - 1].replace(/\.[^/.]+$/, "");
+  // Fetch from Hybrid Service (Supabase -> Blogger)
+  const game = await getGame(slug);
   
-  const game = await fetchGameById(gameId);
+  if (!game) {
+      return { title: 'Item Not Found - Rubies Unleashed' };
+  }
+  
   return generateMetaTags(game);
 }
 
 // 2. Server Page Component
 export default async function ViewPage({ params }) {
   const { slug } = await params;
-  
-  // Extract ID
-  const parts = slug.split("-");
-  const gameId = parts[parts.length - 1].replace(/\.[^/.]+$/, "");
-  
-  // Fetch Data (Server Side)
-  const game = await fetchGameById(gameId);
+  console.log("👉 Viewing Slug:", slug); // DEBUG
+
+  const game = await getGame(slug);
+  console.log("👉 Game Found:", game ? game.title : "NULL"); // DEBUG
+
+  if (!game) {
+      notFound();
+  }
 
   // Generate Schema (JSON-LD)
   const jsonLd = generateJsonLd(game);

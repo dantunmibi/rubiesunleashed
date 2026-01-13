@@ -7,16 +7,13 @@ export default function VaultFilters({
   allTags,
   ribbonTags,
   onPlatformClick,
-  onSubPlatformClick,
   onGenreClick,
 }) {
   return (
     <>
       <PlatformSelector
         selectedPlatform={filters.selectedPlatform}
-        selectedSubPlatform={filters.selectedSubPlatform}
         onPlatformClick={onPlatformClick}
-        onSubPlatformClick={onSubPlatformClick}
       />
 
       <GenreFilter

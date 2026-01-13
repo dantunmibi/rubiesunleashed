@@ -1,245 +1,383 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter, usePathname } from 'next/navigation';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter, usePathname } from "next/navigation";
 
 const AuthContext = createContext({});
-
 export const useAuth = () => useContext(AuthContext);
 
+// ----------------------
+// Shared in-memory cache
+// ----------------------
+const requestCache = new Map();
+const CACHE_TTL = 30000;
+
+// ----------------------
+// Preload wishlist/cache utility (authenticated users only)
+// ----------------------
+const preloadUserData = async (userId) => {
+  try {
+    console.log("🔄 Preloading cache for user:", userId);
+
+    const { data: wishlistData } = await supabase
+      .from("wishlists")
+      .select("game_id, added_at")
+      .eq("user_id", userId)
+      .order("added_at", { ascending: false });
+
+    if (!wishlistData) return;
+
+    // Update in-memory cache
+    requestCache.set(`wishlist-full-${userId}`, { data: wishlistData, timestamp: Date.now() });
+    requestCache.set(`wishlist-count-${userId}`, { data: wishlistData.length, timestamp: Date.now() });
+    wishlistData.slice(0, 10).forEach((item) => {
+      requestCache.set(`wishlist-${userId}-${item.game_id}`, { data: { id: "cached" }, timestamp: Date.now() });
+    });
+
+    // Persist minimal wishlist in localStorage for cross-tab sync
+    localStorage.setItem(`ruby_wishlist_${userId}`, JSON.stringify({
+      full: wishlistData,
+      timestamp: Date.now()
+    }));
+
+    console.log("✅ Preloaded wishlist cache:", wishlistData.length, "items");
+  } catch (err) {
+    console.error("❌ Cache preload failed:", err);
+  }
+};
+
+// ----------------------
+// AuthProvider
+// ----------------------
 export default function AuthProvider({ children }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
 
-// ✅ ENHANCED: Better token caching with expiry
-const [authToken, setAuthToken] = useState(null);
-const [tokenExpiry, setTokenExpiry] = useState(null);
+  const authTokenRef = useRef(null);
+  const tokenExpiryRef = useRef(null);
+  const preloadOnceRef = useRef(false);
 
-const getValidToken = useCallback(async () => {
-  // Check if cached token is still valid (with 5min buffer)
-  if (authToken && tokenExpiry && Date.now() < tokenExpiry - 300000) {
-    return authToken;
-  }
+  // ----------------------
+  // TOKEN MANAGEMENT
+  // ----------------------
+  const getValidToken = useCallback(async () => {
+    const token = authTokenRef.current;
+    const expiry = tokenExpiryRef.current;
 
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    
-    if (session?.access_token) {
-      setAuthToken(session.access_token);
-      // JWT tokens typically expire in 1 hour
-      setTokenExpiry(Date.now() + 3600000);
-      return session.access_token;
-    }
-  } catch (error) {
-    console.error('Token refresh failed:', error);
-    setAuthToken(null);
-    setTokenExpiry(null);
-  }
-  return null;
-}, [authToken, tokenExpiry]);
+    if (token && expiry && Date.now() < expiry - 300000) return token;
 
-// Update the useEffect to use the new function
-useEffect(() => {
-  const updateToken = async () => {
-    if (user) {
-      await getValidToken();
-    } else {
-      setAuthToken(null);
-      setTokenExpiry(null);
-    }
-  };
-  updateToken();
-}, [user, getValidToken]);
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
 
-  // Load cached profile on mount for instant UI
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('ruby_profile');
-      if (cached) {
-        try {
-          setProfile(JSON.parse(cached));
-        } catch (error) {
-          console.error('Failed to parse cached profile:', error);
-          localStorage.removeItem('ruby_profile');
-        }
+      if (session?.access_token) {
+        authTokenRef.current = session.access_token;
+        tokenExpiryRef.current = Date.now() + 3600000; // 1h cache
+        return session.access_token;
       }
+    } catch (err) {
+      console.error("Token refresh failed:", err);
+      authTokenRef.current = null;
+      tokenExpiryRef.current = null;
     }
+    return null;
   }, []);
 
-  const fetchProfile = useCallback(async (userId) => {
-    if (!userId) return;
-    
-    setProfileLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error.message);
-        return;
+  useEffect(() => {
+    const updateToken = async () => {
+      if (user) await getValidToken();
+      else {
+        authTokenRef.current = null;
+        tokenExpiryRef.current = null;
       }
+    };
+    updateToken();
+  }, [user, getValidToken]);
 
-      setProfile(data);
-      localStorage.setItem('ruby_profile', JSON.stringify(data));
-      
-      // Handle archetype initialization redirect
-      const publicRoutes = ['/login', '/signup', '/initialize'];
-      if (!data.archetype && !publicRoutes.includes(pathname)) {
-        router.push('/initialize');
+  // ----------------------
+  // PROFILE FETCHING
+  // ----------------------
+  const fetchProfile = useCallback(
+    async (userId) => {
+      if (!userId) return;
+
+      setProfileLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error.message);
+          return;
+        }
+
+        setProfile(data);
+        localStorage.setItem("ruby_profile", JSON.stringify(data));
+
+        // Preload wishlist/cache once per session
+        if (!preloadOnceRef.current) {
+          preloadOnceRef.current = true;
+          await preloadUserData(userId);
+        }
+
+        // Archetype redirect
+        const publicRoutes = ["/login", "/signup", "/initialize"];
+        if (!data.archetype && !publicRoutes.includes(pathname)) {
+          router.push("/initialize");
+        }
+      } catch (err) {
+        console.error("Profile fetch exception:", err);
+      } finally {
+        setProfileLoading(false);
       }
-    } catch (error) {
-      console.error('Profile fetch exception:', error);
-    } finally {
-      setProfileLoading(false);
-    }
-  }, [pathname, router]);
+    },
+    [pathname, router]
+  );
 
   const refreshProfile = useCallback(async () => {
-    if (user?.id) {
-      await fetchProfile(user.id);
-    }
+    if (user?.id) await fetchProfile(user.id);
   }, [user?.id, fetchProfile]);
 
-  // ✅ Initialize auth session with timeout protection
+  // ----------------------
+  // CLEAR AUTH STATE
+  // ----------------------
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setProfile(null);
+
+    if (user?.id) {
+      for (const key of requestCache.keys()) {
+        if (key.includes(user.id)) requestCache.delete(key);
+      }
+      console.log("🧹 Cleared user cache on logout");
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("ruby_profile");
+      // ✅ CLEAN UP: Remove any remaining guest data
+      localStorage.removeItem("ruby_user_data");
+      localStorage.removeItem("ruby_wishlist");
+    }
+  }, [user?.id]);
+
+  // ----------------------
+  // SIGN OUT
+  // ----------------------
+  const signOut = useCallback(async () => {
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Sign out error:", err);
+    } finally {
+      clearAuthState();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("userChanged"));
+        router.push("/"); // SPA navigation
+      }
+    }
+  }, [clearAuthState, router]);
+
+  // ----------------------
+  // INITIAL SESSION
+  // ----------------------
   useEffect(() => {
+    let active = true;
+
     const initSession = async () => {
       try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Session timeout')), 15000)
-        );
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!active) return;
 
-        const { data: { session }, error } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]);
-        
-        // 1. VALID LOGOUT (No session or Auth Error)
-        if (error || !session) {
-          if (error) console.error('Session error:', error);
+        if (error || !session?.user) {
+          if (error) console.error("Session error:", error);
           clearAuthState();
           setLoading(false);
           setInitialized(true);
           return;
         }
 
-        // 2. SUCCESS
         setUser(session.user);
         await fetchProfile(session.user.id);
         setLoading(false);
         setInitialized(true);
-
-      } catch (error) {
-        // 3. TIMEOUT (Network Hang)
-        console.error('Init timeout:', error);
-        // Do NOT clear auth. Do NOT set loading false.
-        // Just show overlay.
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event("sessionExpired"));
-        }
+      } catch (err) {
+        if (!active) return;
+        console.error("Init session error:", err);
+        clearAuthState();
+        setLoading(false);
+        setInitialized(true);
       }
     };
 
     initSession();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [clearAuthState, fetchProfile]);
 
-  // Handle auth state changes
+  // ----------------------
+  // AUTH STATE CHANGE (single subscription)
+  // ----------------------
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth event:', event);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth event:", event);
 
-        // Handle explicit sign-out or session expiry
-        if (event === 'SIGNED_OUT' || !session) {
-            clearAuthState();
-            setLoading(false);
-            return;
-        }
+      if (event === "TOKEN_REFRESHED") return;
 
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Fetch profile on sign in or user change
-          const shouldFetchProfile = 
-            event === 'SIGNED_IN' || 
-            !profile || 
-            profile?.id !== session.user.id;
-          
-          if (shouldFetchProfile) {
-            await fetchProfile(session.user.id);
-          }
-        } else {
-          clearAuthState();
-        }
-
-        if (initialized) {
-          setLoading(false);
-        }
+      if (event === "SIGNED_OUT" || !session) {
+        clearAuthState();
+        setLoading(false);
+        return;
       }
-    );
+
+      if (session?.user) {
+        setUser(session.user);
+
+        const shouldFetchProfile = !profile || profile?.id !== session.user.id;
+        if (shouldFetchProfile) await fetchProfile(session.user.id);
+      } else {
+        clearAuthState();
+      }
+    });
 
     return () => subscription.unsubscribe();
-  }, [profile, initialized, fetchProfile]);
+  }, [fetchProfile, profile, clearAuthState]);
 
-  const clearAuthState = () => {
-    setUser(null);
-    setProfile(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('ruby_profile');
-    }
-  };
+  // ----------------------
+  // TAB SYNC (authenticated users only)
+  // ----------------------
+  useEffect(() => {
+    if (typeof window === "undefined" || !user?.id) return;
 
-  const signOut = async () => {
-    try {
-      setLoading(true);
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    } finally {
-      clearAuthState();
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('ruby_user_data');
-        localStorage.removeItem('ruby_wishlist');
-        window.dispatchEvent(new Event('userChanged'));
-        window.location.href = '/';
+    const handleStorageChange = (e) => {
+      // Profile sync
+      if (e.key === "ruby_profile") {
+        if (e.newValue) {
+          try {
+            setProfile(JSON.parse(e.newValue));
+          } catch (err) {
+            console.error("Failed to sync profile across tabs:", err);
+          }
+        } else setProfile(null);
+      }
+
+      // Wishlist sync (authenticated users only)
+      if (e.key === `ruby_wishlist_${user.id}`) {
+        if (e.newValue) {
+          try {
+            const cachedWishlist = JSON.parse(e.newValue);
+            requestCache.set(`wishlist-full-${user.id}`, {
+              data: cachedWishlist.full,
+              timestamp: cachedWishlist.timestamp
+            });
+            requestCache.set(`wishlist-count-${user.id}`, {
+              data: cachedWishlist.full.length,
+              timestamp: cachedWishlist.timestamp
+            });
+            cachedWishlist.full.slice(0, 10).forEach((item) => {
+              requestCache.set(`wishlist-${user.id}-${item.game_id}`, {
+                data: { id: "cached" },
+                timestamp: cachedWishlist.timestamp
+              });
+            });
+            console.log("🔄 Wishlist cache synced from another tab");
+          } catch (err) {
+            console.error("Failed to sync wishlist cache across tabs:", err);
+          }
+        } else {
+          for (const key of requestCache.keys()) {
+            if (key.includes(user.id)) requestCache.delete(key);
+          }
+          console.log("🧹 Wishlist cache cleared from another tab");
+        }
+      }
+    };
+
+    const handleUserChanged = () => {
+      // ✅ SIMPLIFIED: Only clear auth state if no user
+      if (!user) clearAuthState();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userChanged", handleUserChanged);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userChanged", handleUserChanged);
+    };
+  }, [user, clearAuthState]);
+
+  // ----------------------
+  // LOAD CACHED PROFILE ON MOUNT
+  // ----------------------
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const cached = localStorage.getItem("ruby_profile");
+    if (cached) {
+      try {
+        setProfile(JSON.parse(cached));
+      } catch {
+        localStorage.removeItem("ruby_profile");
       }
     }
+  }, []);
+
+  // ----------------------
+  // UTILITY TO UPDATE WISHLIST (authenticated users only)
+  // ----------------------
+  const updateWishlistCache = (newWishlist) => {
+    if (!user?.id) return;
+
+    requestCache.set(`wishlist-full-${user.id}`, { data: newWishlist, timestamp: Date.now() });
+    requestCache.set(`wishlist-count-${user.id}`, { data: newWishlist.length, timestamp: Date.now() });
+    newWishlist.slice(0, 10).forEach((item) => {
+      requestCache.set(`wishlist-${user.id}-${item.game_id}`, { data: { id: "cached" }, timestamp: Date.now() });
+    });
+
+    localStorage.setItem(`ruby_wishlist_${user.id}`, JSON.stringify({
+      full: newWishlist,
+      timestamp: Date.now()
+    }));
+
+    window.dispatchEvent(new Event("userChanged"));
   };
 
+  // ----------------------
+  // CONTEXT VALUE
+  // ----------------------
   const value = {
-    // State
     user,
     profile,
-    loading: loading || !initialized, 
+    loading: loading || !initialized,
     profileLoading,
     initialized,
-    
-    // Computed values
-    archetype: profile?.archetype || 'guest',
-    role: profile?.role || 'user',
-    isArchitect: profile?.role === 'architect' || profile?.role === 'admin',
-    isAdmin: profile?.role === 'admin',
+    archetype: profile?.archetype || "guest",
+    role: profile?.role || "user",
+    isArchitect: profile?.role === "architect" || profile?.role === "admin",
+    isAdmin: profile?.role === "admin",
     isAuthenticated: !!user,
     hasProfile: !!profile,
-    
-    // Actions
+    getDeveloperName: useCallback(() => profile?.developer_name || profile?.display_name || profile?.username || "Unknown Developer", [profile]),
+    needsDeveloperName: useCallback(() => profile && !profile?.developer_name, [profile]),
+    developerName: profile?.developer_name || profile?.display_name || profile?.username || null,
+    needsDevNameSetup: profile && !profile?.developer_name,
     refreshProfile,
     signOut,
+    preloadUserData: () => user?.id ? preloadUserData(user.id) : null,
+    updateWishlistCache,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

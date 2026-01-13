@@ -30,7 +30,11 @@ const nextConfig = {
 
   // ✅ 4. Experimental (Empty for now, viewTransition is native)
   experimental: {
+    middleware: true,
   },
+  
+  // ✅ ADD: Ensure proxy.js is recognized
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
 };
 
 export default nextConfig;

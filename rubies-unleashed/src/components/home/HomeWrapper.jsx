@@ -5,7 +5,7 @@ import LandingPage from './LandingPage';
 import UserDashboard from './UserDashboard';
 import { Loader2 } from 'lucide-react';
 
-// ✅ Accept 'games' prop from Server Component
+// ✅ Accept 'games' prop from Server Component (should be unified feed)
 export default function HomeWrapper({ games }) {
   const { user, loading, initialized } = useAuth();
 
@@ -20,10 +20,10 @@ export default function HomeWrapper({ games }) {
 
   // Once initialized, make the binary choice
   if (user) {
-    // ✅ PASS THE GAMES DATA HERE
+    // ✅ PASS THE UNIFIED GAMES DATA HERE
     return <UserDashboard initialGames={games} />;
   }
 
-  // ✅ Pass games to Landing Page too (optional optimization)
+  // ✅ Pass games to Landing Page too
   return <LandingPage games={games} />;
 }

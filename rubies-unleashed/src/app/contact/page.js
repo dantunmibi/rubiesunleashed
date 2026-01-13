@@ -1,12 +1,13 @@
 /**
  * ================================================================
- * CONTACT PAGE (Search Params Enabled)
+ * CONTACT PAGE - Phase 4 Edition
  * ================================================================
  *
  * Updates:
- * - Uses useSearchParams to autofill Subject (e.g. from Claim button).
- * - Wraps logic in Suspense to prevent build errors.
- * - Preserves all original UI and Layout.
+ * - Reflects The Forge creator platform capabilities
+ * - Updated corporate info to match current features
+ * - Added creator support resources
+ * - Maintains all original functionality and UI
  */
 
 "use client";
@@ -24,6 +25,9 @@ import {
   HelpCircle,
   Briefcase,
   ChevronRight,
+  Wrench,
+  Users,
+  Shield
 } from "lucide-react";
 import { useToastContext } from "@/components/providers/ToastProvider";
 
@@ -153,16 +157,23 @@ function ContactFormLogic() {
                   >
                     Subject
                   </label>
-                  <input
-                    type="text"
+                  <select
                     id="subject"
                     name="subject"
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-5 py-4 bg-background/60 border border-slate-700 focus:border-ruby rounded-lg text-white placeholder-slate-600 transition-all font-medium focus:outline-none focus:ring-1 focus:ring-ruby/50"
-                    placeholder="General Inquiry, Partnership, Support..."
-                  />
+                    className="w-full px-5 py-4 bg-background/60 border border-slate-700 focus:border-ruby rounded-lg text-white transition-all font-medium focus:outline-none focus:ring-1 focus:ring-ruby/50"
+                  >
+                    <option value="">Select a topic...</option>
+                    <option value="Creator Support">Creator Support - The Forge</option>
+                    <option value="Publishing Inquiry">Publishing Inquiry</option>
+                    <option value="Technical Support">Technical Support</option>
+                    <option value="Partnership">Partnership Opportunity</option>
+                    <option value="Content Report">Content Report</option>
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
 
                 <div>
@@ -247,59 +258,88 @@ function ContactFormLogic() {
                 </div>
               </div>
 
-              {/* Information Cards */}
+              {/* Platform Info */}
               <div className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                   <Briefcase size={20} className="text-ruby" />
-                  Corporate Info
+                  Platform Overview
                 </h3>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
                     <span className="mt-1 w-1.5 h-1.5 rounded-full bg-ruby shrink-0"></span>
                     <span>
-                      Rubies Unleashed is a premium digital marketplace for
-                      curated indie games, applications and tools.
+                      <strong>Rubies Unleashed</strong> is a creator-first platform combining 
+                      curated discovery with community publishing.
                     </span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
-                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0"></span>
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
                     <span>
-                      We partner with developers to provide secure, high-speed
-                      distribution.
+                      <strong>The Forge</strong> enables direct publishing, asset management, 
+                      and creator dashboards for independent developers.
                     </span>
                   </li>
                   <li className="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
-                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-ruby shrink-0"></span>
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></span>
                     <span>
-                      Open for strategic partnerships and cross-promotion
-                      opportunities.
+                      Dedicated to supporting independent developers through accessible publishing and discovery.
                     </span>
                   </li>
                 </ul>
               </div>
 
-              {/* Quick Links */}
+              {/* Creator Resources */}
               <div className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                  <HelpCircle size={20} className="text-ruby" />
-                  Resources
+                  <Wrench size={20} className="text-emerald-400" />
+                  Creator Resources
                 </h3>
                 <div className="space-y-3">
                   <a
                     href="/publish"
+                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
+                  >
+                    <span>🔨 Start Publishing</span>
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-emerald-400 transition-colors"
+                    />
+                  </a>
+                  <a
+                    href="/help"
                     className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
-                    <span>Submit a Game</span>
+                    <span>📚 Creator Guide</span>
                     <ChevronRight
                       size={14}
                       className="text-slate-500 group-hover:text-ruby transition-colors"
                     />
                   </a>
                   <a
-                    href="/publish"
-                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
+                    href="/status"
+                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-cyan-500/10 border border-slate-800 hover:border-cyan-500/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
-                    <span>Developer Portal</span>
+                    <span>⚡ Platform Status</span>
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+                    />
+                  </a>
+                </div>
+              </div>
+
+              {/* Community Links */}
+              <div className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <Users size={20} className="text-cyan-400" />
+                  Community
+                </h3>
+                <div className="space-y-3">
+                  <a
+                    href="/explore"
+                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800                     hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
+                  >
+                    <span>🎮 Explore Games</span>
                     <ChevronRight
                       size={14}
                       className="text-slate-500 group-hover:text-ruby transition-colors"
@@ -309,14 +349,65 @@ function ContactFormLogic() {
                     href="https://rubyapks.blogspot.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-ruby/10 border border-slate-800 hover:border-ruby/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
+                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-cyan-500/10 border border-slate-800 hover:border-cyan-500/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
                   >
-                    <span>Visit RubyApks Blog</span>
+                    <span>📝 Legacy Blog</span>
                     <ChevronRight
                       size={14}
-                      className="text-slate-500 group-hover:text-ruby transition-colors"
+                      className="text-slate-500 group-hover:text-cyan-400 transition-colors"
                     />
                   </a>
+                  <a
+                    href="/about"
+                    className="flex items-center justify-between px-5 py-3 bg-background/60 hover:bg-amber-500/10 border border-slate-800 hover:border-amber-500/50 rounded-lg transition-all text-sm font-bold text-slate-300 hover:text-white group"
+                  >
+                    <span>💎 Our Story</span>
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-amber-400 transition-colors"
+                    />
+                  </a>
+                </div>
+              </div>
+
+              {/* Support Types */}
+              <div className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <HelpCircle size={20} className="text-ruby" />
+                  Support Topics
+                </h3>
+                <div className="space-y-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <Wrench size={16} className="text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-white font-semibold">Creator Support</p>
+                      <p className="text-slate-400">Publishing help, dashboard issues, asset uploads</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Users size={16} className="text-cyan-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-white font-semibold">User Support</p>
+                      <p className="text-slate-400">Account issues, wishlist problems, download help</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Shield size={16} className="text-amber-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-white font-semibold">Content Reports</p>
+                      <p className="text-slate-400">Report broken links, inappropriate content, or security concerns</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Briefcase size={16} className="text-ruby mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-white font-semibold">Business Inquiries</p>
+                      <p className="text-slate-400">Partnerships, sponsorships, media requests</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -344,8 +435,8 @@ export default function ContactPage() {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-              Have a question about the marketplace? Interested in publishing?
-              Our team is ready to assist you.
+              Questions about The Forge? Need creator support? Want to publish your project? 
+              Our team is here to help you succeed.
             </p>
           </div>
 

@@ -6,82 +6,102 @@ import { supabase } from "@/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
+import { useSessionGuard } from "@/hooks/useSessionGuard"; // ✅ NEW
+import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay"; // ✅ NEW
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import { 
-  User, Shield, Cpu, AlertTriangle, Save, Loader2, Check, Eye, EyeOff, RefreshCw
+  User, Shield, Cpu, AlertTriangle, Save, Loader2, Check, Eye, EyeOff, RefreshCw, LayoutDashboard, Globe, Github, Twitter, Youtube, Plus, X
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // ✅ ADD useSearchParams
 import { useToastContext } from "@/components/providers/ToastProvider";
 
 // --- TABS CONFIG ---
 const TABS = [
   { id: 'profile', label: 'Identity', icon: User },
   { id: 'archetype', label: 'Protocol', icon: Cpu },
+  { id: 'architect', label: 'Architect Profile', icon: LayoutDashboard, role: 'architect' }, // ✅ NEW TAB
   { id: 'security', label: 'Security & Privacy', icon: Shield },
 ];
 
-
 export default function SettingsPage() {
-  // ✅ AUTH GUARD: initialized
   const { user, profile, refreshProfile, initialized } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('profile');
+  const searchParams = useSearchParams(); 
+    // ✅ READ TAB FROM URL (Default to 'profile')
+  const initialTab = searchParams.get('tab') || 'profile';
+  
+  // ✅ INITIALIZE STATE WITH URL PARAM
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [authToken, setAuthToken] = useState(null);
+  
+  // ✅ USE HOOK
+  const { showSessionError, checkApiError, validateSession, triggerError } = useSessionGuard();
   
   const { showToast } = useToastContext();
 
-  const [showSessionError, setShowSessionError] = useState(false); // ✅ New State
-
-  // Form State
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     displayName: "",
     bio: "",
+    developerName: "", // ✅ ADD THIS
     avatarUrl: "",
     coverUrl: "", 
     isPublicProfile: true,
     isPublicWishlist: true,
-    archetype: "hunter"
-  });
+    archetype: "hunter",
+    socialLinks: [],
+    architectBio: ""
+});
 
-  // ✅ CACHE AUTH TOKEN (same as wishlist fix)
+  // Redirect if not logged in
   useEffect(() => {
-    const getToken = async () => {
-      if (user) {
-        const { data: { session } } = await supabase.auth.getSession();
-        setAuthToken(session?.access_token);
-      } else {
-        setAuthToken(null);
-      }
-    };
-    getToken();
-  }, [user]);
-
-  // Redirect if not logged in (handled mostly by wrapper, but explicit safe guard)
-  useEffect(() => {
-    if (initialized && !user) {
-        router.push('/login');
-    }
+    if (initialized && !user) router.push('/login');
   }, [initialized, user, router]);
 
   // Load Data
-  useEffect(() => {
+useEffect(() => {
     if (profile) {
       setFormData({
         displayName: profile.display_name || profile.username || "",
         bio: profile.bio || "",
+        developerName: profile.developer_name || "", // ✅ ADD THIS
         avatarUrl: profile.avatar_url || "",
         coverUrl: profile.cover_url || "", 
         isPublicProfile: profile.profile_visibility === 'public',
         isPublicWishlist: profile.is_public_wishlist ?? true,
-        archetype: profile.archetype || "hunter"
+        archetype: profile.archetype || "hunter",
+        socialLinks: profile.social_links || [],
+        architectBio: profile.architect_bio || ""
       });
     }
-  }, [profile]);
+}, [profile]);
 
-  // Helper: Verify Image URL
+
+  // ✅ SAFETY VALVE
+  useEffect(() => {
+    let timer;
+    if (loading) {
+        timer = setTimeout(() => {
+            console.warn("Save timed out. Triggering session recovery.");
+            setLoading(false);
+            if (triggerError) triggerError();
+        }, 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [loading, triggerError]);
+
+    // Initial Load Safety Valve
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        if (!initialized) {
+            console.warn("Auth initialization timed out (5s).");
+            triggerError(); // Show overlay
+        }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [initialized, triggerError]);
+
   const validateImage = (url) => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -91,116 +111,130 @@ export default function SettingsPage() {
     });
   };
 
-  const handleSave = async () => {
+const handleSave = async () => {
+    // ✅ VALIDATE SESSION FIRST
+    if (!(await validateSession())) return;
+
     setLoading(true);
     setSuccessMsg("");
-
     try {
-      // 1. Validate Avatar
       if (formData.avatarUrl && formData.avatarUrl.length > 0) {
-          const isValid = await validateImage(formData.avatarUrl);
-          if (!isValid) {
-              throw new Error("Avatar URL is invalid or unreachable.");
-          }
+          if (!(await validateImage(formData.avatarUrl))) throw new Error("Invalid Avatar URL.");
       }
-
-      // 2. Validate Cover
       if (formData.coverUrl && formData.coverUrl.length > 0) {
-          const isValid = await validateImage(formData.coverUrl);
-          if (!isValid) {
-              throw new Error("Cover Image URL is invalid or unreachable.");
-          }
+          if (!(await validateImage(formData.coverUrl))) throw new Error("Invalid Cover URL.");
       }
 
-      // ✅ Check we have a valid token
-      if (!authToken) {
-        throw new Error("Session expired. Please refresh the page.");
-      }
+      // Get fresh token
+      const { data: { session } } = await supabase.auth.getSession();
 
       const updates = {
         display_name: formData.displayName,
         bio: formData.bio,
+        developer_name: formData.developerName,
         avatar_url: formData.avatarUrl,
         cover_url: formData.coverUrl,
         profile_visibility: formData.isPublicProfile ? 'public' : 'private',
         is_public_wishlist: formData.isPublicWishlist,
         archetype: formData.archetype,
+        social_links: formData.socialLinks,
+        architect_bio: formData.architectBio,
         updated_at: new Date().toISOString(),
       };
 
-      console.log("Calling API with token:", authToken ? "exists" : "missing");
-
-      // ✅ Use API route with cached token and timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
+      // 1. Update profile
       const response = await fetch('/api/profile/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify(updates),
-        signal: controller.signal
+        body: JSON.stringify(updates)
       });
 
-      clearTimeout(timeoutId);
-
-      console.log("API Response status:", response.status);
+      if (checkApiError(response)) return;
 
       if (!response.ok) {
         const error = await response.json();
-        console.error("API Error:", error);
         throw new Error(error.error || "Update failed");
       }
 
       const result = await response.json();
-      console.log("API Success:", result);
 
-      // 3. ✅ Update local state immediately
-      if (result.data && result.data[0]) {
-        const updatedProfile = result.data[0];
-        setFormData({
-          displayName: updatedProfile.display_name || updatedProfile.username || "",
-          bio: updatedProfile.bio || "",
-          avatarUrl: updatedProfile.avatar_url || "",
-          coverUrl: updatedProfile.cover_url || "",
-          isPublicProfile: updatedProfile.profile_visibility === 'public',
-          isPublicWishlist: updatedProfile.is_public_wishlist ?? true,
-          archetype: updatedProfile.archetype || "hunter"
-        });
+      // ✅ 2. UPDATE ALL PROJECTS IF DEVELOPER NAME CHANGED
+      if (formData.developerName && formData.developerName.trim()) {
+        try {
+          const projectsResponse = await fetch('/api/projects/update-developer', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({ 
+              developer_name: formData.developerName.trim() 
+            })
+          });
+
+          if (projectsResponse.ok) {
+            const projectsResult = await projectsResponse.json();
+            console.log(`✅ Updated ${projectsResult.updated_count} projects with new developer name`);
+          } else {
+            console.warn('Failed to update existing projects');
+          }
+        } catch (projectError) {
+          console.warn('Project update failed:', projectError);
+          // Don't fail the whole save for this
+        }
       }
 
-      showToast("Settings saved! Refreshing page...", "success");
+      // Update local state
+      if (result.data && result.data[0]) {
+        const updated = result.data[0];
+        setFormData(prev => ({
+          ...prev,
+          displayName: updated.display_name || updated.username || "",
+          bio: updated.bio || "",
+          avatarUrl: updated.avatar_url || "",
+          coverUrl: updated.cover_url || "",
+          isPublicProfile: updated.profile_visibility === 'public',
+          isPublicWishlist: updated.is_public_wishlist ?? true,
+          archetype: updated.archetype || "hunter",
+          socialLinks: updated.social_links || [],
+          architectBio: updated.architect_bio || ""
+        }));
+      }
+
+      showToast("Settings saved! Refreshing...", "success");
       setSuccessMsg("System Updated Successfully.");
       
-      // ✅ Always reload to apply theme change
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      setTimeout(() => window.location.reload(), 1000);
       
     } catch (error) {
       console.error("Save Error:", error);
-      
-      // ✅ TRIGGER OVERLAY
-      if (error.message.includes("expired") || error.message.includes("Unauthorized")) {
-          setShowSessionError(true);
-      } else {
-          showToast(error.message, "error");
-      }
+      if (!showSessionError) showToast(error.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ LOADING SKELETON: Wait for Auth Init
-  if (!initialized || !user) {
+  // ✅ LOADING SKELETON (Only if no error yet)
+  if ((!initialized || !user) && !showSessionError) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-ruby" size={48} />
         <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Authenticating...</p>
       </div>
     );
+  }
+
+  // If we fell through here without user/initialized, show overlay
+  if (showSessionError) {
+      return (
+        <div className="min-h-screen bg-background">
+            <Navbar />
+            <SessionErrorOverlay show={true} />
+        </div>
+      );
   }
 
   return (
@@ -223,6 +257,17 @@ export default function SettingsPage() {
           {/* --- SIDEBAR TABS --- */}
           <aside className="lg:w-64 shrink-0 space-y-2">
             {TABS.map((tab) => {
+              // ✅ FIX: Check profile.role instead of archetype
+              // This ensures Hunters/Netrunners who are Architects can still see the tab
+              const isHidden = 
+                tab.role === 'architect' && 
+                profile?.role !== 'architect' && 
+                profile?.role !== 'admin';
+
+              if (isHidden) {
+                  return null;
+              }
+
               const isActive = activeTab === tab.id;
               return (
                 <button
@@ -240,7 +285,6 @@ export default function SettingsPage() {
               );
             })}
           </aside>
-
           {/* --- MAIN CONTENT --- */}
           <div className="flex-1 bg-[#161b2c] border border-white/5 rounded-3xl p-8 relative overflow-hidden">
             
@@ -258,6 +302,9 @@ export default function SettingsPage() {
                 )}
                 {activeTab === 'archetype' && (
                     <ArchetypeSettings formData={formData} setFormData={setFormData} />
+                )}
+                {activeTab === 'architect' && (
+                    <ArchitectProfileSettings formData={formData} setFormData={setFormData} />
                 )}
                 {activeTab === 'security' && (
                     <SecuritySettings formData={formData} setFormData={setFormData} />
@@ -297,6 +344,8 @@ export default function SettingsPage() {
             </div>
         </div>
       )}
+      {/* ✅ SESSION ERROR OVERLAY */}
+      <SessionErrorOverlay show={showSessionError} />
       
       <Footer />
     </div>
@@ -392,6 +441,135 @@ function ProfileSettings({ formData, setFormData, profile }) {
                             <p className="text-xs text-slate-300 font-bold opacity-80">@{profile?.username || "username"}</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ✅ UPDATED COMPONENT: Architect Profile Settings
+function ArchitectProfileSettings({ formData, setFormData }) {
+    const [inputs, setInputs] = useState({ label: "Website", url: "" });
+
+    // ✅ AUTO-DETECT LABEL ON URL PASTE
+    const handleUrlChange = (e) => {
+        const val = e.target.value;
+        let detectedLabel = inputs.label;
+        
+        const lower = val.toLowerCase();
+        if (lower.includes('twitter.com') || lower.includes('x.com')) detectedLabel = 'Twitter';
+        else if (lower.includes('github.com')) detectedLabel = 'GitHub';
+        else if (lower.includes('linkedin.com')) detectedLabel = 'LinkedIn';
+        else if (lower.includes('discord.gg') || lower.includes('discord.com')) detectedLabel = 'Discord';
+        else if (lower.includes('youtube.com')) detectedLabel = 'YouTube';
+        else if (lower.includes('instagram.com')) detectedLabel = 'Instagram';
+
+        setInputs({ label: detectedLabel, url: val });
+    };
+
+const detectLabelFromUrl = (url) => {
+  const lower = url.toLowerCase();
+  if (lower.includes('twitter.com') || lower.includes('x.com')) return 'Twitter';
+  if (lower.includes('github.com')) return 'GitHub';
+  if (lower.includes('linkedin.com')) return 'LinkedIn';
+  if (lower.includes('discord')) return 'Discord';
+  if (lower.includes('youtube.com')) return 'YouTube';
+  if (lower.includes('instagram.com')) return 'Instagram';
+  return 'Website';
+};
+
+const handleAddSocial = () => {
+  if (!inputs.url) return;
+
+  setFormData({
+    ...formData,
+    socialLinks: [
+      ...(formData.socialLinks || []),
+      {
+        url: inputs.url,
+        label: detectLabelFromUrl(inputs.url),
+      },
+    ],
+  });
+
+  setInputs({ label: "Website", url: "" });
+};
+
+    const handleRemoveSocial = (index) => {
+        setFormData({
+            ...formData,
+            socialLinks: formData.socialLinks.filter((_, i) => i !== index)
+        });
+    };
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h2 className="text-xl font-bold text-white mb-4">Architect Portfolio</h2>
+                <p className="text-sm text-slate-400">Configure your public developer presence.</p>
+            </div>
+
+            {/* Developer Name */}
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">
+                    Developer Name (Universal)
+                </label>
+                <input 
+                    type="text" 
+                    value={formData.developerName || ""}
+                    onChange={(e) => setFormData({...formData, developerName: e.target.value})}
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-(--user-accent) focus:outline-none"
+                    placeholder="Your developer/studio name"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                    Used automatically in all your projects. Updates existing projects when changed.
+                </p>
+            </div>
+
+            {/* Architect Bio */}
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Developer Bio</label>
+                <textarea 
+                    value={formData.architectBio || ""}
+                    onChange={(e) => setFormData({...formData, architectBio: e.target.value})}
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-(--user-accent) focus:outline-none h-32 resize-none placeholder:text-slate-600"
+                    placeholder="Describe your development philosophy, tools, or studio mission..."
+                />
+            </div>
+
+            {/* Social Links Editor */}
+            <div className="space-y-3">
+                <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Connect Links</label>
+                <div className="flex gap-2">
+                    <select 
+                        value={inputs.label} 
+                        onChange={e => setInputs({...inputs, label: e.target.value})}
+                        className="bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 outline-none focus:border-(--user-accent)"
+                    >
+                        <option>Website</option><option>GitHub</option><option>Twitter</option><option>LinkedIn</option><option>Discord</option><option>YouTube</option><option>Itch.io</option><option>Instagram</option>
+                    </select>
+                    <input 
+                        type="url" 
+                        value={inputs.url} 
+                        onChange={handleUrlChange} // ✅ Using Auto-Detect
+                        className="flex-1 bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-mono focus:border-(--user-accent) focus:outline-none"
+                        placeholder="https://..."
+                    />
+                    <button type="button" onClick={handleAddSocial} className="bg-white/10 hover:bg-white/20 px-4 rounded-xl text-white transition-colors">
+                        <Plus size={18} />
+                    </button>
+                </div>
+
+                <div className="space-y-2">
+                    {formData.socialLinks?.map((s, i) => (
+                        <div key={i} className="flex items-center justify-between px-4 py-3 bg-[#0b0f19] rounded-lg border border-white/5 text-sm">
+                            <div className="flex items-center gap-3">
+                                <span className="text-slate-400 font-bold w-20">{s.label}:</span>
+                                <span className="text-(--user-accent) truncate font-mono text-xs">{s.url}</span>
+                            </div>
+                            <button type="button" onClick={() => handleRemoveSocial(i)}><X size={14} className="text-slate-600 hover:text-red-400"/></button>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

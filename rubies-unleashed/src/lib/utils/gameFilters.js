@@ -1,7 +1,7 @@
 import { PLATFORMS } from "@/lib/config/platforms";
 import { matchesCollection } from "./collectionMatchers";
 import { normalizeText } from "./textUtils";
-import { checkPlatformMatch, checkWebSubPlatform } from "./platformUtils";
+import { checkPlatformMatch } from "./platformUtils";
 
 export function filterGames(games, filters, allTags) {
   let filtered = games;
@@ -13,49 +13,17 @@ export function filterGames(games, filters, allTags) {
     );
   }
 
-  // 2. Platform Filter
-  if (filters.selectedSubPlatform) {
+  // 2. Platform Filter (✅ SIMPLIFIED - no sub-platforms)
+  if (filters.selectedPlatform !== "All") {
+    const platformId = filters.selectedPlatform.toLowerCase();
+    
     filtered = filtered.filter((g) => {
-      // Special handling for Web sub-platforms
-      if (
-        ["PWA", "Extension", "CloudApp"].includes(filters.selectedSubPlatform)
-      ) {
-        return checkWebSubPlatform(g, filters.selectedSubPlatform);
-      }
-
-      // Normal platform matching
-      return checkPlatformMatch(g, filters.selectedSubPlatform);
+      // Check if game matches the selected platform
+      return checkPlatformMatch(g, platformId);
     });
-  } else if (filters.selectedPlatform !== "All") {
-    const platformConfig = PLATFORMS[filters.selectedPlatform];
-    if (platformConfig) {
-      if (filters.selectedPlatform === "Web") {
-        // Show all web games
-        filtered = filtered.filter((g) => {
-          const isWebPlatform =
-            (g.buildPlatform &&
-              g.buildPlatform
-                .split(",")
-                .map((p) => p.trim().toLowerCase())
-                .some((p) => p === "web" || p === "html5")) ||
-            (g.tags &&
-              g.tags.some((t) => ["web", "html5"].includes(t.toLowerCase())));
-          return isWebPlatform;
-        });
-      } else {
-        // PC and Mobile platforms
-        const subPlatformIds = platformConfig.subPlatforms.map((sp) =>
-          sp.id.toLowerCase()
-        );
-
-        filtered = filtered.filter((g) =>
-          checkPlatformMatch(g, subPlatformIds)
-        );
-      }
-    }
   }
 
-  // 3. Genre/Search Logic
+  // 3. Genre/Search Logic (unchanged)
   const exactTagMatch =
     allTags.find(
       (t) => t.toLowerCase() === filters.searchQuery.toLowerCase()

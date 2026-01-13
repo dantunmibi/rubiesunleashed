@@ -4,9 +4,7 @@ import { PLATFORMS } from "@/lib/config/platforms";
 
 export default function PlatformSelector({
   selectedPlatform,
-  selectedSubPlatform,
   onPlatformClick,
-  onSubPlatformClick,
 }) {
   return (
     <div className="mb-4 space-y-3">
@@ -14,14 +12,14 @@ export default function PlatformSelector({
         <Monitor size={12} /> Platform
       </div>
 
-      {/* Main Platform Buttons */}
+      {/* ✅ SIMPLIFIED: Flat platform list (no sub-platforms) */}
       <div className="flex gap-2 p-1 overflow-x-auto no-scrollbar pb-2">
         <button
           onClick={() => onPlatformClick("All")}
           className={`
             shrink-0 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border-2 transition-all
             ${
-              selectedPlatform === "All" && !selectedSubPlatform
+              selectedPlatform === "All"
                 ? "bg-white text-black border-white shadow-lg scale-105"
                 : "bg-surface/50 text-slate-400 border-white/10 hover:text-white hover:border-white/30"
             }
@@ -29,9 +27,10 @@ export default function PlatformSelector({
         >
           All Platforms
         </button>
+        
         {Object.entries(PLATFORMS).map(([key, platform]) => {
           const Icon = platform.icon;
-          const isSelected = selectedPlatform === key && !selectedSubPlatform;
+          const isSelected = selectedPlatform === key;
           return (
             <button
               key={key}
@@ -50,32 +49,6 @@ export default function PlatformSelector({
           );
         })}
       </div>
-
-      {/* Sub-Platform Buttons */}
-      {selectedPlatform !== "All" && PLATFORMS[selectedPlatform] && (
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pl-4 animate-in slide-in-from-top-2 fade-in duration-300">
-          {PLATFORMS[selectedPlatform].subPlatforms.map((subPlatform) => {
-            const Icon = subPlatform.icon;
-            const isSelected = selectedSubPlatform === subPlatform.id;
-            return (
-              <button
-                key={subPlatform.id}
-                onClick={() => onSubPlatformClick(subPlatform.id)}
-                className={`
-                  shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all
-                  ${
-                    isSelected
-                      ? "bg-white text-black border-white shadow-md scale-105"
-                      : "bg-surface/30 text-slate-400 border-white/5 hover:text-white hover:border-white/20"
-                  }
-                `}
-              >
-                <Icon size={12} /> {subPlatform.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

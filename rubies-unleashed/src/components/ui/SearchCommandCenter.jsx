@@ -180,7 +180,7 @@ export default function SearchCommandCenter({ isOpen, onClose, allGames }) {
 
                     return (
                         <Link 
-                            key={game.id}
+                            key={game.slug || game.id}
                             href={`/view/${game.slug}`}
                             onClick={() => {
                                 addToHistory(game.title);
@@ -299,7 +299,7 @@ export default function SearchCommandCenter({ isOpen, onClose, allGames }) {
                                 
                                 return (
                                     <Link 
-                                        key={game.id}
+                                        key={game.slug || game.id}
                                         href={`/view/${game.slug}`}
                                         onClick={onClose}
                                         // ✅ FIXED: Canonical aspect-3/4

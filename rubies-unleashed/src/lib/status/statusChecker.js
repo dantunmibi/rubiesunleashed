@@ -15,18 +15,16 @@ const THRESHOLDS = {
   poor: 2000
 };
 
-
 /**
  * Check HTTP endpoint health
  */
-async function checkHTTPEndpoint(endpoint) {
+async function checkHTTPEndpoint(endpoint, healthKey = null) {
   const startTime = performance.now();
   
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    // Use GET instead of HEAD for better compatibility
     const response = await fetch(endpoint, {
       method: 'GET',
       signal: controller.signal,
@@ -36,20 +34,41 @@ async function checkHTTPEndpoint(endpoint) {
     clearTimeout(timeoutId);
     const responseTime = Math.round(performance.now() - startTime);
     
-    // ✅ FIX: Better status determination
-    let status = 'operational';
     if (!response.ok) {
-      status = 'degraded';
-    } else if (responseTime > THRESHOLDS.degraded) {
-      status = 'degraded';
+      return {
+        status: 'degraded',
+        responseTime,
+        statusCode: response.status,
+        healthy: false
+      };
+    }
+    
+    // ✅ NEW: Handle health endpoint responses
+    if (healthKey && endpoint.includes('/health')) {
+      try {
+        const healthData = await response.json();
+        const serviceHealth = healthData.services?.[healthKey];
+        
+        if (serviceHealth) {
+          return {
+            status: serviceHealth.status || 'operational',
+            responseTime: serviceHealth.responseTime || responseTime,
+            healthy: serviceHealth.status === 'operational',
+            statusCode: response.status
+          };
+        }
+      } catch (parseError) {
+        // If JSON parsing fails, fall back to basic check
+      }
     }
     
     return {
-      status,
+      status: responseTime > THRESHOLDS.degraded ? 'degraded' : 'operational',
       responseTime,
       statusCode: response.status,
-      healthy: response.ok
+      healthy: true
     };
+    
   } catch (error) {
     const responseTime = Math.round(performance.now() - startTime);
     
@@ -62,11 +81,48 @@ async function checkHTTPEndpoint(endpoint) {
   }
 }
 
+// Update checkService function
+export async function checkService(service) {
+  const checkStartTime = Date.now();
+  
+  let result;
+  
+  switch (service.checkType) {
+    case 'http':
+      result = await checkHTTPEndpoint(service.endpoint, service.healthKey); // ✅ Pass healthKey
+      break;
+    case 'supabase_db':
+      result = await checkSupabaseDB();
+      break;
+    case 'supabase_auth':
+      result = await checkSupabaseAuth();
+      break;
+    case 'client':
+    default:
+      result = checkClientService(service.id);
+      break;
+  }
+  
+  return {
+    serviceId: service.id,
+    serviceName: service.name,
+    description: service.description,
+    category: service.category,
+    status: result.status,
+    healthy: result.healthy,
+    responseTime: result.responseTime,
+    performance: getPerformanceRating(result.responseTime),
+    lastChecked: checkStartTime,
+    error: result.error || null,
+    statusCode: result.statusCode || null,
+    criticalPath: service.criticalPath,
+    icon: service.icon
+  };
+}
+
 async function checkSupabaseDB() {
   const start = performance.now();
   try {
-    // Simple query: Count profiles (fast, low cost)
-    // We limit to 1 to minimize load
     const { error } = await supabase.from('profiles').select('id').limit(1);
     
     const latency = Math.round(performance.now() - start);
@@ -88,13 +144,9 @@ async function checkSupabaseDB() {
   }
 }
 
-/**
- * Check Supabase Auth Health
- */
 async function checkSupabaseAuth() {
   const start = performance.now();
   try {
-    // Check session retrieval (doesn't hit DB, hits Auth server)
     const { error } = await supabase.auth.getSession();
     
     const latency = Math.round(performance.now() - start);
@@ -116,14 +168,11 @@ async function checkSupabaseAuth() {
   }
 }
 
-/**
- * Check client-side service health
- */
+// ✅ FIXED: Added support for Forge services
 function checkClientService(serviceId) {
   try {
     switch (serviceId) {
       case 'search':
-        // Verify search can access localStorage
         const testKey = '__search_test__';
         localStorage.setItem(testKey, 'ok');
         const canRead = localStorage.getItem(testKey) === 'ok';
@@ -136,13 +185,29 @@ function checkClientService(serviceId) {
         };
         
       case 'wishlist':
-        // Verify wishlist storage access
-        const userData = localStorage.getItem('ruby_user_data');
-        const canParse = userData ? JSON.parse(userData) : true;
+        // Check if wishlist system is working
+        try {
+          const userData = localStorage.getItem('ruby_user_data');
+          return {
+            status: 'operational',
+            healthy: true,
+            responseTime: 0
+          };
+        } catch {
+          return {
+            status: 'degraded',
+            healthy: false,
+            responseTime: 0
+          };
+        }
         
+      // ✅ NEW: Handle Forge services that don't have endpoints
+      case 'creator_dashboard':
+      case 'asset_storage':
+        // These are checked via their actual endpoints, not client-side
         return {
-          status: canParse ? 'operational' : 'degraded',
-          healthy: !!canParse,
+          status: 'operational',
+          healthy: true,
           responseTime: 0
         };
         
@@ -163,65 +228,21 @@ function checkClientService(serviceId) {
   }
 }
 
-
-/**
- * Get performance rating based on response time
- */
 export function getPerformanceRating(responseTime) {
-  if (responseTime === 0) return 'excellent'; // Client-side services
+  if (responseTime === 0) return 'excellent';
   if (responseTime <= THRESHOLDS.excellent) return 'excellent';
   if (responseTime <= THRESHOLDS.good) return 'good';
   if (responseTime <= THRESHOLDS.degraded) return 'degraded';
   return 'poor';
 }
 
-/**
- * Check single service health
- */
-export async function checkService(service) {
-  const checkStartTime = Date.now();
-  
-  let result;
-    // ✅ Handle new check types
-  if (service.checkType === 'http') {
-    result = await checkHTTPEndpoint(service.endpoint);
-  } else if (service.checkType === 'supabase_db') {
-    result = await checkSupabaseDB();
-  } else if (service.checkType === 'supabase_auth') {
-    result = await checkSupabaseAuth();
-  } else {
-    result = checkClientService(service.id);
-  }
-  
-  if (service.checkType === 'http') {
-    result = await checkHTTPEndpoint(service.endpoint);
-  } else {
-    result = checkClientService(service.id);
-  }
-  
-  return {
-    serviceId: service.id,
-    serviceName: service.name,
-    status: result.status,
-    healthy: result.healthy,
-    responseTime: result.responseTime,
-    performance: getPerformanceRating(result.responseTime),
-    lastChecked: checkStartTime,
-    error: result.error || null,
-    statusCode: result.statusCode || null
-  };
-}
-
-/**
- * Check all services
- */
 export async function checkAllServices() {
   const checks = SERVICES.map(service => checkService(service));
   const results = await Promise.all(checks);
   
   // Calculate overall status
-  const hasOutage = results.some(r => r.status === 'outage' && SERVICES.find(s => s.id === r.serviceId)?.criticalPath);
-  const hasDegraded = results.some(r => r.status === 'degraded' && SERVICES.find(s => s.id === r.serviceId)?.criticalPath);
+  const hasOutage = results.some(r => r.status === 'outage' && r.criticalPath);
+  const hasDegraded = results.some(r => r.status === 'degraded' && r.criticalPath);
   const hasMaintenance = results.some(r => r.status === 'maintenance');
   
   let overallStatus = 'operational';
@@ -236,20 +257,15 @@ export async function checkAllServices() {
   };
 }
 
-/**
- * Calculate uptime percentage
- */
 export function calculateUptime(incidents, days = 30) {
   const now = Date.now();
   const periodStart = now - (days * 24 * 60 * 60 * 1000);
   
-  // Filter incidents in the period
   const relevantIncidents = incidents.filter(inc => {
     const incidentStart = new Date(inc.startTime).getTime();
     return incidentStart >= periodStart;
   });
   
-  // Calculate total downtime
   const totalDowntime = relevantIncidents.reduce((total, inc) => {
     const start = new Date(inc.startTime).getTime();
     const end = inc.endTime ? new Date(inc.endTime).getTime() : now;

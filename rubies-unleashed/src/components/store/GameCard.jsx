@@ -27,9 +27,38 @@ export default function GameCard({ game, onClick, priority = false }) {
 
       {/* Text Content Layer */}
       <div className="absolute bottom-0 left-0 w-full p-4 flex flex-col justify-end z-10">
-        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded w-fit mb-2 border backdrop-blur-md ${tagStyle}`}>
-          {game.type === 'App' ? "SOFTWARE" : "GAME"}
+<div className="flex flex-wrap gap-1.5 mb-2">
+  {/* Main Type Badge */}
+  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border backdrop-blur-md ${tagStyle}`}>
+    {game.type === 'App' ? "SOFTWARE" : "GAME"}
+  </span>
+  
+  {/* ✅ NEW: Project Type Badges */}
+  {(() => {
+    const hasDownloads = game.downloadLinks && game.downloadLinks.length > 0 && game.downloadLinks[0].url;
+    const hasVideo = game.videoUrl;
+    const hasScreenshots = game.screenshots && game.screenshots.length > 0;
+    
+    // Show badge only for non-downloadable projects
+    if (!hasDownloads && hasVideo) {
+      return (
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-md">
+          DEMO
         </span>
+      );
+    }
+    
+    if (!hasDownloads && !hasVideo && hasScreenshots) {
+      return (
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border bg-purple-500/20 text-purple-400 border-purple-500/30 backdrop-blur-md">
+          SHOWCASE
+        </span>
+      );
+    }
+    
+    return null;
+  })()}
+</div>
         <h4 className="text-white font-bold text-sm leading-tight line-clamp-2 drop-shadow-md group-hover:text-ruby-light transition-colors">
           {game.title}
         </h4>

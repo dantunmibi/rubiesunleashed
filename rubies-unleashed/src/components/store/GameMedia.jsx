@@ -4,8 +4,35 @@ import { useState, useEffect } from "react";
 import { Gamepad2, ExternalLink, ImageIcon, X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 export default function GameMedia({ game }) {
+  console.log('🔍 GameMedia Debug:', {
+    title: game.title,
+    gameEmbed: game.gameEmbed,
+    html5_embed_url: game.html5_embed_url,
+    htmlEmbedUrl: game.htmlEmbedUrl,
+    allFields: Object.keys(game)
+  });
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  const screenshots = game?.screenshots || [];
+  // ✅ UPDATED: Handle undefined screenshots properly
+  const screenshots = Array.isArray(game?.screenshots) ? game.screenshots : [];
+
+  // ✅ ADD: Convert YouTube watch URLs to embed URLs
+const convertToEmbedUrl = (url) => {
+  if (!url) return url;
+  
+  // YouTube watch URL to embed URL
+  if (url.includes('youtube.com/watch?v=')) {
+    const videoId = url.split('v=')[1]?.split('&')[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  
+  // YouTube short URL to embed URL
+  if (url.includes('youtu.be/')) {
+    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  
+  return url; // Return as-is for other URLs
+};
 
   // Helper: Detect if video needs an Iframe (YouTube/Vimeo) or Native Player
   const isEmbed = (url) => {
@@ -55,76 +82,80 @@ export default function GameMedia({ game }) {
   return (
     <>
       {/* ✅ PRIORITY 1: Playable Game Embed */}
-      {game.gameEmbed && (
+      {(game.gameEmbed || game.html5_embed_url) && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-black text-white uppercase">
               <Gamepad2 size={20} className="text-ruby" /> Play in Browser
             </h3>
-            <a 
-              href={game.gameEmbed} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
-            >
-              Open Fullscreen <ExternalLink size={14} />
-            </a>
+<a 
+  href={game.gameEmbed || game.html5_embed_url} 
+  target="_blank" 
+  rel="noopener noreferrer"
+  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+>
+  Open Fullscreen <ExternalLink size={14} />
+</a>
           </div>
           
           <div className="relative w-full bg-black rounded-2xl overflow-hidden border-2 border-ruby/20 shadow-[0_0_30px_rgba(224,17,95,0.2)]">
             <div className="w-full aspect-video max-h-162.5 mx-auto">
-              <iframe 
-                src={game.gameEmbed} 
-                className="w-full h-full" 
-                allowFullScreen 
-                title="Play Game"
-                allow="autoplay; fullscreen; gamepad; microphone; camera"
-              />
+<iframe 
+  src={game.gameEmbed || game.html5_embed_url} 
+  className="w-full h-full" 
+  allowFullScreen 
+  title="Play Game"
+  allow="autoplay; fullscreen; gamepad; microphone; camera"
+/>
             </div>
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-ruby via-pink-500 to-ruby" />
           </div>
         </section>
       )}
 
-      {/* ✅ PRIORITY 2: Gameplay Trailer */}
-      {game.video && (
-        <section className="space-y-4">
-          <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
-            <Play size={16} /> {game.gameEmbed ? 'Gameplay Trailer' : 'Trailer'}
-          </h3>
-          <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
-            
-            {isEmbed(game.video) ? (
-                // 🅰️ YouTube / Vimeo / Embeds
-                <iframe 
-                  src={game.video} 
-                  className="w-full h-full" 
-                  allowFullScreen 
-                  title="Trailer" 
-                  loading="lazy"
-                />
-            ) : (
-                // 🅱️ Native Videos (Blogger/MP4)
-                <video 
-                    controls 
-                    preload="metadata"
-                    className="w-full h-full object-contain"
-                    poster={game.image} // Use Game Cover as poster
-                >
-                    <source src={game.video} type="video/mp4" />
-                    {/* Fallback for other formats if necessary */}
-                    <source src={game.video} type="video/webm" />
-                    Your browser does not support the video tag.
-                </video>
-            )}
+{/* ✅ UPDATED: Support both video and videoUrl fields */}
+{(game.video || game.videoUrl) && (
+  <section id="video-section" className="space-y-4">
+    <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
+      <Play size={16} /> {game.gameEmbed ? 'Gameplay Trailer' : 'Trailer'}
+    </h3>
+    <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
+      
+      {(() => {
+        const videoUrl = game.video || game.videoUrl;
+        const embedUrl = convertToEmbedUrl(videoUrl);
+        
+        return isEmbed(embedUrl) ? (
+          // 🅰️ YouTube / Vimeo / Embeds
+          <iframe 
+            src={embedUrl} 
+            className="w-full h-full" 
+            allowFullScreen 
+            title="Trailer" 
+            loading="lazy"
+          />
+        ) : (
+          // 🅱️ Native Videos (Blogger/MP4)
+          <video 
+              controls 
+              preload="metadata"
+              className="w-full h-full object-contain"
+              poster={game.image}
+          >
+              <source src={videoUrl} type="video/mp4" />
+              <source src={videoUrl} type="video/webm" />
+              Your browser does not support the video tag.
+          </video>
+        );
+      })()}
 
-          </div>
-        </section>
-      )}
+    </div>
+  </section>
+)}
 
       {/* ✅ PRIORITY 3: Interactive Gallery */}
       {screenshots.length > 0 && (
-        <section className="space-y-6">
+        <section id="screenshots-section" className="space-y-6">
           <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
             <ImageIcon size={16} /> Gallery
           </h3>

@@ -1,12 +1,27 @@
 import { useMemo, useReducer, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { filterGames } from "@/lib/utils/gameFilters";
-import { extractTags } from "@/lib/utils/tagExtractor";
+
+// ✅ ADD: Standardized tags from ProjectEditor
+const GAME_TAGS = [
+  "Action", "Adventure", "RPG", "Strategy", "Simulation", "Puzzle", 
+  "Shooter", "Platformer", "Visual Novel", "Fighting", "Racing", "Sports", 
+  "Horror", "Sci-Fi", "Fantasy", "Cyberpunk"
+];
+
+const APP_TAGS = [
+  "Utility", "Productivity", "Development", "Design", "System", "Tool", 
+  "Social", "Education", "Multimedia", "Security", "Open Source"
+];
+
+const UNIVERSAL_TAGS = [
+  "Pixel Art", "Retro", "Cozy", "Minimalist", "Family Friendly", 
+  "PWA", "2D", "3D", "VR", "Mobile"
+];
 
 const initialState = {
   searchQuery: "",
   selectedPlatform: "All",
-  selectedSubPlatform: null,
   selectedGenre: "All",
   selectedCollection: null,
   visibleCount: 12,
@@ -21,14 +36,6 @@ function filtersReducer(state, action) {
       return {
         ...state,
         selectedPlatform: action.payload,
-        selectedSubPlatform: null,
-        selectedCollection: null,
-        visibleCount: 12,
-      };
-    case "SET_SUB_PLATFORM":
-      return {
-        ...state,
-        selectedSubPlatform: action.payload,
         selectedCollection: null,
         visibleCount: 12,
       };
@@ -44,7 +51,6 @@ function filtersReducer(state, action) {
         ...state,
         selectedCollection: action.payload,
         selectedPlatform: "All",
-        selectedSubPlatform: null,
         visibleCount: 12,
       };
     case "TOGGLE_EXPANDED":
@@ -78,8 +84,47 @@ export function useGameFilters(games, searchParams) {
     });
   }, [searchParams]);
 
-  // Extract tags from games
-  const { allTags, topTags } = useMemo(() => extractTags(games), [games]);
+  // ✅ REPLACE: Use standardized tags instead of extracting from data
+  const { allTags, topTags } = useMemo(() => {
+    // Combine all standardized tags
+    const allStandardTags = [...GAME_TAGS, ...APP_TAGS, ...UNIVERSAL_TAGS];
+    
+    // Find which tags are actually used in the current games
+    const usedTags = new Set();
+    games.forEach(game => {
+      if (game.tags) {
+        game.tags.forEach(tag => {
+          if (allStandardTags.includes(tag)) {
+            usedTags.add(tag);
+          }
+        });
+      }
+    });
+    
+    // Filter standardized tags to only show ones that are used
+    const availableTags = allStandardTags.filter(tag => usedTags.has(tag));
+    
+    // Calculate top tags based on usage frequency
+    const tagCounts = {};
+    games.forEach(game => {
+      if (game.tags) {
+        game.tags.forEach(tag => {
+          if (availableTags.includes(tag)) {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          }
+        });
+      }
+    });
+    
+    // Sort by usage count and take top 8
+    const sortedTags = availableTags.sort((a, b) => (tagCounts[b] || 0) - (tagCounts[a] || 0));
+    const topUsedTags = sortedTags.slice(0, 8);
+    
+    return {
+      allTags: availableTags,
+      topTags: topUsedTags
+    };
+  }, [games]);
 
   // Calculate ribbon tags
   const ribbonTags = useMemo(() => {
@@ -120,10 +165,6 @@ export function useGameFilters(games, searchParams) {
     dispatch({ type: "SET_PLATFORM", payload: platform });
   };
 
-  const updateSubPlatform = (subPlatform) => {
-    dispatch({ type: "SET_SUB_PLATFORM", payload: subPlatform });
-  };
-
   const updateGenre = (genre) => {
     dispatch({ type: "SET_GENRE", payload: genre });
     if (genre === "All") updateSearch("");
@@ -153,7 +194,6 @@ export function useGameFilters(games, searchParams) {
     filters,
     updateSearch,
     updatePlatform,
-    updateSubPlatform,
     updateGenre,
     updateCollection,
     toggleExpanded,

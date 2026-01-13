@@ -1,10 +1,18 @@
-export function checkPlatformMatch(game, platformIds) {
-  const ids = Array.isArray(platformIds) ? platformIds : [platformIds.toLowerCase()];
+export function checkPlatformMatch(game, platformId) {
+  const id = platformId.toLowerCase();
+
+  // Check download_links array (Supabase projects)
+  if (game.download_links && Array.isArray(game.download_links)) {
+    const hasMatch = game.download_links.some(link => 
+      link.platform && link.platform.toLowerCase() === id
+    );
+    if (hasMatch) return true;
+  }
 
   // Check tags array
-  const inTags =
-    game.tags &&
-    game.tags.some((tag) => ids.includes(tag.toLowerCase()));
+  const inTags = game.tags && game.tags.some((tag) => 
+    tag.toLowerCase() === id
+  );
 
   // Check buildPlatform string
   const platformsInBuild = game.buildPlatform
@@ -12,71 +20,13 @@ export function checkPlatformMatch(game, platformIds) {
     : [];
 
   const inBuildPlatform = platformsInBuild.some((platform) =>
-    ids.includes(platform)
+    platform === id
   );
 
-  return inTags || inBuildPlatform;
+  // Check platform field (legacy)
+  const inPlatform = game.platform && game.platform.toLowerCase() === id;
+
+  return inTags || inBuildPlatform || inPlatform;
 }
 
-export function isWebPlatform(game) {
-  return (
-    (game.buildPlatform &&
-      game.buildPlatform
-        .split(",")
-        .map((p) => p.trim().toLowerCase())
-        .some((p) => p === "web" || p === "html5")) ||
-    (game.tags &&
-      game.tags.some((t) => ["web", "html5"].includes(t.toLowerCase())))
-  );
-}
-
-export function checkWebSubPlatform(game, subPlatformId) {
-  const isWeb = isWebPlatform(game);
-
-  if (!isWeb) return false;
-
-  switch (subPlatformId) {
-    case "PWA":
-      return (
-        game.tags && game.tags.some((t) => t.toLowerCase() === "pwa")
-      );
-
-    case "Extension": {
-      const hasExtensionTag =
-        game.tags &&
-        game.tags.some((t) => {
-          const lower = t.toLowerCase();
-          return (
-            lower.includes("extension") ||
-            lower.includes("chrome extension") ||
-            lower.includes("firefox extension") ||
-            lower.includes("add-on") ||
-            lower.includes("addon") ||
-            lower.includes("g-suite")
-          );
-        });
-      return hasExtensionTag;
-    }
-
-    case "CloudApp": {
-      const hasPWATag =
-        game.tags && game.tags.some((t) => t.toLowerCase() === "pwa");
-
-      const hasExtensionTag =
-        game.tags &&
-        game.tags.some((t) => {
-          const lower = t.toLowerCase();
-          return (
-            lower.includes("extension") ||
-            lower.includes("add-on") ||
-            lower.includes("addon")
-          );
-        });
-
-      return !hasPWATag && !hasExtensionTag;
-    }
-
-    default:
-      return false;
-  }
-}
+// ✅ REMOVE: isWebPlatform and checkWebSubPlatform functions (no longer needed)

@@ -31,7 +31,6 @@ import {
   clearAllNotifications,
   formatTimeAgo
 } from "@/lib/notificationManager";
-import { removeFromWishlist, addToWishlist } from "@/lib/userManager";
 import { useToastContext } from "@/components/providers/ToastProvider";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase"; 
@@ -124,10 +123,6 @@ const performUndoAction = async (action, gameId) => {
                 body: JSON.stringify({ action, game_id: gameId })
             });
         }
-    } else {
-        // Local Call for Guest
-        if (action === 'remove') removeFromWishlist(gameId);
-        else addToWishlist({ id: gameId }); // We need full game object for add?
     }
 };
 
@@ -154,13 +149,35 @@ const handleUndo = async (notification) => {
     loadNotifications();
     window.dispatchEvent(new Event("wishlistUpdated")); // Standardize event name
 };
-  const handleView = (notification) => {
-    if (notification.actionData?.gameSlug) {
-      router.push(`/view/${notification.actionData.gameSlug}`);
-      onClose();
+const handleView = (notification) => {
+  // ✅ FIXED: Handle project notifications with proper status-based routing
+  if (notification.actionData?.projectId) {
+    const { projectId, type, status } = notification.actionData;
+    
+    // For draft projects or creation, go to cockpit for editing
+    if (status === 'draft' || type === 'project_created' || type === 'project_updated') {
+      router.push(`/${user?.username}/dashboard/project/${projectId}`);
     }
-  };
-
+    // For published projects, can go to public view
+    else if (status === 'published' && notification.actionData?.projectSlug) {
+      router.push(`/view/${notification.actionData.projectSlug}`);
+    }
+    // For deleted projects, go to dashboard
+    else if (type === 'project_deleted' || type === 'project_archived') {
+      router.push(`/${user?.username}/dashboard`);
+    }
+    // Fallback to cockpit
+    else {
+      router.push(`/${user?.username}/dashboard/project/${projectId}`);
+    }
+    onClose();
+  }
+  // Legacy game notifications (Blogger content)
+  else if (notification.actionData?.gameSlug) {
+    router.push(`/view/${notification.actionData.gameSlug}`);
+    onClose();
+  }
+};
   // Group notifications by date
   const groupedNotifications = notifications.reduce((groups, notif) => {
     const now = Date.now();
@@ -263,13 +280,15 @@ const handleUndo = async (notification) => {
                       {/* Action Buttons */}
                       {notif.actionData && (
                         <div className="flex gap-2 mt-2">
-    {/* Only show Undo if recent */}
-    {isRecent(notif.timestamp) && notif.actionData?.type?.includes("wishlist") && (
-        <button onClick={(e) => { e.stopPropagation(); handleUndo(notif); }} className="text-xs font-bold text-ruby hover:underline">
-            Undo
-        </button>
-    )}
-                          {notif.actionData.gameSlug && (
+                          {/* Existing wishlist undo logic */}
+                          {isRecent(notif.timestamp) && notif.actionData?.type?.includes("wishlist") && (
+                              <button onClick={(e) => { e.stopPropagation(); handleUndo(notif); }} className="text-xs font-bold text-ruby hover:underline">
+                                  Undo
+                              </button>
+                          )}
+                          
+                          {/* ✅ ADD PROJECT VIEW BUTTONS */}
+                          {(notif.actionData.gameSlug || notif.actionData.projectSlug || notif.actionData.projectId) && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -277,7 +296,7 @@ const handleUndo = async (notification) => {
                               }}
                               className="text-xs font-bold text-slate-400 hover:text-white hover:underline"
                             >
-                              View
+                              {notif.actionData.type === 'project_deleted' ? 'Dashboard' : 'View'}
                             </button>
                           )}
                         </div>

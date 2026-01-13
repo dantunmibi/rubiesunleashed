@@ -12,35 +12,75 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Play, Gamepad2, ChevronDown, Sparkles, Box } from "lucide-react";
 import Link from "next/link";
 
-const FEATURED_TAG = "Featured";
 const SPOTLIGHT_COUNT = 5;
 
 export default function SpotlightHero({ games = [] }) {
   const [spotlightIndex, setSpotlightIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [featuredContent, setFeaturedContent] = useState([]);
 
-  // 1. Data Logic
+  // ✅ UPDATED: Fetch admin-curated featured content
+  useEffect(() => {
+    const fetchFeaturedContent = async () => {
+      try {
+        // Import here to avoid SSR issues
+        const { supabase } = await import('@/lib/supabase');
+        
+        // Get admin-selected featured content (Supabase projects only)
+        const { data: featured, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('status', 'published')
+          .eq('is_featured', true)
+          .order('featured_order', { ascending: true })
+          .limit(SPOTLIGHT_COUNT);
+        
+        if (error) {
+          console.error('Featured content fetch error:', error);
+          return;
+        }
+        
+        if (featured && featured.length > 0) {
+          // Process Supabase projects
+          const { processSupabaseProject } = await import('@/lib/game-utils');
+          const processedFeatured = featured.map(processSupabaseProject).filter(Boolean);
+          setFeaturedContent(processedFeatured);
+        }
+      } catch (error) {
+        console.error('Failed to fetch featured content:', error);
+      }
+    };
+    
+    fetchFeaturedContent();
+  }, []);
+
+  // 1. Data Logic - Prioritize admin-curated content
   const spotlightItems = useMemo(() => {
+    // Priority 1: Admin-curated featured content (Supabase)
+    if (featuredContent.length > 0) {
+      return featuredContent.slice(0, SPOTLIGHT_COUNT);
+    }
+    
+    // Priority 2: Legacy "Featured" tag (Blogger content)
     if (!games || games.length === 0) return [];
-
-    // Filter for "Featured" tag (Case Insensitive)
-    const featured = games.filter(
+    
+    const taggedFeatured = games.filter(
       (g) =>
         g.tags &&
-        g.tags.some((t) => t.toLowerCase() === FEATURED_TAG.toLowerCase())
+        g.tags.some((t) => t.toLowerCase() === "featured")
     );
 
-    // Fallback: If not enough featured items, fill with others
+    // Priority 3: Fallback to recent quality content
     const finalSelection =
-      featured.length >= SPOTLIGHT_COUNT
-        ? featured.slice(0, SPOTLIGHT_COUNT)
-        : [...featured, ...games.filter((g) => !featured.includes(g))].slice(
+      taggedFeatured.length >= SPOTLIGHT_COUNT
+        ? taggedFeatured.slice(0, SPOTLIGHT_COUNT)
+        : [...taggedFeatured, ...games.filter((g) => !taggedFeatured.includes(g))].slice(
             0,
             SPOTLIGHT_COUNT
           );
 
     return finalSelection;
-  }, [games]);
+  }, [games, featuredContent]);
 
   // 2. Auto-Rotation Logic
   useEffect(() => {
@@ -94,21 +134,23 @@ export default function SpotlightHero({ games = [] }) {
           {/* Content Container */}
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
             
-            {/* Top Badges */}
-            <div className="flex items-center gap-3 mb-4 animate-in slide-in-from-bottom-2 duration-700 delay-100">
-              <span className={`
-                text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg border border-white/10 flex items-center gap-2
-                ${isApp ? "bg-cyan-600 shadow-cyan-900/40" : "bg-ruby shadow-ruby-900/40"}
-              `}>
-                <Sparkles size={10} className="fill-current" /> Spotlight
+          {/* Top Badges */}
+          <div className="flex items-center gap-3 mb-4 animate-in slide-in-from-bottom-2 duration-700 delay-100">
+            <span className={`
+              text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg border border-white/10 flex items-center gap-2
+              ${isApp ? "bg-netrunner-600 shadow-netrunner-900/40" : "bg-ruby shadow-ruby-900/40"}
+            `}>
+              <Sparkles size={10} className="fill-current" /> 
+              {/* ✅ UPDATED: Show source of featuring */}
+              {featuredContent.length > 0 ? "Featured" : "Spotlight"}
+            </span>
+            
+            {activeSpotlight.developer && (
+              <span className="bg-white/10 backdrop-blur-md text-slate-100 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/5">
+                {activeSpotlight.developer}
               </span>
-              
-              {activeSpotlight.developer && (
-                <span className="bg-white/10 backdrop-blur-md text-slate-100 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/5">
-                  {activeSpotlight.developer}
-                </span>
-              )}
-            </div>
+            )}
+          </div>
 
             {/* Title */}
             <h2 className="text-4xl md:text-6xl font-black text-white mb-4 leading-none tracking-tighter drop-shadow-2xl animate-in slide-in-from-bottom-3 duration-700 delay-200 uppercase italic">

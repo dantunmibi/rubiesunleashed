@@ -124,7 +124,6 @@ export const getPlatformInfo = (game, tags) => {
   }
   
   // Check if it's an app (apps are often cross-platform)
-  // UPDATED: Now uses the exported utility function for consistency
   if (isApp(safeTags)) {
     return { name: "Cross-Platform", icon: <Globe size={20} />, ver: "Any" };
   }
@@ -152,13 +151,6 @@ export const getSocialIcon = (label) => {
   return <ExternalLink size={16} />;
 };
 
-/**
- * Get display label for download platform
- * Provides consistent "View on", "Get on", "Get for" labeling
- * Used ONLY for multi-platform downloads
- * @param {string} platform - Platform name from blogger.js
- * @returns {string} - User-friendly label
- */
 export const getDownloadLabel = (platform) => {
   if (!platform) return 'Download';
   
@@ -171,7 +163,6 @@ export const getDownloadLabel = (platform) => {
   if (lower === 'epic games') return 'View on Epic Games';
   if (lower === 'game jolt') return 'View on Game Jolt';
   if (lower === 'humble bundle') return 'View on Humble Bundle';
-  if (lower === 'game jolt') return 'View on Game Jolt';
   
   // Mobile/Desktop App Stores - "Get on/in"
   if (lower === 'google play') return 'Get on Google Play';
@@ -193,7 +184,7 @@ export const getDownloadLabel = (platform) => {
   if (lower === 'playstation') return 'Get for PlayStation';
   
   // Web
-  if (lower === 'web') return 'Play Online';
+  if (lower === 'web') return isApp ? 'Visit Site' : 'Play Online';
   
   // Generic fallback
   if (lower === 'download') return 'Download';
@@ -201,3 +192,127 @@ export const getDownloadLabel = (platform) => {
   // Unknown platform - show as-is with "Get for" prefix
   return `Get for ${platform}`;
 };
+
+// --- PHASE 4: SUPABASE ADAPTERS ---
+
+/**
+ * Determine if project is Game or App based on tags
+ */
+function determineType(tags = []) {
+  const appTags = ['Utility', 'Tool', 'Productivity', 'Development', 'Software', 'App'];
+  const hasAppTag = tags.some(tag => appTags.includes(tag));
+  return hasAppTag ? 'App' : 'Game';
+}
+
+/**
+ * Generate unique slug from title
+ * @param {string} title - Project title
+ * @returns {string} URL-safe slug
+ */
+export function generateSlug(title) {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+  
+  // Add short random suffix for uniqueness
+  const suffix = Math.random().toString(36).substring(2, 8);
+  return `${base}-${suffix}`;
+}
+
+/**
+ * Process Supabase project row into standard Game Object
+ * @param {Object} row - Database row from projects table
+ * @returns {Object} Normalized game object
+ */
+export function processSupabaseProject(row) {
+  if (!row) return null;
+  
+  try {
+    // Parse JSONB fields (Handle potential stringified JSON or native object)
+    const downloadLinks = typeof row.download_links === 'string' 
+      ? JSON.parse(row.download_links) 
+      : (row.download_links || []);
+    
+    const socialLinks = typeof row.social_links === 'string'
+      ? JSON.parse(row.social_links)
+      : (row.social_links || []);
+
+    // ✅ ADD: Process content warnings properly
+    let contentWarnings = [];
+    if (row.content_warning && row.content_warning.trim()) {
+      // Split by common delimiters and clean up
+      contentWarnings = row.content_warning
+        .split(/[,\n\r•\-]/) // Split by comma, newline, bullet, or dash
+        .map(warning => warning.trim())
+        .filter(warning => warning.length > 0);
+    }
+      
+    // Determine primary download URL (Priority: Cache -> First Link)
+    const primaryDownload = row.download_url || (downloadLinks.length > 0 ? downloadLinks[0].url : null);
+    
+    // Normalize Tags
+    const tags = Array.isArray(row.tags) ? row.tags : [];
+    
+    return {
+      // Identity
+      id: row.id,
+      slug: row.slug,
+      source: 'supabase',
+      
+      // Content
+      title: row.title,
+      description: row.description || '',
+      fullDescription: row.full_description || row.description || '',
+      image: row.cover_url || '/placeholder-game.png',
+      images: row.screenshots || [], // Legacy compatibility
+      screenshots: row.screenshots || [], // ✅ For GameMedia component
+      videoUrl: row.video_url,
+      video: row.video_url, // ✅ Legacy compatibility
+      html5_embed_url: row.html5_embed_url,
+      
+      // Distribution
+      downloadLinks: downloadLinks.length > 0 
+        ? downloadLinks 
+        : (primaryDownload ? [{ platform: row.platform || 'Unknown', url: primaryDownload }] : []),
+      downloadUrl: primaryDownload,
+      platforms: row.platform ? [row.platform] : [], // Legacy compat
+      buildPlatform: row.platform || 'Multi-Platform', // For getPlatformInfo
+      version: row.version || '1.0',
+      
+      // Metadata
+      tags: tags,
+      type: determineType(tags),
+      features: row.features || [],
+      requirements: row.requirements || [],
+      controls: row.controls || [],
+      developer: row.developer || 'Unknown',
+      developerUrl: row.uploader_username 
+        ? `/${row.uploader_username}/projects` 
+        : `/user/${row.user_id}`,
+      socialLinks: socialLinks,
+      
+      // ✅ ADD: Content warnings mapped correctly
+      contentWarnings: contentWarnings, // Now an array like Blogger posts
+      
+      // ✅ ADD: Safety & Ratings (for completeness)
+      ageRating: row.age_rating || 'Not Rated',
+      size: row.size || null,
+      
+      // State
+      status: row.status || 'published', // View doesn't return status, implied published
+      original_blogger_id: row.original_blogger_id,
+      
+      // Timestamps
+      publishedDate: row.created_at,
+      lastUpdated: row.updated_at,
+      
+      // Ownership
+      userId: row.user_id
+    };
+    
+  } catch (error) {
+    console.error('processSupabaseProject error:', error, row);
+    return null;
+  }
+}

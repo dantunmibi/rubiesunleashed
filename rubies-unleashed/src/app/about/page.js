@@ -1,13 +1,14 @@
 /**
  * ================================================================
- * ABOUT PAGE - The Manifesto (Refined & Corrected)
+ * ABOUT PAGE - The Manifesto (Current Reality Edition)
  * ================================================================
  *
  * Purpose:
  * - Tells the story of RubyApks -> Rubies Unleashed
- * - Explains the mission, values, and the "Rubies Economy" (Gamified)
+ * - Explains the mission, values, and current capabilities
+ * - Reflects actual Phase 4 implementation (The Forge)
+ * - Removes unimplemented features (Ruby Economy)
  * - Cinematic, digestible layout
- * - STRICT Tailwind v4 Canonical Classes (No arbitrary values)
  * ================================================================
  */
 
@@ -19,15 +20,16 @@ import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import {
   Gem,
-  Target,
   Users,
   Zap,
   Shield,
   ArrowRight,
   History,
   Heart,
-  Trophy,
   Crown,
+  Wrench,
+  Upload,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 
@@ -40,7 +42,6 @@ export default function AboutPage() {
       <main className="relative z-10">
         {/* 1. HERO - THE VISION */}
         <section className="relative pt-40 pb-20 px-6 lg:px-8 text-center overflow-hidden">
-          {/* ✅ FIXED: Use canonical h-200 w-200 */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-ruby/10 blur-[120px] rounded-full pointer-events-none" />
 
           <div className="relative z-10 max-w-4xl mx-auto">
@@ -91,17 +92,16 @@ export default function AboutPage() {
             </div>
             <div className="order-1 md:order-2">
               <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
-                The Roots
+                The Evolution
               </h2>
               <p className="text-slate-400 text-lg leading-relaxed mb-6">
-                Evolving from its foundation platform, <strong>RubyApks</strong>
-                , Rubies Unleashed represents the next step in a journey that
-                began with simple discovery.
+                Evolving from its foundation platform, <strong>RubyApks</strong>,
+                Rubies Unleashed now combines curated discovery with 
+                <span className="text-emerald-400 font-bold"> community-driven publishing</span>.
               </p>
               <p className="text-slate-400 text-lg leading-relaxed">
-                RubyApks laid the foundation.{" "}
-                <span className="text-ruby font-bold">Rubies Unleashed</span> is
-                where that vision continues to grow.
+                What started as a showcase has become a full creator ecosystem where 
+                developers can publish directly alongside curated content.
               </p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function AboutPage() {
               Why It Matters
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              The values that built RubyApks remain central to us today.
+              The principles that guide everything we build.
             </p>
           </div>
 
@@ -122,69 +122,69 @@ export default function AboutPage() {
             <ValueCard
               icon={<Zap size={32} className="text-amber-400" />}
               title="Creator-First"
-              desc="Indie developers drive innovation. We remove restrictions so they can publish freely and reach a global audience on their own terms."
+              desc="Indie developers drive innovation. We provide tools for direct publishing, project management, and community building without restrictive gatekeeping."
             />
             <ValueCard
               icon={<Users size={32} className="text-cyan-400" />}
               title="Player-Focused"
-              desc="Players deserve creativity, not repetition. We make it easy to discover niche titles and experimental projects that go unnoticed elsewhere."
+              desc="Players deserve creativity, not repetition. Our unified discovery system surfaces both curated gems and fresh community projects in one place."
             />
             <ValueCard
               icon={<Shield size={32} className="text-emerald-400" />}
               title="Transparent"
-              desc="No accounts required to browse. No hidden steps. Just discover, click, and download. Accessibility is a principle, not a feature."
+              desc="Browse without barriers. Download with confidence. Our external link warnings and content moderation keep the experience safe and honest."
             />
           </div>
         </section>
 
-        {/* 4. THE RUBIES ECONOMY (Gamified) */}
+        {/* 4. WHAT WE OFFER TODAY */}
         <section className="py-24 px-6 bg-[#161b2c] border-y border-white/5 relative overflow-hidden">
-          {/* ✅ FIXED: Use canonical h-125 w-125 */}
-          <div className="absolute top-0 right-0 w-125 h-125 bg-ruby/5 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-125 h-125 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
 
           <div className="max-w-5xl mx-auto relative z-10">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ruby/20 border border-ruby/50 mb-6 animate-pulse">
-                <Gem size={32} className="text-ruby" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 mb-6">
+                <Wrench size={32} className="text-emerald-400" />
               </div>
               <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
-                The Rubies Economy
+                The Platform Today
               </h2>
               <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-                A digital currency designed to support a healthier relationship
-                between creators and users—without aggressive monetization.
+                A complete ecosystem for discovering and publishing independent games and applications.
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
-              {/* Card 1: Earn */}
-              <div className="bg-black/40 p-8 rounded-3xl border border-white/10 hover:border-ruby/30 transition-all flex flex-col items-start relative overflow-hidden group">
+              {/* For Creators */}
+              <div className="bg-black/40 p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all flex flex-col items-start relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Trophy size={120} />
+                  <Upload size={120} />
                 </div>
                 <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-                  <Trophy className="text-amber-400" size={24} /> Play to Earn
+                  <Upload className="text-emerald-400" size={24} /> For Creators
                 </h3>
-                <p className="text-slate-400 leading-relaxed">
-                  Earn Rubies through community participation, completing
-                  platform goals, and joining events. The more you engage, the
-                  more you earn.
-                </p>
+                <ul className="text-slate-400 leading-relaxed space-y-2">
+                  <li>• <strong>Direct Publishing:</strong> Upload projects with full control</li>
+                  <li>• <strong>Asset Management:</strong> Host images, videos, and files</li>
+                  <li>• <strong>Creator Dashboards:</strong> Manage your portfolio</li>
+                  <li>• <strong>Public Profiles:</strong> Showcase your work</li>
+                </ul>
               </div>
 
-              {/* Card 2: Spend & Support */}
+              {/* For Players */}
               <div className="bg-black/40 p-8 rounded-3xl border border-white/10 hover:border-ruby/30 transition-all flex flex-col items-start relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Heart size={120} />
+                  <Search size={120} />
                 </div>
                 <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-                  <Heart className="text-ruby" size={24} /> Support Creators
+                  <Search className="text-ruby" size={24} /> For Players
                 </h3>
-                <p className="text-slate-400 leading-relaxed">
-                  Use your Rubies to unlock exclusive content or tip your
-                  favorite developers directly. It's transparent support that
-                  rewards creativity.
-                </p>
+                <ul className="text-slate-400 leading-relaxed space-y-2">
+                  <li>• <strong>Unified Discovery:</strong> Curated + community content</li>
+                  <li>• <strong>Personal Wishlists:</strong> Save and organize favorites</li>
+                  <li>• <strong>Advanced Search:</strong> Find exactly what you want</li>
+                  <li>• <strong>Safe Downloads:</strong> External link warnings</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -196,31 +196,30 @@ export default function AboutPage() {
             {/* Publishing Support */}
             <div className="bg-surface/30 p-8 rounded-3xl border border-white/5">
               <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-                <Crown size={24} className="text-cyan-400" /> Publishing Support
+                <Crown size={24} className="text-emerald-400" /> The Forge
               </h3>
               <p className="text-slate-400 mb-6 leading-relaxed">
-                We provide platform-backed releases for creators whose work
-                shows strong potential. This includes increased visibility,
-                promotional opportunities, and a clear path from experimentation
-                to recognition.
+                Our creator platform provides everything needed to publish and manage projects. 
+                From initial upload to community engagement, creators have full control over 
+                their content and presentation.
               </p>
               <Link
                 href="/publish"
-                className="text-cyan-400 font-bold uppercase tracking-widest text-xs hover:text-white transition-colors flex items-center gap-2"
+                className="text-emerald-400 font-bold uppercase tracking-widest text-xs hover:text-white transition-colors flex items-center gap-2"
               >
-                Learn about Publishing <ArrowRight size={14} />
+                Start Publishing <ArrowRight size={14} />
               </Link>
             </div>
 
             {/* Community */}
             <div className="bg-surface/30 p-8 rounded-3xl border border-white/5">
               <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-                <Users size={24} className="text-ruby" /> Shared Space
+                <Users size={24} className="text-ruby" /> Open Community
               </h3>
               <p className="text-slate-400 mb-6 leading-relaxed">
-                Rubies Unleashed is not a closed system. We actively support
-                community challenges and creative initiatives. Feedback from
-                creators and users directly influences how the platform evolves.
+                Rubies Unleashed thrives on community feedback and collaboration. 
+                Whether you're a creator seeking visibility or a player discovering 
+                new experiences, you're part of shaping the platform's future.
               </p>
               <Link
                 href="/contact"
@@ -236,15 +235,15 @@ export default function AboutPage() {
         <section className="py-32 px-6 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-6xl font-black text-white mb-8">
-              Our Promise
+              Our Commitment
             </h2>
             <p className="text-xl text-slate-400 mb-12 leading-relaxed">
-              We are committed to building a platform that respects creators,
-              values players, and grows through trust rather than pressure.{" "}
-              <br />
+              We are building a platform that respects creators, values players, 
+              and grows through trust rather than pressure. Every feature we add 
+              serves this mission. <br />
               <br />
               <span className="text-white font-bold">
-                Rubies Unleashed is here to support that journey.
+                Rubies Unleashed is here to support independent creativity.
               </span>
             </p>
 
@@ -253,13 +252,13 @@ export default function AboutPage() {
                 href="/explore"
                 className="px-8 py-4 bg-ruby text-white font-black rounded-xl uppercase tracking-widest hover:bg-rose-600 transition-all shadow-[0_0_30px_rgba(224,17,95,0.3)] hover:shadow-[0_0_50px_rgba(224,17,95,0.5)] transform hover:-translate-y-1"
               >
-                Join the Community
+                Explore Content
               </Link>
               <Link
                 href="/publish"
                 className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold rounded-xl uppercase tracking-widest hover:bg-white/10 transition-all"
               >
-                Start Publishing
+                Start Creating
               </Link>
             </div>
           </div>

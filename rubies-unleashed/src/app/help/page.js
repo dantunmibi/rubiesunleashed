@@ -1,11 +1,11 @@
 "use client";
 
 /* 
-  💎 RUBIES UNLEASHED - Help Center (v20.5)
+  💎 RUBIES UNLEASHED - Help Center (Phase 4 Edition)
   -----------------------------------------
-  - Purpose: Universal Knowledge Base.
-  - Updates: Corrected Dev "Claim" & "Update" workflows.
-  - Logic: Search overrides filters; Categories scroll to FAQs.
+  - Purpose: Universal Knowledge Base for The Forge era
+  - Updates: Reflects actual creator platform capabilities
+  - Removes: Outdated "coming soon" features that are now live
 */
 
 import React, { useState, useRef } from "react";
@@ -28,6 +28,7 @@ import {
   Activity,
   Globe,
   ArrowRight,
+  Wrench,
 } from "lucide-react";
 
 export default function HelpPage() {
@@ -58,7 +59,7 @@ export default function HelpPage() {
     scrollToContent();
   };
 
-  // 💎 DATA: Categories
+  // 💎 DATA: Categories (Updated for Phase 4)
   const categories = [
     {
       id: "Technical",
@@ -75,16 +76,16 @@ export default function HelpPage() {
       color:
         "group-hover:border-ruby/50 group-hover:shadow-[0_0_30px_rgba(224,17,95,0.2)]",
       title: "Account",
-      desc: "Guest mode, Wishlists, and Cloud saves.",
+      desc: "User accounts, wishlists, and profiles.",
       action: "filter",
     },
     {
-      id: "Developers",
-      icon: <Code2 size={24} className="text-emerald-400" />,
+      id: "Creators",
+      icon: <Wrench size={24} className="text-emerald-400" />,
       color:
         "group-hover:border-emerald-500/50 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]",
-      title: "Developers",
-      desc: "Submit, Update, or Claim projects.",
+      title: "The Forge",
+      desc: "Publishing, dashboards, and project management.",
       action: "filter",
     },
     {
@@ -93,7 +94,7 @@ export default function HelpPage() {
       color:
         "group-hover:border-amber-500/50 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]",
       title: "Safety",
-      desc: "Virus scans and file safety.",
+      desc: "Download safety and content moderation.",
       action: "filter",
     },
     {
@@ -101,8 +102,8 @@ export default function HelpPage() {
       icon: <Globe size={24} className="text-violet-400" />,
       color:
         "group-hover:border-violet-500/50 group-hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]",
-      title: "App Features",
-      desc: "How to install this site as an App (PWA).",
+      title: "Platform Features",
+      desc: "Search, discovery, and platform capabilities.",
       action: "filter",
     },
     {
@@ -111,13 +112,13 @@ export default function HelpPage() {
       color:
         "group-hover:border-white/30 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]",
       title: "System Status",
-      desc: "Check if the website is online.",
+      desc: "Check platform health and uptime.",
       link: "/status",
       action: "link",
     },
   ];
 
-  // 💎 DATA: Detailed Answers
+  // 💎 DATA: Updated FAQs for Phase 4
   const faqs = [
     // --- TECHNICAL ---
     {
@@ -142,71 +143,109 @@ export default function HelpPage() {
       category: "Technical",
       question: "The download link is broken.",
       answer:
-        "We link to external sites (Itch.io, Drive). If a link stops working, please click 'Report Issue' on the game page or contact us so we can fix it.",
+        "We link to external sites and creator-hosted files. If a link stops working, please click 'Report Issue' on the game page or contact us so we can fix it.",
     },
-    // --- ACCOUNT ---
+
+    // --- ACCOUNT (Updated) ---
     {
       category: "Account",
       question: "Do I need to sign up?",
       answer:
-        "No. You are currently using a 'Guest Session'. Your Wishlist is saved to this device automatically. You don't need an email to use the site.",
+        "No account is required to browse and download. However, creating an account lets you save wishlists, publish projects, and access creator tools.",
     },
     {
       category: "Account",
-      question: "When can I save my data to the cloud?",
+      question: "How do I create an account?",
       answer:
-        "Real accounts are coming soon in the next update. This will allow you to save your Wishlist and sync it across your phone and computer.",
+        "Click 'Sign Up' in the top navigation. You can sign up with email or social login. Once registered, you'll be able to save wishlists and access The Forge creator platform.",
     },
-    // --- DEVELOPERS (UPDATED) ---
     {
-      category: "Developers",
-      question: "How do I submit my game?",
+      category: "Account",
+      question: "What are user archetypes?",
+      answer:
+        "When you create an account, you choose an archetype (Hunter, Netrunner, Curator, Phantom, or Architect) that personalizes your experience and feed algorithm.",
+    },
+
+    // --- CREATORS (The Forge) ---
+    {
+      category: "Creators",
+      question: "How do I publish my project?",
       answer: (
         <span>
-          Submissions are open via our Google Form.{" "}
+          Create an account, then visit{" "}
           <a
             href="/publish"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-ruby hover:text-white underline font-bold"
+            className="text-emerald-400 hover:text-white underline font-bold"
           >
-            Click here to submit your project
+            The Forge
           </a>
-          . We review all entries manually.
+          . You can upload projects directly, manage assets, and control your portfolio through your creator dashboard.
         </span>
       ),
     },
     {
-      category: "Developers",
-      question: "How do I update my game version?",
+      category: "Creators",
+      question: "What can I upload to The Forge?",
       answer:
-        "Please re-submit the Google Form with the new links and version number, OR use the Contact page to message us directly with your Game Name and the update details.",
+        "You can publish games, applications, tools, and digital assets. Upload cover images, screenshots, videos, and provide download links. All content is moderated for quality and safety.",
     },
     {
-      category: "Developers",
-      question: "My game is listed. How do I claim it?",
+      category: "Creators",
+      question: "How do I manage my published projects?",
       answer:
-        "The 'Claim Protocol' is coming soon (Phase 3). Once active, you will be able to click 'Claim Project' on the game page to request an Architect Account. All claims will be manually verified by our team.",
+        "Access your creator dashboard at /[username]/dashboard. From there you can edit projects, upload new versions, manage assets, and view your public portfolio.",
     },
     {
-      category: "Developers",
-      question: "Do I need a Developer Account?",
+      category: "Creators",
+      question: "Can I update my project after publishing?",
       answer:
-        "Not yet. Architect Accounts are currently in development. For now, you can submit and manage your content simply by using the forms and contact channels.",
+        "Yes! Use your creator dashboard to edit project details, upload new versions, add screenshots, or update download links at any time.",
     },
-    // --- SAFETY ---
+    {
+      category: "Creators",
+      question: "How do I claim an existing project?",
+      answer:
+        "If your project was previously featured on RubyApks, contact us through the support form to verify ownership and claim it for your creator account.",
+    },
+
+    // --- SAFETY (Updated) ---
     {
       category: "Safety",
       question: "Are files safe to download?",
       answer:
-        "We manually review submissions and prefer links from trusted sources like Itch.io or Steam. However, as an indie marketplace, we always recommend using an antivirus on your device.",
+        "We manually review all submissions and use external link warnings for downloads. Community projects go through moderation, but we always recommend using antivirus software.",
     },
-    // --- FEATURES ---
+    {
+      category: "Safety",
+      question: "How do I report inappropriate content?",
+      answer:
+        "Click 'Report Issue' on any project page, or use the contact form. We take content reports seriously and investigate all submissions promptly.",
+    },
+    {
+      category: "Safety",
+      question: "What is the external link warning?",
+      answer:
+        "When downloading files hosted externally, you'll see a safety warning with the domain name. This helps you make informed decisions about downloads.",
+    },
+
+    // --- FEATURES (Updated) ---
     {
       category: "Features",
-      question: "How do I install this site as an App?",
+      question: "How does the unified discovery work?",
       answer:
-        "Mobile: Tap 'Share' (iOS) or 'Menu' (Android) -> 'Add to Home Screen'. Desktop: Look for the install icon in your browser's address bar.",
+        "Our platform combines curated content from RubyApks with community-published projects from The Forge, giving you access to both established and fresh content in one place.",
+    },
+    {
+      category: "Features",
+      question: "How do I search for specific content?",
+      answer:
+        "Use the search bar to find projects by name, developer, or tags. You can also filter by platform, genre, or content type in the Explore section.",
+    },
+    {
+      category: "Features",
+      question: "What are wishlists and how do they work?",
+      answer:
+        "Wishlists let you save interesting projects for later. Your wishlist is private by default but can be made public to share with others. Access it from your profile menu.",
     },
   ];
 
@@ -251,7 +290,7 @@ export default function HelpPage() {
               </span>
             </h1>
             <p className="text-slate-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-              Find answers, fix installation issues, or contact our team.
+              Find answers about downloads, creator tools, accounts, and platform features.
             </p>
 
             {/* Search Bar */}
@@ -264,7 +303,7 @@ export default function HelpPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search for help (e.g. 'Install', 'Claim', 'Zip')..."
+                  placeholder="Search for help (e.g. 'publish', 'account', 'download')..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -280,7 +319,6 @@ export default function HelpPage() {
           </div>
 
           {/* --- CATEGORY GRID --- */}
-          {/* Fades out slightly when searching */}
           <div
             className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24 transition-all duration-500 ${
               searchQuery ? "opacity-50 grayscale scale-95" : "opacity-100"
@@ -319,7 +357,7 @@ export default function HelpPage() {
                       group relative bg-surface/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl 
                       transition-all duration-300 hover:-translate-y-1 hover:bg-surface/60 cursor-pointer ${cat.color}
                     `}
-                  >
+                                  >
                     <ArrowRight
                       className="absolute top-6 right-6 text-slate-600 group-hover:text-white transition-colors"
                       size={20}
@@ -363,6 +401,8 @@ export default function HelpPage() {
                   ? `Search Results: "${searchQuery}"`
                   : activeFilter === "All"
                   ? "Common Questions"
+                  : activeFilter === "Creators"
+                  ? "The Forge"
                   : activeFilter}
               </h2>
               <div className="h-px bg-white/10 flex-1" />
@@ -381,7 +421,7 @@ export default function HelpPage() {
                     >
                       <div>
                         <span className="text-[10px] font-bold text-ruby uppercase tracking-widest mb-2 block">
-                          {faq.category}
+                          {faq.category === "Creators" ? "The Forge" : faq.category}
                         </span>
                         <span className="font-bold text-lg text-slate-200 group-hover:text-white transition-colors">
                           {faq.question}
@@ -451,8 +491,8 @@ export default function HelpPage() {
                   Still need help?
                 </h2>
                 <p className="text-slate-400 max-w-md text-lg font-medium">
-                  If you couldn't find the solution above, our team is ready to
-                  assist.
+                  Can't find what you're looking for? Our team provides direct support 
+                  for creators, users, and technical issues.
                 </p>
               </div>
 
@@ -461,13 +501,13 @@ export default function HelpPage() {
                   href="/contact"
                   className="inline-flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-ruby hover:text-white transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(224,17,95,0.4)] hover:-translate-y-1 cursor-pointer"
                 >
-                  <MessageCircle size={16} /> Contact Us
+                  <MessageCircle size={16} /> Contact Support
                 </Link>
                 <Link
                   href="/status"
                   className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs text-slate-400 hover:text-white border border-white/10 hover:border-white/30 transition-all hover:bg-white/5 cursor-pointer"
                 >
-                  <Server size={16} /> System Status
+                  <Server size={16} /> Platform Status
                 </Link>
               </div>
             </div>
