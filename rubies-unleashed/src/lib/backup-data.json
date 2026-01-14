@@ -3,6 +3,97 @@
     "entry": [
       {
         "id": {
+          "$t": "tag:blogger.com,1999:blog-4882300547081353236.post-3130587960169271609"
+        },
+        "published": {
+          "$t": "2026-01-13T13:59:00.000-08:00"
+        },
+        "updated": {
+          "$t": "2026-01-13T14:29:34.091-08:00"
+        },
+        "category": [
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Apps"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "chrome extension"
+          },
+          {
+            "scheme": "http://www.blogger.com/atom/ns#",
+            "term": "Web"
+          }
+        ],
+        "title": {
+          "type": "text",
+          "$t": "YScroll"
+        },
+        "content": {
+          "type": "html",
+          "$t": "<!--1. COVER IMAGE-->\n<!--==========================================-->\n<div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgahcNLdJd-eEJf7_5llkA-IUNtVrrQoYb8pffQpLZTzsCS09z5MfS9uTil9UBLOE-9veTvi40fFMicQI2X8gUHekqlyhV0izXkRaCxO379kz5LMEObfqNDZwYtU_p6UGidnozCuybEI2i-8vK2Yi_twcnbkfHAFESOmcL5xS3x_H19Yt3wUiCH9RJCcCo/s259/logo%20-%20Sanyi%20Diriba.png\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Game Cover\" border=\"0\" data-original-height=\"259\" data-original-width=\"259\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgahcNLdJd-eEJf7_5llkA-IUNtVrrQoYb8pffQpLZTzsCS09z5MfS9uTil9UBLOE-9veTvi40fFMicQI2X8gUHekqlyhV0izXkRaCxO379kz5LMEObfqNDZwYtU_p6UGidnozCuybEI2i-8vK2Yi_twcnbkfHAFESOmcL5xS3x_H19Yt3wUiCH9RJCcCo/s16000/logo%20-%20Sanyi%20Diriba.png\" /></a></div><br />\n\n<!--==========================================-->\n<!--2. GAME DESCRIPTION (MUST COME FIRST!)-->\n<!--==========================================-->\n<div style=\"text-align: left;\">\n    <p style=\"line-height: 1.6;\"><span style=\"font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">Take back control of your time. YScroll helps you limit endless scrolling, stay focused, and get more done — automatically.</span></span></p></div>\n\n<!--==========================================-->\n<!--3. METADATA BOX-->\n<!--==========================================-->\n<div style=\"background-color: whitesmoke; border-radius: 5px; margin: 20px 0px; padding: 15px;\">\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Developer - <a href=\"https://www.linkedin.com/in/sanyi-diriba/\" target=\"_blank\">Sanyi Diriba</a></span>\n    </div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Version - 1.0</span></div>\n    <div style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif; font-size: 14px; text-align: left;\">\n        <span style=\"color: #404040;\">Build - Windows, Mac, Linux, Android, HTML5</span></div></div>\n\n<!--==========================================-->\n<!--5. FEATURES-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Features:</u>\n    </span>\n</h3>\n\n<div style=\"background-color: white;\">\n    <ul style=\"line-height: 1.6; margin: 0.5em 0px; padding: 0px 2.5em;\">\n        <li style=\"margin: 0px 0px 0.5em; padding: 0px; text-align: left;\"><span style=\"color: #404040; font-family: Georgia, Times New Roman, serif;\"><span style=\"font-size: 14px;\">Set Daily, Per Session and Cool Down Limit</span></span></li></ul></div>\n\n<br />\n\n<!--==========================================-->\n<!--11. SCREENSHOTS-->\n<!--==========================================-->\n<h3 style=\"color: #e0115f; text-align: center;\">\n    <span style=\"font-family: 'Georgia', 'Times New Roman', serif;\">\n        <u>Screenshots:</u></span></h3><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjq0J9i8aj3c9futcKt2-LwJq_0c_jOkURHIpUWg6dyRgJ7pvRrKn0rqhtFtX1OB4aX_sQs-FHzc7ugrsBMsgcu8eiroLh_OZqIcz1h0sGINvXxQY6ISxkQCu_kwb3IcEorgCYMaS0DLp2hpPSRxKGLyDN0dxNfsDDD6w6nVd4luSzs1davphKnLod5gkk/s1200/1%20-%20Sanyi%20Diriba.png\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 1\" border=\"0\" data-original-height=\"628\" data-original-width=\"1200\" height=\"167\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjq0J9i8aj3c9futcKt2-LwJq_0c_jOkURHIpUWg6dyRgJ7pvRrKn0rqhtFtX1OB4aX_sQs-FHzc7ugrsBMsgcu8eiroLh_OZqIcz1h0sGINvXxQY6ISxkQCu_kwb3IcEorgCYMaS0DLp2hpPSRxKGLyDN0dxNfsDDD6w6nVd4luSzs1davphKnLod5gkk/w320-h167/1%20-%20Sanyi%20Diriba.png\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh1ssCzCZJnESBMAIIcy_pjNwu5aBu7cw_wmSHK5DI_j-HitAnwYRsklMjxPTfe27JA2NgYUg4qUlh8WxeFs7bmdr9oOJgVIwuMdCJxZOnmhLJMDsodqmtUEm1IhWQB2B3sLDZhtixPiejmiwxR7N1wxgAFyEXSEBh0WV8jRUbibQlyijKY4sQAGnN2kF0/s1200/2%20-%20Sanyi%20Diriba.png\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 2\" border=\"0\" data-original-height=\"628\" data-original-width=\"1200\" height=\"167\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh1ssCzCZJnESBMAIIcy_pjNwu5aBu7cw_wmSHK5DI_j-HitAnwYRsklMjxPTfe27JA2NgYUg4qUlh8WxeFs7bmdr9oOJgVIwuMdCJxZOnmhLJMDsodqmtUEm1IhWQB2B3sLDZhtixPiejmiwxR7N1wxgAFyEXSEBh0WV8jRUbibQlyijKY4sQAGnN2kF0/w320-h167/2%20-%20Sanyi%20Diriba.png\" width=\"320\" /></a></div><br /><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVwJ7_XQ0AgTDsLtIF2fTAa1FAsCLVIBVyJ0JM9S3EVVO5n_siPqhqMlY0eYtd8DJzBJCO9FXQ6ufHTq2vjhP2KRAt_P8xL3jOcwqKIsEMyHjSC_ccdFudGb01Je99t1GDAyURAb7_u4yLmPoQMqphFTNjglIEtv1KP43J2BB7b5g1tylAnYtraWy2niM/s1200/3%20-%20Sanyi%20Diriba.png\" style=\"margin-left: 1em; margin-right: 1em;\"><img alt=\"Gameplay Screenshot 3\" border=\"0\" data-original-height=\"628\" data-original-width=\"1200\" height=\"167\" src=\"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVwJ7_XQ0AgTDsLtIF2fTAa1FAsCLVIBVyJ0JM9S3EVVO5n_siPqhqMlY0eYtd8DJzBJCO9FXQ6ufHTq2vjhP2KRAt_P8xL3jOcwqKIsEMyHjSC_ccdFudGb01Je99t1GDAyURAb7_u4yLmPoQMqphFTNjglIEtv1KP43J2BB7b5g1tylAnYtraWy2niM/w320-h167/3%20-%20Sanyi%20Diriba.png\" width=\"320\" /></a></div><div><br /></div><div><h3 style=\"color: #e0115f; text-align: center;\"><span style=\"font-family: 'Georgia', 'Times New Roman', serif;\"><u><b>Download:</b></u></span></h3><!--✅ WINDOWS DOWNLOAD--><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://yscroll.xyz\" target=\"_blank\"><img alt=\"Play in Browser\" border=\"0\" data-original-height=\"150\" data-original-width=\"427\" height=\"91\" src=\"https://1.bp.blogspot.com/-amKziz2-_-I/X-Sh3po81eI/AAAAAAAABIc/A_t-jvUXv4IOpBH1HzKGzMMyoZAn5yPIACLcBGAsYHQ/w320-h91/button%2Bdone.webp\" width=\"320\" /></a></div></div><div class=\"separator\" style=\"clear: both; text-align: center;\"><br /></div><div class=\"separator\" style=\"clear: both; text-align: center;\"><a href=\"https://chromewebstore.google.com/detail/hlnhamlgmoijbfhilkanhifompndjaho\" target=\"_blank\"><img alt=\"Play in Browser\" border=\"0\" data-original-height=\"150\" data-original-width=\"427\" src=\"https://1.bp.blogspot.com/-amKziz2-_-I/X-Sh3po81eI/AAAAAAAABIc/A_t-jvUXv4IOpBH1HzKGzMMyoZAn5yPIACLcBGAsYHQ/s0/button%2Bdone.webp\" width=\"320\" /></a></div>"
+        },
+        "link": [
+          {
+            "rel": "replies",
+            "type": "application/atom+xml",
+            "href": "https://rubyapk.blogspot.com/feeds/3130587960169271609/comments/default",
+            "title": "Post Comments"
+          },
+          {
+            "rel": "replies",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/yscroll.html#comment-form",
+            "title": "0 Comments"
+          },
+          {
+            "rel": "edit",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/3130587960169271609"
+          },
+          {
+            "rel": "self",
+            "type": "application/atom+xml",
+            "href": "https://www.blogger.com/feeds/4882300547081353236/posts/default/3130587960169271609"
+          },
+          {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://rubyapk.blogspot.com/2026/01/yscroll.html",
+            "title": "YScroll"
+          }
+        ],
+        "author": [
+          {
+            "name": {
+              "$t": "Daniel"
+            },
+            "uri": {
+              "$t": "http://www.blogger.com/profile/15206375618270590204"
+            },
+            "email": {
+              "$t": "noreply@blogger.com"
+            },
+            "gd$image": {
+              "rel": "http://schemas.google.com/g/2005#thumbnail",
+              "width": "32",
+              "height": "32",
+              "src": "//blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi1GdyGNofLyAImIEAAX7oIfoSBm_iu7cqL6u35Zji6aEknh7sY8dlQyIkwNk95f63UwOfYe6M2dfDRVNGHAuj-s19e7dLzxr3EdSNLQPSTY_P92p1c2TmtKpTPZhiGHg/s113/download+%282%29.jpg"
+            }
+          }
+        ],
+        "media$thumbnail": {
+          "xmlns$media": "http://search.yahoo.com/mrss/",
+          "url": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgahcNLdJd-eEJf7_5llkA-IUNtVrrQoYb8pffQpLZTzsCS09z5MfS9uTil9UBLOE-9veTvi40fFMicQI2X8gUHekqlyhV0izXkRaCxO379kz5LMEObfqNDZwYtU_p6UGidnozCuybEI2i-8vK2Yi_twcnbkfHAFESOmcL5xS3x_H19Yt3wUiCH9RJCcCo/s72-c/logo%20-%20Sanyi%20Diriba.png",
+          "height": "72",
+          "width": "72"
+        },
+        "thr$total": {
+          "$t": "0"
+        }
+      },
+      {
+        "id": {
           "$t": "tag:blogger.com,1999:blog-4882300547081353236.post-2860549366488016355"
         },
         "published": {
@@ -7250,9 +7341,9 @@
       }
     ],
     "_metadata": {
-      "generatedAt": "2026-01-13T21:30:07.218Z",
+      "generatedAt": "2026-01-14T00:32:14.122Z",
       "source": "Merge (Vault + Live)",
-      "totalPosts": 59
+      "totalPosts": 60
     }
   }
 }
