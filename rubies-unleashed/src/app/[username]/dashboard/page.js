@@ -6,6 +6,8 @@ export const metadata = {
   robots: 'noindex'
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage({ params }) {
   const { username } = await params;
 

@@ -2,13 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
-import { getSmartTag, getTagStyle } from "@/lib/game-utils";
+import { getSmartTag, getTagStyle, getBetaBadge } from "@/lib/game-utils";
+import { Zap } from "lucide-react";
 
 export default function GameCard({ game, onClick, priority = false }) {
   if (!game) return null;
 
   const smartTag = getSmartTag(game.tags);
   const tagStyle = getTagStyle(smartTag);
+  const betaBadge = getBetaBadge(game.tags);
 
   // Common Inner Content
   const CardContent = () => (
@@ -58,6 +60,14 @@ export default function GameCard({ game, onClick, priority = false }) {
     
     return null;
   })()}
+        {/* ✅ NEW: Beta Badge */}
+  {betaBadge && (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-bold uppercase tracking-widest">
+      <Zap size={10} />
+      {betaBadge.label}
+    </span>
+  )}
+
 </div>
         <h4 className="text-white font-bold text-sm leading-tight line-clamp-2 drop-shadow-md group-hover:text-ruby-light transition-colors">
           {game.title}

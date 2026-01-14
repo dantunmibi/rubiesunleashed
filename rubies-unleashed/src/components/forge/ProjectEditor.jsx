@@ -12,6 +12,11 @@ import {
   Youtube, Layers, ShieldCheck, User, Calendar, Save, Cpu, Keyboard, AlertTriangle, Lightbulb,
   Gamepad2, AppWindow, Play, Scale, ArrowLeft, ArrowRight
 } from 'lucide-react';
+import { 
+  PROJECT_STATUSES, 
+  detectProjectStatus, 
+  injectStatusTag 
+} from "@/lib/game-utils";
 
 /**
  * 🎨 CONSTANTS & CONFIGURATION
@@ -106,6 +111,7 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
   const [uploading, setUploading] = useState(false);
   const [activeSection, setActiveSection] = useState('basics');
   const [isDirty, setIsDirty] = useState(false);
+  const [projectStatus, setProjectStatus] = useState('stable');
 
   // --- STATE INITIALIZATION ---
   // Hydrates from existing project prop or sets defaults for new creation.
@@ -137,8 +143,24 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
     
     // Safety
     size: project?.size || "",
-    age_rating: project?.age_rating || "Not Rated",
-    content_warning: project?.content_warning || ""
+    age_rating: project?.age_rating || "All Ages",
+  content_warning: (() => {
+    const warning = project?.content_warning;
+    // Handle empty array string, actual empty arrays, null, or whitespace
+    if (!warning || 
+        warning === '[]' || 
+        warning === '' || 
+        (Array.isArray(warning) && warning.length === 0) ||
+        (typeof warning === 'string' && warning.trim() === '')) {
+      return "";
+    }
+    // If it's an array, join it
+    if (Array.isArray(warning)) {
+      return warning.join('\n');
+    }
+    // Return as-is if it's a valid string
+    return warning;
+  })()
   });
 
   // Temporary inputs for adding to arrays
@@ -419,6 +441,14 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
       onInputChange: (v) => setInputs(p => ({ ...p, [key]: v })),
       onAdd: () => handleArrayAdd(field, key)
   });
+
+// Initialize project status from tags when project loads
+useEffect(() => {
+  if (project?.tags) {
+    const initialStatus = detectProjectStatus(project.tags);
+    setProjectStatus(initialStatus);
+  }
+}, [project?.id]);
   
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
@@ -551,6 +581,35 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
                                     <Input label="Build Version" value={formData.version} onChange={v => updateField('version', v)} placeholder="1.0.0" theme={themeFocus} />
                                 </div>
 
+                                {/* Project Status Dropdown */}
+<div className="space-y-2">
+  <label className="text-xs font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2">
+    <AlertTriangle size={14} /> Project Status
+  </label>
+  <select
+    value={projectStatus}
+    onChange={(e) => {
+      const newStatus = e.target.value;
+      setProjectStatus(newStatus);
+      
+      // Auto-inject status tag
+      const updatedTags = injectStatusTag(formData.tags, newStatus);
+      handleChange(() => setFormData(prev => ({ ...prev, tags: updatedTags })));
+    }}
+    className={`w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white ${themeFocus} outline-none appearance-none cursor-pointer`}
+  >
+    {PROJECT_STATUSES.map(status => (
+      <option key={status.value} value={status.value}>
+        {status.label}
+      </option>
+    ))}
+  </select>
+  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+    <Lightbulb size={12} className="text-amber-500" />
+    {PROJECT_STATUSES.find(s => s.value === projectStatus)?.description || 'Set development stage'}
+  </p>
+</div>
+
                                 <Input area label="Short Summary (Card)" value={formData.description} onChange={v => updateField('description', v)} placeholder="Brief hook (1-2 sentences)..." theme={themeFocus} h="h-24" />
                                 <Input area label="Full Description (Markdown)" value={formData.full_description} onChange={v => updateField('full_description', v)} placeholder="Deep dive, story, instructions..." theme={themeFocus} h="h-40" />
 
@@ -627,7 +686,7 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
             <div className="flex-1 space-y-3">
                 <div>
                     <label className="text-xs font-bold uppercase text-white tracking-widest flex items-center gap-2 mb-1">
-                        <ImageIcon size={14} className={themeText} /> Cover Art
+                        <ImageIcon size={14} className={themeText} /> Project Icon
                     </label>
                     <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm">
                         The face of your project. Used in cards and search.
@@ -737,13 +796,10 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
                                     onChange={e => updateField('age_rating', e.target.value)}
                                     className={`w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white ${themeFocus} outline-none`}
                                 >
-                                    <option value="NR">Not Rated</option>
-                                    <option value="3+">3+</option>
-                                    <option value="7+">7+</option>
-                                    <option value="12+">12+</option>
-                                    <option value="13+">13+</option>
-                                    <option value="16+">16+</option>
-                                    <option value="18+">18+</option>
+                                    <option value="All Ages">All Ages</option>
+                                    <option value="Teen (12+)">Teen (12+)</option>
+                                    <option value="Mature (16+)">Mature (16+)</option>
+                                    <option value="Adults Only (18+)">Adults Only (18+)</option>
                                 </select>
                                 </div>
 
@@ -821,42 +877,42 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
     <div className="sticky top-32 space-y-6">
         <p className="text-xs font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2"><Layers size={14}/> Asset Preview</p>
         
-        {/* Preview Card */}
-        <div className="bg-[#161b2c] border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">
-            
-            {/* ASPECT RATIO: 2:3 (Matches 3/4.5 from GameCard) */}
-            <div className="aspect-3/4.5 bg-black relative group">
-                <img 
-                    src={formData.cover_url || PLACEHOLDER_COVER} 
-                    className="w-full h-full object-cover opacity-80" 
-                    onError={(e) => e.target.src = PLACEHOLDER_COVER}
-                />
-                
-                <div className="absolute inset-0 bg-linear-to-t from-[#161b2c] via-transparent to-transparent" />
-                
-                <div className="absolute bottom-0 left-0 p-6 w-full">
-                    <div className="flex gap-2 mb-3">
-                        <span className={`px-2 py-1 ${themeBgLight} ${themeText} ${themeBorderLight} border rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1`}>
-                            {formData.type}
-                        </span>
-                        {formData.tags[0] && (
-                            <span className="px-2 py-1 bg-white/10 text-slate-300 border border-white/10 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                                {formData.tags[0]}
-                            </span>
-                        )}
-                    </div>
-                    <h3 className="text-2xl font-black text-white uppercase leading-none mb-2 line-clamp-2">
-                        {formData.title || "Untitled Project"}
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">
-                        <User size={12}/> {formData.developer || user?.user_metadata?.username || "You"}
-                    </div>
-                    <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
-                        {formData.description || "Project summary will appear here..."}
-                    </p>
-                </div>
+{/* Preview Card */}
+<div className="bg-[#161b2c] border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">
+    
+    {/* ASPECT RATIO: 3:4.5 using explicit calculation */}
+    <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: '3 / 4.5' }}>
+        <img 
+            src={formData.cover_url || PLACEHOLDER_COVER} 
+            className="w-full h-full object-cover opacity-80"
+            onError={(e) => e.target.src = PLACEHOLDER_COVER}
+        />
+        
+        <div className="absolute inset-0 bg-linear-to-t from-[#161b2c] via-transparent to-transparent pointer-events-none" />
+        
+        <div className="absolute bottom-0 left-0 p-6 w-full z-10">
+            <div className="flex gap-2 mb-3">
+                <span className={`px-2 py-1 ${themeBgLight} ${themeText} ${themeBorderLight} border rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1`}>
+                    {formData.type}
+                </span>
+                {formData.tags[0] && (
+                    <span className="px-2 py-1 bg-white/10 text-slate-300 border border-white/10 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                        {formData.tags[0]}
+                    </span>
+                )}
             </div>
+            <h3 className="text-2xl font-black text-white uppercase leading-none mb-2 line-clamp-2">
+                {formData.title || "Untitled Project"}
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">
+                <User size={12}/> {formData.developer || currentUsername || "You"}
+            </div>
+            <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                {formData.description || "Project summary will appear here..."}
+            </p>
         </div>
+    </div>
+</div>
                     
                     {/* Status Stats */}
                     <div className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl text-xs text-slate-500 font-mono space-y-1">

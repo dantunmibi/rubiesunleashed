@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { 
   ArrowLeft, Download, Gamepad2, Heart, Box, Share2, 
-  ShieldCheck, Calendar, User, Gem, Info 
+  ShieldCheck, Calendar, User, Gem, Info, Zap
 } from "lucide-react";
 import { getDownloadIcon, getDownloadLabel } from "@/lib/game-utils";
 import { getGameTheme } from "@/lib/theme-utils";
 import { useState, useEffect } from "react";
-import ExternalLinkWarning from "@/components/ui/ExternalLinkWarning"; // ✅ Add import
+import ExternalLinkWarning from "@/components/ui/ExternalLinkWarning";
+import { getBetaBadge } from "@/lib/game-utils";
 
 /**
  * GameHero Component
@@ -196,6 +197,8 @@ const getButtonLabel = () => {
   ).toUpperCase();
 };
 
+const betaBadge = getBetaBadge(game.tags);
+
   return (
     <>
       <div className="relative w-full overflow-hidden bg-[#0b0f19]">
@@ -269,6 +272,13 @@ const getButtonLabel = () => {
   <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theme.bgLight} ${theme.border} ${theme.text} text-[10px] font-black uppercase tracking-widest shadow-lg shadow-ruby/10`}>
     <Gem size={12} /> {game.tag || (isApp ? "App" : "Game")}
   </div>
+
+  {/* ✅ NEW: Beta Badge */}
+  {betaBadge && (
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest shadow-lg">
+      <Zap size={12} /> {betaBadge.label}
+    </div>
+  )}
   
   {/* ✅ NEW: Project Type Badges */}
   {(() => {
@@ -348,7 +358,7 @@ const getButtonLabel = () => {
           onClick={(e) => handleDownloadClick(e, link.url)}
           className={`${theme.bg} hover:brightness-110 text-white px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1 shadow-lg cursor-pointer`}
         >
-          {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform, game.tags)}
+          {getDownloadIcon(link.platform)} {getDownloadLabel(link.platform, game.tags, link.url)}
         </button>
       ))}
     </div>

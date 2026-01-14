@@ -13,10 +13,11 @@
 import React, { useState, useEffect } from "react";
 import { useWishlist } from "@/hooks/useWishlist";
 import AuthModal from "@/components/auth/AuthModal";
-import ExternalLinkWarning from "@/components/ui/ExternalLinkWarning"; // ✅ Add import
+import ExternalLinkWarning from "@/components/ui/ExternalLinkWarning";
+import { getBetaBadge } from "@/lib/game-utils";
 import { 
   X, Heart, Download, ArrowRight, AlertTriangle, Eye, 
-  User, GitBranch
+  User, GitBranch, Zap
 } from "lucide-react";
 import Link from "next/link";
 import { getDownloadIcon, getDownloadLabel } from "@/lib/game-utils";
@@ -120,6 +121,8 @@ const handleDownloadClick = (e, url, linkType = 'download') => {
 
   const isLongTitle = game.title.length > 25;
   const desktopHeightClass = isLongTitle ? "md:h-[500px]" : "md:h-[460px]";
+// ✅ Get beta badge if exists
+const betaBadge = getBetaBadge(game.tags);
 
   return (
     <>
@@ -210,6 +213,14 @@ const handleDownloadClick = (e, url, linkType = 'download') => {
                      <theme.icon size={10} />
                      {theme.badge}
                   </span>
+
+                    {/* ✅ NEW: Beta Badge */}
+  {betaBadge && (
+    <span className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase tracking-[0.15em] rounded-sm">
+      <Zap size={10} />
+      {betaBadge.label}
+    </span>
+  )}
                 </div>
                 
                 <h2 className="text-3xl sm:text-5xl font-black text-white leading-none uppercase tracking-tighter mb-3 italic">
@@ -227,13 +238,13 @@ const handleDownloadClick = (e, url, linkType = 'download') => {
                 <div className="grid grid-cols-2 gap-3">
                   
                   {/* Developer */}
-                  <div className={`p-3 bg-background border border-white/5 rounded-sm ${theme.borderHover} transition-colors`}>
+                  <Link href={`/${game.developer}/projects`} className={`p-3 bg-background border border-white/5 rounded-sm ${theme.borderHover} transition-colors`}>
                     <p className="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] mb-0.5">Developer</p>
                     <div className="flex items-center justify-between text-white font-bold text-[10px] uppercase tracking-wider">
                         <span className="truncate pr-2">{game.developer || "Unknown"}</span>
                         <User size={12} className={`${theme.text} shrink-0`} />
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Version */}
                   <div className={`p-3 bg-background border border-white/5 rounded-sm ${theme.borderHover} transition-colors`}>

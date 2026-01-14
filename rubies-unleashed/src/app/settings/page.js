@@ -22,6 +22,8 @@ const TABS = [
   { id: 'security', label: 'Security & Privacy', icon: Shield },
 ];
 
+export const dynamic = "force-dynamic";
+
 // --- 1. MAIN EXPORT (WRAPPER) ---
 export default function SettingsPage() {
   return (

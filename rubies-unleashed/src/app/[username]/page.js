@@ -1,3 +1,7 @@
+// ✅ ISR: Regenerate every hour, serve stale content while revalidating
+export const revalidate = 3600; // 1 hour
+// 
+
 import { supabase } from "@/lib/supabase";
 import ProfileClient from "./ProfileClient";
 

@@ -1,38 +1,42 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ✅ 1. React Compiler (Moved to Top Level for Next.js 15)
+  // ✅ REMOVED: output: 'export' (using Netlify SSR instead)
+
+  // ✅ React Compiler
   reactCompiler: true,
 
-  // ✅ 2. Image Optimization (CRITICAL for Blogger CMS)
+  // ✅ Image Optimization (Re-enabled)
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'blogger.googleusercontent.com', // Primary Image Host
+        hostname: 'blogger.googleusercontent.com',
       },
       {
         protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',     // Secondary Google Host
+        hostname: 'lh3.googleusercontent.com',
       },
       {
         protocol: 'https',
-        hostname: 'img.youtube.com',               // Video Thumbnails
+        hostname: 'img.youtube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dcnyisjzvnmzweqkolqe.supabase.co', // Supabase Storage
       },
     ],
-    // Dangerously allow SVG if needed for badges, though Lucide is safer
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // ✅ 3. Strict React Mode
+  // ✅ Strict Mode
   reactStrictMode: true,
 
-  // ✅ 4. Experimental (Empty for now, viewTransition is native)
-  experimental: {
-  },
+  // ✅ Experimental Features
+  experimental: {},
   
-  // ✅ ADD: Ensure proxy.js is recognized
+  // ✅ Page Extensions
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
 };
 

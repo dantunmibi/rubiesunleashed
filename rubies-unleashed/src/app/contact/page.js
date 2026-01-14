@@ -12,11 +12,13 @@
 
 "use client";
 
+import Link from "next/link";
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
   Mail,
   Send,
@@ -27,11 +29,14 @@ import {
   ChevronRight,
   Wrench,
   Users,
-  Shield
+  Shield,
+  AlertTriangle, 
+  CheckCircle 
 } from "lucide-react";
 import { useToastContext } from "@/components/providers/ToastProvider";
 
 function ContactFormLogic() {
+  const { user, profile } = useAuth(); // ✅ Add this
   const searchParams = useSearchParams();
   const defaultSubject = searchParams.get('subject') || "";
 
@@ -42,41 +47,66 @@ function ContactFormLogic() {
     message: "",
   });
   
-// ✅ Updated useEffect to handle subject dropdown and auto-fill message
+// ✅ Updated useEffect with auth-aware message template
 useEffect(() => {
   const subj = searchParams.get('subject');
   
-  // Check if it's a claim request (subject contains "Claim Request:")
+  // Check if it's a claim request
   const isClaimRequest = subj && subj.includes('Claim Request:');
   
-  // Auto-fill message template for claim requests
   let autoMessage = "";
   let dropdownSubject = "";
   
   if (isClaimRequest) {
-    // Set dropdown to "Claim Request" option
     dropdownSubject = "Claim Request";
     
     // Extract game info from subject
     const gameInfo = subj.replace('Claim Request:', '').trim();
     
-    autoMessage = `Hello,
+    // ✅ Get username/developer name from auth session
+    const username = profile?.username || user?.user_metadata?.username || "";
+    const developerName = profile?.developer_name || profile?.display_name || "";
+    
+    // ✅ Build authenticated message template
+    if (user) {
+      autoMessage = `Hello,
 
 I would like to claim this game listing: ${gameInfo}
 
-USERNAME/DEVELOPER NAME: [Enter your username/developer name here]
+USERNAME: ${username}${developerName ? `\nDEVELOPER NAME: ${developerName}` : ''}
+PROFILE LINK: https://rubiesunleashed.netlify.app/${username}
 
 PROOF OF OWNERSHIP: 
 [Please describe how you can prove this is your game. For example:
-- Link to your developer profile
+- Link to your developer profile on other platforms
 - Original source code repository
 - Social media accounts showing development
+- Build files or internal documentation
 - Other verification methods]
 
 Additional Information:
 [Any other details you'd like to share]
 
 Thank you!`;
+    } else {
+      // ✅ Guest user template (prompts to log in)
+      autoMessage = `Hello,
+
+I would like to claim this game listing: ${gameInfo}
+
+⚠️ IMPORTANT: Please log in to your account before submitting this claim.
+This helps us verify your identity and speeds up the approval process.
+
+If you don't have an account yet, please sign up at:
+https://rubiesunleashed.netlify.app/signup
+
+USERNAME (after login): [Will be auto-filled when you log in]
+
+PROOF OF OWNERSHIP: 
+[Please describe how you can prove this is your game]
+
+Thank you!`;
+    }
   } else {
     dropdownSubject = subj || "";
   }
@@ -86,7 +116,7 @@ Thank you!`;
     subject: dropdownSubject,
     message: autoMessage || prev.message
   }));
-}, [searchParams]);
+}, [searchParams, user, profile]); // ✅ Add dependencies
 
   const [status, setStatus] = useState("idle");
   const { showToast } = useToastContext();
@@ -146,6 +176,58 @@ Thank you!`;
                   </p>
                 </div>
               </div>
+              {/* ✅ Auth Status Indicator for Claims */}
+{formData.subject === "Claim Request" && (
+  <div className={`mb-6 p-4 rounded-xl border ${
+    user 
+      ? "bg-emerald-500/10 border-emerald-500/20" 
+      : "bg-amber-500/10 border-amber-500/20"
+  }`}>
+    {user ? (
+      <div className="flex items-start gap-3">
+        <CheckCircle size={20} className="text-emerald-500 shrink-0 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-bold text-emerald-400 mb-1">
+            Authenticated Claim
+          </h4>
+          <p className="text-xs text-slate-300">
+            Submitting as: <strong>{profile?.username || user?.user_metadata?.username}</strong>
+            {profile?.developer_name && ` (${profile.developer_name})`}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Your account info has been pre-filled for faster verification.
+          </p>
+        </div>
+      </div>
+    ) : (
+      <div className="flex items-start gap-3">
+        <AlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-bold text-amber-400 mb-1">
+            Login Recommended
+          </h4>
+          <p className="text-xs text-slate-300 mb-2">
+            Please log in to auto-verify your identity and speed up the claim process.
+          </p>
+          <div className="flex gap-2">
+            <Link
+              href={`/login?redirect=/contact?subject=${encodeURIComponent(formData.subject)}`}
+              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
+            >
+              Log In
+            </Link>
+            <Link
+              href={`/signup?redirect=/contact?subject=${encodeURIComponent(formData.subject)}`}
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <input type="hidden" name="form-name" value="contact" />

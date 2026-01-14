@@ -21,6 +21,7 @@ import {
   Twitter,
   Mail,
   Instagram,
+  Linkedin,
 } from "lucide-react";
 
 export default function Footer() {
@@ -57,7 +58,7 @@ export default function Footer() {
 
             <div className="flex items-center gap-4 pt-2">
               <SocialLink
-                href="https://twitter.com"
+                href="https://twitter.com/rubiesunleashed"
                 icon={<Twitter size={18} />}
                 label="Twitter"
               />
@@ -67,9 +68,9 @@ export default function Footer() {
                 label="Email"
               />
               <SocialLink
-                href="https://github.com"
-                icon={<Instagram size={18} />}
-                label="InstaGram"
+                href="https://linkedin.com/company/rubies-unleashed"
+                icon={<Linkedin size={18} />}
+                label="LinkedIn"
               />
             </div>
           </div>

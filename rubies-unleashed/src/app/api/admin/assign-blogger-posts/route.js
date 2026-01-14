@@ -162,7 +162,7 @@ const projectData = {
   
   // Content Moderation
   content_warning: bloggerPost.contentWarnings || null,
-  age_rating: bloggerPost.ageRating || 'Not Rated',
+  age_rating: bloggerPost.ageRating || 'All Ages',
   size: bloggerPost.size || null,
   
   // Type & Status

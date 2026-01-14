@@ -5,6 +5,9 @@
  * - Server-Side Rendering for SEO & Performance.
  */
 
+// ✅ ISR: Regenerate every hour, serve stale content while revalidating
+export const revalidate = 3600; // 1 hour
+
 import { getGame } from '@/lib/game-service'; // ✅ Hybrid Service
 import { generateJsonLd, generateMetaTags } from '@/lib/seo-utils';
 import ViewClient from '@/components/store/ViewClient';

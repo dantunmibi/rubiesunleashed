@@ -172,7 +172,7 @@ export default function GameSidebar({ game }) {
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div className="flex items-center gap-3 text-slate-400">
                   <AlertCircle size={18} />
-                  <span className="text-sm font-bold">Rating</span>
+                  <span className="text-sm font-bold">Age Rating</span>
                 </div>
                 <span className="text-white font-bold truncate max-w-35 text-right">
                   {game.ageRating}

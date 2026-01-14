@@ -326,74 +326,72 @@ if (profile.role !== "architect" && profile.role !== "admin") {
                   </Link>
                 )}
               </div>
-              ) : (
-                projects.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group relative flex flex-col bg-[#0b0f19] border border-white/4 rounded-2xl overflow-hidden hover:border-emerald-500/20 hover:bg-white/1 transition-all duration-500"
-                  >
-                    {/* Thumbnail */}
-                    <div className="relative aspect-4/3 overflow-hidden bg-black">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 grayscale-20 group-hover:grayscale-0"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-900 text-slate-700">
-                          <Package size={32} />
-                        </div>
-                      )}
+) : (
+  projects.map((item) => (
+    <Link
+      key={item.id}
+      href={`/view/${item.slug}`}
+      className="group relative flex flex-col bg-[#0b0f19] border border-white/4 rounded-2xl overflow-hidden hover:border-emerald-500/20 hover:bg-white/1 transition-all duration-500 cursor-pointer"
+    >
+      {/* Thumbnail */}
+      <div className="relative aspect-4/3 overflow-hidden bg-black">
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 grayscale-20 group-hover:grayscale-0"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-900 text-slate-700">
+            <Package size={32} />
+          </div>
+        )}
 
-                      <div className="absolute inset-0 bg-linear-to-t from-[#0b0f19] via-transparent to-transparent opacity-90" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#0b0f19] via-transparent to-transparent opacity-90" />
 
-                      {/* Badge */}
-                      <div className="absolute bottom-4 left-4">
-                        <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2 bg-[#0b0f19]/80 backdrop-blur-md px-2 py-1 rounded border border-emerald-500/20">
-                          <Zap size={10} /> {item.type || "Module"}
-                        </span>
-                      </div>
-                    </div>
+        {/* Badge */}
+        <div className="absolute bottom-4 left-4">
+          <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2 bg-[#0b0f19]/80 backdrop-blur-md px-2 py-1 rounded border border-emerald-500/20">
+            <Zap size={10} /> {item.type || "Module"}
+          </span>
+        </div>
+      </div>
 
-                    {/* Details */}
-                    <div className="p-6 space-y-4">
-                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-                          {item.platform || "Multi-Platform"}
-                        </p>
-                        <h3 className="text-xl font-bold text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
-                          {item.title}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-slate-400 font-light leading-relaxed line-clamp-2 italic">
-                        "{item.description || "No description provided."}"
-                      </p>
+      {/* Details */}
+      <div className="p-6 space-y-4">
+        <div>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+            {item.platform || "Multi-Platform"}
+          </p>
+          <h3 className="text-xl font-bold text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
+            {item.title}
+          </h3>
+        </div>
+        <p className="text-sm text-slate-400 font-light leading-relaxed line-clamp-2 italic">
+          "{item.description || "No description provided."}"
+        </p>
 
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {item.tags?.slice(0, 3).map((t, i) => (
-                          <span
-                            key={i}
-                            className="text-[9px] font-mono text-slate-500 px-2 py-0.5 border border-white/5 rounded bg-white/2"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
+        {/* Tags */}
+        <div className="flex flex-wrap gap-2 pt-2">
+          {item.tags?.slice(0, 3).map((t, i) => (
+            <span
+              key={i}
+              className="text-[9px] font-mono text-slate-500 px-2 py-0.5 border border-white/5 rounded bg-white/2"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
 
-                      {/* Link */}
-                      <Link
-                        href={`/view/${item.slug}`}
-                        className="pt-4 flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity hover:text-emerald-400"
-                      >
-                        Get Now{" "}
-                        <ChevronRight size={12} className="text-emerald-500" />
-                      </Link>
-                    </div>
-                  </div>
-                ))
-              )}
+        {/* Link Indicator */}
+        <div className="pt-4 flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity group-hover:text-emerald-400">
+          View Project
+          <ChevronRight size={12} className="text-emerald-500 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+    </Link>
+  ))
+)}
             </div>
           </section>
         </div>
