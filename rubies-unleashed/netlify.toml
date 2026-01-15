@@ -9,12 +9,11 @@
   NODE_VERSION = "20"
   NEXT_PRIVATE_TARGET = "server"
 
-# ✅ CRITICAL: API Route Rewrites
+# ✅ FIXED: Use actual function name from build output
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/__nextjs_api/:splat"
+  from = "/*"
+  to = "/.netlify/functions/___netlify-server-handler/:splat"
   status = 200
-  force = true
 
 # ✅ Catch-all for Next.js pages
 [[redirects]]
