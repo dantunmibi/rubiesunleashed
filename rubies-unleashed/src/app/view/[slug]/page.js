@@ -42,6 +42,31 @@ export default async function ViewPage({ params }) {
   // Generate Schema (JSON-LD)
   const jsonLd = generateJsonLd(game);
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://rubiesunleashed.netlify.app"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Explore",
+        "item": "https://rubiesunleashed.netlify.app/explore"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": game.title,
+        "item": `https://rubiesunleashed.netlify.app/view/${game.slug}`
+      }
+    ]
+  };
+
   return (
     <>
       {/* Inject Structured Data for Search Engines */}

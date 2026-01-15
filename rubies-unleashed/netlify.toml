@@ -9,14 +9,15 @@
   NODE_VERSION = "20"
   NEXT_PRIVATE_TARGET = "server"
 
-# ✅ Redirect rules (optional but recommended)
+# ✅ CRITICAL: API Route Rewrites
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/__nextjs_api/:splat"
   status = 200
+  force = true
 
+# ✅ Catch-all for Next.js pages
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/__nextjs/:splat"
   status = 200
-  force = false

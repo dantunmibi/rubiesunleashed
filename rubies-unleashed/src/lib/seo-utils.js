@@ -18,7 +18,14 @@ export function generateJsonLd(game) {
 
   const isApplication = isApp(game.tags);
   const platformInfo = getPlatformInfo(game, game.tags);
- const canonicalUrl = `https://rubiesunleashed.netlify.app/view/${game.slug}`; 
+  const canonicalUrl = `https://rubiesunleashed.netlify.app/view/${game.slug}`; 
+  
+  // ✅ Determine operating system smartly
+  const operatingSystem = game.buildPlatform && 
+                          game.buildPlatform !== 'Multi-Platform' && 
+                          game.buildPlatform !== 'Platform TBA'
+    ? game.buildPlatform
+    : game.downloadLinks?.map(link => link.platform).join(', ') || "Windows, macOS, Linux";
   
   const baseSchema = {
     "@context": "https://schema.org",
@@ -27,13 +34,34 @@ export function generateJsonLd(game) {
     "description": game.metaDescription || game.description?.substring(0, 160) || "Download from Rubies Unleashed.",
     "image": game.image || DEFAULT_IMAGE,
     "url": canonicalUrl,
-    "datePublished": game.date, 
+    
+    // ✅ FIXED: Use Supabase publishedDate (created_at)
+    "datePublished": game.publishedDate || game.date,
+    "dateModified": game.lastUpdated || game.publishedDate || game.date,
+    
+    // ✅ ENHANCED: Author with profile URL
     "author": {
       "@type": "Person",
-      "name": game.developer || "Unknown Developer"
+      "name": game.developer,
+      "url": game.developerUrl ? `https://rubiesunleashed.netlify.app${game.developerUrl}` : undefined,
+      // ✅ ADD: Make author more prominent
+      "description": `Independent creator on Rubies Unleashed`
     },
+    
+    // ✅ NEW: Publisher info
+    "publisher": {
+      "@type": "Organization",
+      "name": "Rubies Unleashed",
+      "url": "https://rubiesunleashed.netlify.app",
+      "description": "Digital distribution platform for independent creators"
+    },
+    
     "applicationCategory": isApplication ? "UtilitiesApplication" : "Game",
-    "operatingSystem": platformInfo.name === "Platform TBA" ? "Windows" : platformInfo.name,
+    "operatingSystem": operatingSystem,
+    
+    // ✅ NEW: Download URL
+    "downloadUrl": game.downloadUrl || game.downloadLinks?.[0]?.url,
+    
     "offers": {
       "@type": "Offer",
       "price": "0.00",
@@ -42,18 +70,38 @@ export function generateJsonLd(game) {
     }
   };
 
+  // ✅ NEW: Social links as sameAs
+  if (game.socialLinks?.length > 0) {
+    baseSchema.sameAs = game.socialLinks.map(link => link.url);
+  }
+
+  // Rating (if exists)
   if (game.rating) {
     baseSchema.aggregateRating = {
       "@type": "AggregateRating",
       "ratingValue": game.rating,
       "bestRating": "5",
       "worstRating": "1",
-      "ratingCount": "10" 
+      "ratingCount": "10"
     };
   }
 
-  if (!isApplication) {
-    baseSchema.genre = game.genre || "Action";
+  // ✅ ENHANCED: App-specific fields
+  if (isApplication) {
+    baseSchema.softwareVersion = game.version || '1.0';
+    baseSchema.applicationSubCategory = game.tags?.find(t => 
+      ['Productivity', 'Development', 'Utility', 'Design', 'Tool'].includes(t)
+    ) || 'Utility';
+    
+    // File size (if available)
+    if (game.size) {
+      baseSchema.fileSize = game.size;
+    }
+  } else {
+    // Game-specific fields
+    baseSchema.genre = game.tags?.find(t => 
+      ['Action', 'RPG', 'Strategy', 'Puzzle', 'Horror', 'Adventure'].includes(t)
+    ) || "Action";
     baseSchema.playMode = "SinglePlayer";
   }
 
@@ -85,7 +133,11 @@ export function generateMetaTags(game) {
   const context = `v${game.version || 'Latest'} by ${game.developer || 'Unknown'}`;
 
   // 4. Assemble: "Hook (Context) - Download on Rubies Unleashed"
-  const richDescription = `${hook} (${context}) - Download on Rubies Unleashed.`;
+  const developerAttribution = game.source === 'supabase' && game.developer
+    ? ` Created by ${game.developer}.`
+    : '';
+
+  const richDescription = `${hook} (${context})${developerAttribution} Download on Rubies Unleashed.`;
 
   // ✅ Ensure Image is Absolute
   const imageUrl = game.image?.startsWith('http') ? game.image : DEFAULT_IMAGE;
@@ -97,6 +149,7 @@ export function generateMetaTags(game) {
     // ✅ TITLE KEPT EXACTLY AS REQUESTED
     title: `${game.title} - Rubies Unleashed`,
     description: richDescription,
+    keywords: game.tags?.slice(0, 10).join(', '),
     
     openGraph: {
       title: `${game.title} - Rubies Unleashed`,
