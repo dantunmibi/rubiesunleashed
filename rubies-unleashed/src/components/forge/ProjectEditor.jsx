@@ -667,6 +667,20 @@ useEffect(() => {
 {/* SECTION: MEDIA */}
 {activeSection === 'media' && (
     <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+        
+        {/* ✅ GLOBAL UPLOAD PROGRESS INDICATOR */}
+        {uploading && (
+            <div className="fixed top-24 right-6 z-50 bg-[#161b2c] border-2 border-emerald-500 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-4 fade-in duration-300">
+                <div className="flex items-center gap-3">
+                    <Loader2 className="animate-spin text-emerald-500" size={24} />
+                    <div>
+                        <p className="text-white font-bold text-sm uppercase tracking-wider">Uploading Media...</p>
+                        <p className="text-slate-400 text-xs">Processing your file</p>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* Compact Cover Upload */}
         <div className="flex gap-6 items-start p-4 bg-[#0b0f19] border border-white/5 rounded-xl">
             {/* THUMBNAIL: Matches GameCard ratio (2:3) */}
@@ -679,8 +693,19 @@ useEffect(() => {
                         <span className="text-[9px] text-slate-500 font-mono font-bold tracking-widest">2:3</span>
                     </div>
                 )}
-                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} />
-                {uploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Loader2 className="animate-spin text-white w-6 h-6" /></div>}
+                <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => handleFileUpload(e, 'cover')} 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    disabled={uploading} 
+                />
+                {/* ✅ LOCAL OVERLAY (Optional - shows on cover only when uploading cover) */}
+                {uploading && (
+                    <div className="absolute inset-0 bg-black/80 flex items-center justify-center backdrop-blur-sm">
+                        <Loader2 className="animate-spin text-emerald-500 w-8 h-8" />
+                    </div>
+                )}
             </div>
             
             <div className="flex-1 space-y-3">
@@ -700,31 +725,54 @@ useEffect(() => {
             </div>
         </div>
         
-        {/* Screenshots Section (Remains 16:9 Landscape) */}
+        {/* Screenshots Section */}
         <div className="space-y-3 pt-4 border-t border-white/5">
             <div className="flex justify-between items-end">
                 <label className="block text-xs font-bold uppercase text-slate-500 tracking-widest">Screenshots Gallery</label>
                 <span className="text-[10px] text-slate-600 font-mono">1920x1080px (16:9)</span>
             </div>
                             
-                            <div className="grid grid-cols-2 gap-3">
-                                {formData.screenshots.map((url, i) => (
-                                    <div key={i} className="relative aspect-video bg-black rounded-lg overflow-hidden border border-white/10 group">
-                                        <img src={url} className="w-full h-full object-cover" />
-                                        <button type="button" onClick={() => handleChange(() => setFormData(p => ({...p, screenshots: p.screenshots.filter((_, idx) => idx !== i)})))} className="absolute top-1 right-1 bg-red-500/80 p-1.5 rounded-md text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"><X size={12}/></button>
-                                    </div>
-                                ))}
-                                <div className={`aspect-video bg-[#0b0f19] border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center hover:${themeBorder} transition-colors relative cursor-pointer group`}>
-                                    <Plus className="text-slate-600 group-hover:text-white transition-colors mb-1" />
-                                    <span className="text-[10px] text-slate-600 font-bold tracking-widest group-hover:text-slate-400">ADD IMAGE</span>
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'screenshot')} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <Input label="Trailer / Video URL" value={formData.video_url} onChange={v => updateField('video_url', v)} placeholder="https://youtube.com/..." icon={Youtube} theme={themeFocus} />
+            <div className="grid grid-cols-2 gap-3">
+                {formData.screenshots.map((url, i) => (
+                    <div key={i} className="relative aspect-video bg-black rounded-lg overflow-hidden border border-white/10 group">
+                        <img src={url} className="w-full h-full object-cover" />
+                        <button 
+                            type="button" 
+                            onClick={() => handleChange(() => setFormData(p => ({...p, screenshots: p.screenshots.filter((_, idx) => idx !== i)})))} 
+                            className="absolute top-1 right-1 bg-red-500/80 p-1.5 rounded-md text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                            <X size={12}/>
+                        </button>
                     </div>
-                )}
+                ))}
+                
+                {/* ✅ UPLOAD BUTTON - Now shows loading state */}
+                <div className={`aspect-video bg-[#0b0f19] border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center hover:${themeBorder} transition-colors relative cursor-pointer group ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+                    {uploading ? (
+                        <>
+                            <Loader2 className="text-emerald-500 animate-spin mb-1" size={24} />
+                            <span className="text-[10px] text-emerald-500 font-bold tracking-widest">PROCESSING...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Plus className="text-slate-600 group-hover:text-white transition-colors mb-1" />
+                            <span className="text-[10px] text-slate-600 font-bold tracking-widest group-hover:text-slate-400">ADD IMAGE</span>
+                        </>
+                    )}
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileUpload(e, 'screenshot')} 
+                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                        disabled={uploading} 
+                    />
+                </div>
+            </div>
+        </div>
+
+        <Input label="Trailer / Video URL" value={formData.video_url} onChange={v => updateField('video_url', v)} placeholder="https://youtube.com/..." icon={Youtube} theme={themeFocus} />
+    </div>
+)}
 
                         {/* 3. TECH SPECS */}
                         {activeSection === 'tech' && (
