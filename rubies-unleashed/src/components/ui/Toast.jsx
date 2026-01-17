@@ -25,10 +25,10 @@ import { X, Check, Heart, AlertCircle, Info } from "lucide-react";
 
 export default function Toast({ 
   message, 
-  type = "success", // success, error, info
+  type = "success",
   onClose,
   duration = 3000,
-  icon: CustomIcon
+  icon // ✅ Can be emoji string or Lucide component
 }) {
   useEffect(() => {
     if (duration > 0) {
@@ -40,15 +40,27 @@ export default function Toast({
     }
   }, [duration, onClose]);
 
-  // Icon selection
-  const Icon = CustomIcon || (() => {
+  // ✅ NEW: Handle both emoji strings and Lucide icons
+  const renderIcon = () => {
+    // If custom emoji string provided (e.g., "💬", "⚠️")
+    if (typeof icon === 'string') {
+      return <span className="text-2xl">{icon}</span>;
+    }
+    
+    // If Lucide component provided
+    if (icon) {
+      const CustomIcon = icon;
+      return <CustomIcon size={20} />;
+    }
+    
+    // Default icons by type
     switch (type) {
       case "success": return <Check size={20} />;
       case "error": return <AlertCircle size={20} />;
       case "wishlist": return <Heart size={20} fill="currentColor" />;
       default: return <Info size={20} />;
     }
-  });
+  };
 
   // Color schemes
   const styles = {
@@ -93,7 +105,7 @@ export default function Toast({
     >
       {/* Icon */}
       <div className={`${style.text} shrink-0`}>
-        <Icon />
+        {renderIcon()}
       </div>
 
       {/* Message */}

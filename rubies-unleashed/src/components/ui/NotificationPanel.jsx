@@ -25,6 +25,7 @@ import {
   clearAllNotifications,
   formatTimeAgo
 } from "@/lib/notificationManager";
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import {
   fetchDatabaseNotifications,
   markDatabaseNotificationRead,
@@ -43,6 +44,9 @@ export default function NotificationPanel({ isOpen, onClose }) {
   const { showToast } = useToastContext();
   const { user } = useAuth();
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // ✅ NEW: Enable realtime updates
+  useRealtimeNotifications();
 
   // Helper to check recency
   const isRecent = (timestamp) => {

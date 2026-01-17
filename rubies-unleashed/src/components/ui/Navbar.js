@@ -16,7 +16,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { getUnreadCount } from "@/lib/notificationManager";
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import NotificationPanel from "./NotificationPanel";
 import { getUnifiedFeed } from "@/lib/game-service-client";
 import Link from "next/link";
@@ -50,7 +50,7 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { unreadCount } = useRealtimeNotifications(); // ✅ Add this
   const [allGames, setAllGames] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -121,18 +121,6 @@ export default function Navbar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [menuOpen, userDropdownOpen, notificationPanelOpen]);
-
-  // ✅ Notification updates
-  useEffect(() => {
-    const updateUnreadCount = () => setUnreadCount(getUnreadCount());
-    updateUnreadCount();
-    const handleNotificationChange = () => {
-      updateUnreadCount();
-    };
-    window.addEventListener("notificationsChanged", handleNotificationChange);
-    return () =>
-      window.removeEventListener("notificationsChanged", handleNotificationChange);
-  }, []);
 
   // ✅ Data Prefetch
   useEffect(() => {
