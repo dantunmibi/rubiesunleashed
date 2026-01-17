@@ -8,7 +8,7 @@ import { MessageSquare, X, Clock, Shield } from 'lucide-react';
 /**
  * AdminCommentBanner
  * Shows unacknowledged admin comments on developer dashboard
- * Similar to ModerationNotificationBanner
+ * ✅ NOW WITH REAL-TIME UPDATES
  */
 export default function AdminCommentBanner() {
   const { user } = useAuth();
@@ -17,7 +17,60 @@ export default function AdminCommentBanner() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Initial fetch
     fetchComments();
+
+    // ✅ NEW: Subscribe to real-time changes
+    const channel = supabase
+      .channel(`admin-comments-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'admin_comments',
+          filter: `developer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔔 New admin comment received:', payload.new);
+          
+          // Only add if not acknowledged
+          if (!payload.new.acknowledged) {
+            setComments(prev => [payload.new, ...prev]);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'admin_comments',
+          filter: `developer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('📝 Admin comment updated:', payload.new);
+          
+          // Remove if acknowledged
+          if (payload.new.acknowledged) {
+            setComments(prev => prev.filter(c => c.id !== payload.new.id));
+          } else {
+            // Update existing comment
+            setComments(prev => 
+              prev.map(c => c.id === payload.new.id ? payload.new : c)
+            );
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Admin comments subscription:', status);
+      });
+
+    // Cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchComments = async () => {
@@ -53,7 +106,7 @@ export default function AdminCommentBanner() {
 
       if (error) throw error;
 
-      // Remove from local state
+      // Optimistically remove from local state
       setComments(prev => prev.filter(c => c.id !== commentId));
     } catch (error) {
       console.error('Failed to acknowledge comment:', error);
