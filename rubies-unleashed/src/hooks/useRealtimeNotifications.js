@@ -13,7 +13,7 @@
  * ================================================================
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToastContext } from '@/components/providers/ToastProvider';
@@ -22,19 +22,33 @@ export function useRealtimeNotifications() {
   const { user } = useAuth();
   const { showToast } = useToastContext();
   const [unreadCount, setUnreadCount] = useState(0);
+  const channelRef = useRef(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!user?.id) {
+      console.log('⚠️ No user, skipping realtime');
       setUnreadCount(0);
       return;
     }
 
-    // Initial unread count fetch
+    console.log('🚀 Setting up realtime for user:', user.id);
+
+    // Cleanup any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up old channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Fetch initial count
     fetchUnreadCount();
 
-    // Subscribe to real-time changes
+    // Create unique channel ID
+    const channelId = `notifications:${user.id}:${Date.now()}`;
+    console.log('📡 Creating channel:', channelId);
+
     const channel = supabase
-      .channel('user-notifications')
+      .channel(channelId)
       .on(
         'postgres_changes',
         {
@@ -44,23 +58,22 @@ export function useRealtimeNotifications() {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('🔔 New notification received:', payload.new);
+          console.log('🔔 NEW NOTIFICATION RECEIVED:', payload.new);
           
-          // Update unread count
+          // Update count
           fetchUnreadCount();
           
-          // Trigger UI refresh
+          // Refresh notification panel
           window.dispatchEvent(new Event('notificationsChanged'));
           
-          // Show toast for new notification
+          // Show toast
           const notification = payload.new;
           showToast(notification.message, 'info', {
             icon: notification.icon || '🔔',
             duration: 5000
           });
           
-          // Play notification sound (optional)
-          playNotificationSound();
+          console.log('✅ Notification processed');
         }
       )
       .on(
@@ -71,13 +84,9 @@ export function useRealtimeNotifications() {
           table: 'user_notifications',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('📝 Notification updated:', payload.new);
-          
-          // Update unread count
+        () => {
+          console.log('📝 Notification updated');
           fetchUnreadCount();
-          
-          // Trigger UI refresh
           window.dispatchEvent(new Event('notificationsChanged'));
         }
       )
@@ -89,29 +98,38 @@ export function useRealtimeNotifications() {
           table: 'user_notifications',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('🗑️ Notification deleted:', payload.old);
-          
-          // Update unread count
+        () => {
+          console.log('🗑️ Notification deleted');
           fetchUnreadCount();
-          
-          // Trigger UI refresh
           window.dispatchEvent(new Event('notificationsChanged'));
         }
       )
-      .subscribe((status) => {
-        console.log('📡 Realtime subscription status:', status);
+      .subscribe((status, err) => {
+        console.log('📡 Channel status:', status);
+        
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ REALTIME CONNECTED');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ CHANNEL ERROR:', err);
+        } else if (status === 'TIMED_OUT') {
+          console.error('❌ TIMED OUT');
+        }
       });
 
-    // Cleanup subscription on unmount
+    channelRef.current = channel;
+
+    // Cleanup on unmount
     return () => {
-      console.log('🔌 Unsubscribing from notifications');
-      supabase.removeChannel(channel);
+      console.log('🔌 Unmounting - cleaning up channel');
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user]);
+  }, [user?.id]);
 
   const fetchUnreadCount = async () => {
-    if (!user) return;
+    if (!user?.id) return;
 
     try {
       const { count, error } = await supabase
@@ -122,20 +140,11 @@ export function useRealtimeNotifications() {
 
       if (error) throw error;
       
+      console.log('📊 Unread count:', count || 0);
       setUnreadCount(count || 0);
     } catch (error) {
-      console.error('Error fetching unread count:', error);
+      console.error('❌ Error fetching count:', error);
     }
-  };
-
-  const playNotificationSound = () => {
-    // Optional: Play a subtle notification sound
-    // Uncomment if you want audio notifications
-    /*
-    const audio = new Audio('/notification.mp3');
-    audio.volume = 0.3;
-    audio.play().catch(err => console.log('Audio play failed:', err));
-    */
   };
 
   return { unreadCount };
