@@ -113,6 +113,30 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
   const [isDirty, setIsDirty] = useState(false);
   const [projectStatus, setProjectStatus] = useState('stable');
 
+  // ✅ ADD THIS: Block editing for banned projects
+  const isBanned = project?.status === 'banned';
+  
+  // ✅ ADD THIS: Fetch ban reason
+  const [banReason, setBanReason] = useState(null);
+  
+  useEffect(() => {
+    if (isBanned && project?.id) {
+      const fetchBanReason = async () => {
+        const { data } = await supabase
+          .from('moderation_actions')
+          .select('reason, created_at, admin_username')
+          .eq('project_id', project.id)
+          .eq('action_type', 'ban')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (data) setBanReason(data);
+      };
+      fetchBanReason();
+    }
+  }, [isBanned, project?.id]);
+
   // --- STATE INITIALIZATION ---
   // Hydrates from existing project prop or sets defaults for new creation.
   const [formData, setFormData] = useState({
@@ -144,7 +168,7 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
     // Safety
     size: project?.size || "",
     age_rating: project?.age_rating || "All Ages",
-  content_warning: (() => {
+    content_warning: (() => {
     const warning = project?.content_warning;
     // Handle empty array string, actual empty arrays, null, or whitespace
     if (!warning || 
@@ -190,6 +214,60 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
   const themeBorderLight = isApp ? 'border-netrunner/30' : 'border-ruby/30';
 
   if (authLoading) return null;
+
+  // ✅ ADD THIS: Return early if banned
+  if (isBanned) {
+    return (
+      <div className="min-h-screen bg-background pt-32 px-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-surface border border-red-500/20 rounded-2xl p-8">
+            <div className="flex items-start gap-4">
+              <AlertTriangle className="w-8 h-8 text-red-400 shrink-0 mt-1" />
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-red-400 mb-3">
+                  Editing Disabled
+                </h1>
+                <p className="text-slate-300 mb-4">
+                  This project has been banned and cannot be edited until reviewed by an administrator.
+                </p>
+                
+                {banReason && (
+                  <div className="bg-black/30 border border-white/10 rounded-lg p-4 mb-6">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-2">
+                      Moderation Reason
+                    </p>
+                    <p className="text-slate-300 text-sm mb-3">{banReason.reason}</p>
+                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <span>Banned by: <span className="text-red-400 font-mono">{banReason.admin_username}</span></span>
+                      <span>•</span>
+                      <span>{new Date(banReason.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => router.push(`/${user?.user_metadata?.username}/dashboard/project/${project.id}`)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors font-bold uppercase text-sm"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Cockpit
+                  </button>
+                  
+                  <button
+                    onClick={() => router.push('/contact')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-colors font-bold uppercase text-sm"
+                  >
+                    Contact Support
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // --- HANDLERS ---
 
@@ -1049,7 +1127,7 @@ function Input({ label, value, onChange, placeholder, required, icon: Icon, them
                         onChange={e => setInputs({...inputs, socialLabel: e.target.value})}
                         className={`bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 outline-none focus:${theme}`}
                     >
-                        <option>Website</option><option>Discord</option><option>Twitter</option><option>YouTube</option><option>Patreon</option>
+                        <option>Website</option><option>Discord</option><option>X(Twitter)</option><option>YouTube</option><option>Patreon</option>
                     </select>
                     <input 
                         type="url" 

@@ -2,14 +2,15 @@
 export const revalidate = 3600; // 1 hour
 // 
 
-import { supabase } from "@/lib/supabase";
+import { createServerClient } from '@/lib/supabase-server';
 import ProfileClient from "./ProfileClient";
 
 export async function generateMetadata({ params }) {
   const { username } = await params;
   const decodedName = decodeURIComponent(username);
-
-  // Fetch Display Name for Title
+  
+  const supabase = await createServerClient(); // ✅ Create server instance
+  
   const { data } = await supabase
     .from('profiles')
     .select('display_name')

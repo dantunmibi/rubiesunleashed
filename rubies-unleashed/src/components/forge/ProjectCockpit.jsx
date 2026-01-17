@@ -406,46 +406,63 @@ const confirmDelete = async () => {
                     </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-3">
-                    {/* ✅ Session Status Indicator */}
-                    <div className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
-                      sessionStatus === 'valid' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                      sessionStatus === 'expired' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                      'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        sessionStatus === 'valid' ? 'bg-emerald-500 animate-pulse' :
-                        sessionStatus === 'expired' ? 'bg-red-500 animate-ping' :
-                        'bg-amber-500 animate-pulse'
-                      }`}></span>
-                      {sessionStatus === 'valid' ? 'CONNECTED' : sessionStatus === 'expired' ? 'DISCONNECTED' : 'CHECKING'}
-                    </div>
+<div className="flex flex-wrap gap-3">
+    {/* ✅ Session Status Indicator */}
+    <div className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
+      sessionStatus === 'valid' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+      sessionStatus === 'expired' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+      'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${
+        sessionStatus === 'valid' ? 'bg-emerald-500 animate-pulse' :
+        sessionStatus === 'expired' ? 'bg-red-500 animate-ping' :
+        'bg-amber-500 animate-pulse'
+      }`}></span>
+      {sessionStatus === 'valid' ? 'CONNECTED' : sessionStatus === 'expired' ? 'DISCONNECTED' : 'CHECKING'}
+    </div>
 
-                    {project.status === 'published' && (
-                        <a href={`/view/${project.slug}`} target="_blank" className="bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300">
-                            <Globe size={16} /> Public Page
-                        </a>
-                    )}
-                    
-                    {project.status === 'draft' ? (
-                        <button 
-                            onClick={() => handleStatusChange('published')}
-                            disabled={loading}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 shadow-lg hover:shadow-emerald-900/20 transition-all disabled:opacity-50"
-                        >
-                            {loading ? <Loader2 className="animate-spin" size={16} /> : <Rocket size={16} />}
-                            Publish Now
-                        </button>
-                    ) : (
-                        <button 
-                            onClick={() => router.refresh()}
-                            disabled={loading}
-                            className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
-                        >
-                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Sync
-                        </button>
-                    )}
-                </div>
+    {/* ✅ Preview Button - Always Show */}
+    <a 
+      href={`/${user?.user_metadata?.username}/dashboard/project/${project.id}/preview`} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="bg-slate-700 hover:bg-slate-600 border border-slate-600/50 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
+    >
+      <Eye size={16} /> Preview
+    </a>
+
+    {/* ✅ Public Page - Only for Published */}
+    {project.status === 'published' && (
+        <a 
+          href={`/view/${project.slug}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
+        >
+            <Globe size={16} /> Public Page
+        </a>
+    )}
+    
+    {/* ✅ Action Buttons */}
+    {project.status === 'draft' ? (
+        <button 
+            onClick={() => handleStatusChange('published')}
+            disabled={loading}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 shadow-lg hover:shadow-emerald-900/20 transition-all disabled:opacity-50"
+        >
+            {loading ? <Loader2 className="animate-spin" size={16} /> : <Rocket size={16} />}
+            Publish Now
+        </button>
+    ) : (
+        <button 
+            onClick={() => router.refresh()}
+            disabled={loading}
+            className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
+        >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Sync
+        </button>
+    )}
+</div>
             </div>
         </div>
 

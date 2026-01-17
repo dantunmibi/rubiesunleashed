@@ -610,7 +610,7 @@ Data Portability: Users can export their data on request
 ### G. Route Protection & Access Control
 *   **Public Routes:** Home, Explore, View, About, Help, Contact, Status
 *   **Authentication Required:** Wishlist, Settings, Dashboard, Admin
-*   **Creator Only:** The Forge routes (`/[username]/dashboard/*`)
+*   **Creator Only:** The Forge routes (`/[username]/dashboard/`)
 *   **Owner Only:** Private drafts, personal settings, project editing
 *   **Graceful Degradation:** Clear signup prompts for protected features
 
@@ -648,13 +648,15 @@ README.md
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂api
  ┃ ┃ ┣ 📂admin
- ┃ ┃ ┃ ┗ 📂assign-blogger-posts
+ ┃ ┃ ┃ ┣ 📂assign-blogger-posts
+ ┃ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┃ ┗ 📂moderate
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂games
  ┃ ┃ ┃ ┣ 📜route copy.js.backup
  ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂health
- ┃ ┃ ┃ ┗ 📜route.js           # Platform health monitoring
+ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂profile
  ┃ ┃ ┃ ┗ 📂update
  ┃ ┃ ┃ ┃ ┗ 📜route.js
@@ -707,6 +709,8 @@ README.md
  ┃ ┃ ┃ ┃ ┗ 📂[id]
  ┃ ┃ ┃ ┃ ┃ ┣ 📂edit
  ┃ ┃ ┃ ┃ ┃ ┃ ┗ 📜page.js
+ ┃ ┃ ┃ ┃ ┃ ┣ 📂preview
+ ┃ ┃ ┃ ┃ ┃ ┃ ┗ 📜page.js
  ┃ ┃ ┃ ┃ ┃ ┗ 📜page.js
  ┃ ┃ ┃ ┣ 📜DashboardClient.jsx
  ┃ ┃ ┃ ┣ 📜layout.js
@@ -730,7 +734,7 @@ README.md
  ┃ ┃ ┗ 📜InternalTrafficGuard.js
  ┃ ┣ 📂auth
  ┃ ┃ ┣ 📜AuthLoadingWrapper.jsx
- ┃ ┃ ┗ 📜AuthModal.jsx 
+ ┃ ┃ ┗ 📜AuthModal.jsx
  ┃ ┣ 📂explore
  ┃ ┃ ┣ 📜ExploreContent.jsx
  ┃ ┃ ┣ 📜GameGrid.jsx
@@ -749,6 +753,8 @@ README.md
  ┃ ┃ ┣ 📜HomeWrapper.jsx
  ┃ ┃ ┣ 📜LandingPage.jsx
  ┃ ┃ ┗ 📜UserDashboard.jsx
+ ┃ ┣ 📂moderation
+ ┃ ┃ ┗ 📜ModerationNotificationBanner.jsx
  ┃ ┣ 📂providers
  ┃ ┃ ┣ 📜AuthProvider.jsx
  ┃ ┃ ┣ 📜ThemeProvider.jsx
@@ -782,17 +788,19 @@ README.md
  ┃ ┃ ┣ 📜Hero.js
  ┃ ┃ ┣ 📜Navbar.js
  ┃ ┃ ┣ 📜NotificationPanel.jsx
+ ┃ ┃ ┣ 📜PreviewBanner.jsx
  ┃ ┃ ┣ 📜SearchCommandCenter.jsx
  ┃ ┃ ┣ 📜SearchDropdown.jsx
  ┃ ┃ ┣ 📜SessionErrorOverlay.jsx
  ┃ ┃ ┣ 📜Skeleton.jsx
  ┃ ┃ ┣ 📜Toast.jsx
  ┃ ┃ ┗ 📜ToastContainer.jsx
- ┃ ┗ 📂wishlist
+ ┃ ┣ 📂wishlist
  ┃ ┃ ┣ 📜EmptyWishlist.jsx
  ┃ ┃ ┣ 📜WishlistControls.jsx
  ┃ ┃ ┣ 📜WishlistGrid.jsx
  ┃ ┃ ┗ 📜WishlistStats.jsx
+ ┃ ┗ 📜SessionErrorOverlay.jsx
  ┣ 📂hooks
  ┃ ┣ 📜useDebounce.js
  ┃ ┣ 📜useGameFilters.js
@@ -802,7 +810,9 @@ README.md
  ┃ ┣ 📜useSessionGuard.js
  ┃ ┣ 📜useToast.js
  ┃ ┗ 📜useWishlist.js
- ┗ 📂lib
+ ┣ 📂icons
+ ┃ ┗ 📜discord.svg
+ ┣ 📂lib
  ┃ ┣ 📂config
  ┃ ┃ ┗ 📜platforms.js
  ┃ ┣ 📂status
@@ -827,7 +837,8 @@ README.md
  ┃ ┣ 📜seo-utils.js
  ┃ ┣ 📜supabase-server.js
  ┃ ┣ 📜supabase.js
- ┃ ┣ 📜theme-utils.js
+ ┃ ┗ 📜theme-utils.js
+ ┗ 📜proxy.js
  ```
 
 ## 🚀 9. Development Roadmap

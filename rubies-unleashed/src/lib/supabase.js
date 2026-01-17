@@ -1,11 +1,13 @@
 /**
- * 💎 RUBIES UNLEASHED - Supabase Client
+ * 💎 RUBIES UNLEASHED - Supabase Client (Cookie-Based)
  * -------------------------------------
  * Singleton client for Auth & Database interactions.
- * Robust configuration with Fail-Fast validation.
+ * Now uses @supabase/ssr for proper cookie handling.
  */
 
-import { createClient } from '@supabase/supabase-js';
+'use client';
+
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -14,27 +16,19 @@ const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabasePublishableKey) {
   const errorMsg = '🚨 CRITICAL: Supabase environment variables are missing.';
   
-  // Fail fast in Development to prevent debugging headaches
+  // Fail fast in Development
   if (process.env.NODE_ENV === 'development') {
     throw new Error(errorMsg);
   }
   
-  // Log in Production (prevent total crash, though auth will fail)
+  // Log in Production
   if (typeof window !== 'undefined') {
     console.error(errorMsg);
   }
 }
 
-// 2. Initialize with Explicit Config
-// Passing empty strings prevents initialization crash if vars are missing in prod
-export const supabase = createClient(
+// 2. Initialize with Cookie Support
+export const supabase = createBrowserClient(
   supabaseUrl || '', 
-  supabasePublishableKey || '',
-  {
-    auth: {
-      persistSession: true, // Keep user logged in
-      autoRefreshToken: true, // Handle token rotation
-      detectSessionInUrl: true, // Crucial for OAuth redirects
-    },
-  }
+  supabasePublishableKey || ''
 );

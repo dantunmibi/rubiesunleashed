@@ -58,9 +58,9 @@ export default function Footer() {
 
             <div className="flex items-center gap-4 pt-2">
               <SocialLink
-                href="https://twitter.com/rubiesunleashed"
+                href="https://x.com/rubiesunleashed"
                 icon={<Twitter size={18} />}
-                label="Twitter"
+                label="X(Twitter)"
               />
               <SocialLink
                 href="mailto:officialrubiesunleashed@gmail.com"

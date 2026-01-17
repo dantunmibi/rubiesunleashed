@@ -196,12 +196,15 @@ function getDefaultIcon(type) {
     success: "✅",
     error: "❌",
     info: "ℹ️",
-    // ✅ ADD THESE PROJECT NOTIFICATION TYPES
     project_created: "🚀",
     project_updated: "💾",
     project_deleted: "🗑️",
     project_published: "🌟",
-    project_archived: "📦"
+    project_archived: "📦",
+    // ⭐ NEW: Admin comment types
+    admin_comment_feedback: "💬",
+    admin_comment_moderation: "⚠️",
+    admin_comment: "💬" // Generic fallback
   };
   
   return icons[type] || "🔔";

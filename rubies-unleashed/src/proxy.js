@@ -11,14 +11,13 @@ export async function proxy(req) {
   try {
     const { pathname } = req.nextUrl;
     
-    // ✅ DEBUG LOGGING (remove in production)
     console.log(`🔍 Proxy checking: ${pathname}`);
     
     // Define protected path patterns
     const protectedPatterns = [
-      /^\/[^\/]+\/project\//, // /username/project/* (edit routes)
+      /^\/[^\/]+\/dashboard\/project\/[^\/]+\/edit/, // Edit routes
+      /^\/[^\/]+\/dashboard\/project\/[^\/]+\/preview/, // ✅ ADD: Preview routes
     ];
-    // Note: Removed /dashboard, /publish, /settings - they handle auth at component level
     
     // Check if current path is protected
     const isProtectedRoute = protectedPatterns.some(pattern => {
@@ -36,14 +35,18 @@ export async function proxy(req) {
     }
     
     // For protected routes, check for auth token in cookies
-    const authToken = req.cookies.get('sb-access-token')?.value || 
-                     req.cookies.get('supabase-auth-token')?.value ||
-                     req.cookies.get('sb-auth-token')?.value;
+    // ✅ FIX: Check all possible Supabase cookie names
+    const allCookies = req.cookies.getAll();
+    const authCookie = allCookies.find(c => 
+      c.name.includes('sb-') && c.name.includes('auth-token')
+    );
     
-    console.log(`🔍 Auth token found: ${authToken ? 'YES' : 'NO'}`);
+    console.log(`🍪 Total cookies: ${allCookies.length}`);
+    console.log(`🍪 Cookie names:`, allCookies.map(c => c.name).join(', '));
+    console.log(`🔍 Auth token found: ${authCookie ? authCookie.name : 'NO'}`);
     
     // If no auth token found, redirect to login
-    if (!authToken) {
+    if (!authCookie) {
       console.log(`🔒 Blocking unauthenticated access to: ${pathname}`);
       
       const loginUrl = new URL('/login', req.url);
@@ -53,9 +56,6 @@ export async function proxy(req) {
     }
     
     console.log(`✅ Allowing authenticated access to: ${pathname}`);
-    
-    // For project routes, we'll do username verification on the page level
-    // (since we need full Supabase client for database queries)
     
     // Allow authenticated requests to proceed
     return NextResponse.next();

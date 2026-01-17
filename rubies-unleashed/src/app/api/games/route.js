@@ -14,7 +14,7 @@
 
 import { NextResponse } from 'next/server';
 import BACKUP_DATA from '@/lib/backup-data.json';
-import { supabase } from "@/lib/supabase"; 
+import { createServerClient } from "@/lib/supabase-server"; // ✅ CHANGED: Use server client
 
 export const revalidate = 60; // Cache API route output for 60 seconds
 
@@ -69,6 +69,7 @@ export async function GET(request) {
     // ✅ NEW: Fetch Hidden List from Supabase
     // Note: Supabase fetch is fast, but adds ~50-100ms. 
     // If critical speed needed, cache this too? Supabase client caches somewhat.
+    const supabase = await createServerClient(); // ✅ CHANGED: Create server client instance
     const { data: hiddenData } = await supabase.from('hidden_content').select('game_id');
     const hiddenIds = new Set(hiddenData?.map(h => h.game_id) || []);
 

@@ -93,21 +93,34 @@ export async function getUnifiedFeed(options = {}) {
   }
 }
 
-export async function getGame(slug, userId = null, depth = 0) {
+export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
   if (depth > 3) {
     console.warn(`getGame recursion limit reached for slug: ${slug}`);
     return null;
   }
 
-  console.log('🔍 Searching for slug:', slug);
+  console.log('🔍 Searching for slug:', slug, '| Admin:', isAdmin);
 
   try {
-    // ✅ FIX: Use public client for public data
     const client = getPublicClient();
     
-    // Strategy A: Direct slug match
+    // ✅ Fetch hidden content list (unless admin)
+    let hiddenIds = new Set();
+    if (!isAdmin) {
+      try {
+        const { data: hiddenContent } = await supabase
+          .from('hidden_content')
+          .select('game_id');
+        hiddenIds = new Set(hiddenContent?.map(h => h.game_id) || []);
+        console.log('🚫 Hidden content IDs:', Array.from(hiddenIds));
+      } catch (error) {
+        console.log('⚠️ Could not fetch hidden content');
+      }
+    }
+    
+    // Strategy A: Direct slug match (Supabase project)
     let { data: project, error } = await client
-      .from('projects_public') // ✅ Use public view
+      .from('projects_public')
       .select('*')
       .eq('slug', slug)
       .single();
@@ -117,44 +130,66 @@ export async function getGame(slug, userId = null, depth = 0) {
     }
     
     if (project) {
+      // ✅ Check if hidden (admins bypass this check)
+      if (!isAdmin && hiddenIds.has(project.id)) {
+        console.log('🚫 Project is hidden:', project.id);
+        return null;
+      }
+      
       console.log('✅ Found Supabase project:', project.title);
       return processSupabaseProject(project);
     }
     
-    // Strategy B: Blogger ID lookup
+    // Strategy B: Blogger ID lookup (claimed Blogger post)
     if (slug.includes('-')) {
       const parts = slug.split('-');
       const possibleBloggerId = parts[parts.length - 1];
       
       const { data: claimedProject } = await client
-        .from('projects_public') // ✅ Use public view
+        .from('projects_public')
         .select('*')
         .eq('original_blogger_id', possibleBloggerId)
         .single();
       
       if (claimedProject) {
+        // ✅ Check if hidden
+        if (!isAdmin && hiddenIds.has(claimedProject.id)) {
+          console.log('🚫 Claimed project is hidden:', claimedProject.id);
+          return null;
+        }
+        
         console.log('✅ Found claimed project:', claimedProject.title);
         return processSupabaseProject(claimedProject);
       }
     }
     
-    // Strategy C: Blogger Fallback
+    // Strategy C: Blogger Fallback (unclaimed Blogger post)
     const bloggerGame = await fetchGameById(slug);
     
     if (bloggerGame) {
+      // ✅ Check if Blogger post is hidden
+      if (!isAdmin && hiddenIds.has(bloggerGame.id)) {
+        console.log('🚫 Blogger post is hidden:', bloggerGame.id);
+        return null;
+      }
+      
+      // Check if it's been claimed
       const { data: claimed } = await client
-        .from('projects_public') // ✅ Use public view
+        .from('projects_public')
         .select('slug')
         .eq('original_blogger_id', bloggerGame.id)
         .single();
       
       if (claimed) {
-        return getGame(claimed.slug, userId, depth + 1);
+        console.log('🔄 Redirecting to claimed version');
+        return getGame(claimed.slug, userId, isAdmin, depth + 1);
       }
       
+      console.log('✅ Found Blogger game:', bloggerGame.title);
       return bloggerGame;
     }
     
+    console.log('❌ Game not found');
     return null;
     
   } catch (error) {

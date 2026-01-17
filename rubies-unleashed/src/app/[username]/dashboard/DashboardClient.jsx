@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useState, useMemo, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import ModerationNotificationBanner from '@/components/moderation/ModerationNotificationBanner';
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase"; 
 import { useToastContext } from '@/components/providers/ToastProvider';
@@ -17,7 +18,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// ... STATUS_CONFIG ... (Keep existing)
 const STATUS_CONFIG = {
   published: { 
     label: 'LIVE', 
@@ -46,6 +46,13 @@ const STATUS_CONFIG = {
     bg: 'bg-red-500/10', 
     dot: 'bg-red-500', 
     border: 'border-red-500/20'
+  },
+  hidden: { 
+    label: 'HIDDEN', 
+    color: 'text-amber-500', 
+    bg: 'bg-amber-500/10', 
+    dot: 'bg-amber-500', 
+    border: 'border-amber-500/20'
   }
 };
 
@@ -67,6 +74,7 @@ export default function DashboardClient() {
 
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [hiddenProjects, setHiddenProjects] = useState(new Set());
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState("");
@@ -165,6 +173,33 @@ export default function DashboardClient() {
     if (user && user.id) fetchProjects();
     return () => { isMounted = false; };
   }, [user, showToast, checkSupabaseError, refreshTrigger]);
+
+// Fetch hidden content IDs
+useEffect(() => {
+  async function fetchHiddenContent() {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('hidden_content')
+        .select('game_id');
+      
+      if (error) {
+        console.error('Failed to fetch hidden content:', error);
+        return;
+      }
+      
+      const hiddenIds = new Set(data?.map(h => h.game_id) || []);
+      setHiddenProjects(hiddenIds);
+      
+      console.log('🚫 Hidden projects:', Array.from(hiddenIds));
+    } catch (err) {
+      console.error('Error fetching hidden content:', err);
+    }
+  }
+  
+  if (user?.id) fetchHiddenContent();
+}, [user?.id, refreshTrigger]); // Re-fetch when projects refresh
 
   // Refresh on Visibility
   useEffect(() => {
@@ -297,6 +332,9 @@ export default function DashboardClient() {
     </div>
         </div>
 
+        {/* ✅ ADD THIS: Moderation Notification Banner */}
+        <ModerationNotificationBanner />
+
         {/* ✅ DEVELOPER NAME PROMPT */}
         {needsDevNameSetup && (
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-4 animate-in fade-in slide-in-from-top-4">
@@ -397,6 +435,7 @@ export default function DashboardClient() {
                 <div className="flex flex-col">
                     {filteredProjects.map((project) => {
                         const status = STATUS_CONFIG[project.status] || STATUS_CONFIG.draft;
+                        const isHidden = hiddenProjects.has(project.id);
                         return (
                             <div 
                                 key={project.id} 
@@ -418,17 +457,29 @@ export default function DashboardClient() {
                                     <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
 
-                                {/* Info */}
-                                <div className="flex-1 text-center md:text-left space-y-2">
-                                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                                        <h4 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
-                                            {project.title}
-                                        </h4>
-                                        <span className={`self-center md:self-auto px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${status.bg} ${status.color} ${status.border} flex items-center gap-1.5`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${status.dot} animate-pulse`}></span>
-                                            {status.label}
-                                        </span>
-                                    </div>
+      {/* Info */}
+      <div className="flex-1 text-center md:text-left space-y-2">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+          <h4 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+            {project.title}
+          </h4>
+          
+          {/* ✅ ADD: Dual Status Badges */}
+          <div className="flex gap-2 items-center">
+            <span className={`self-center md:self-auto px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${status.bg} ${status.color} ${status.border} flex items-center gap-1.5`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${status.dot} animate-pulse`}></span>
+              {status.label}
+            </span>
+            
+            {/* ✅ NEW: Hidden Badge (shows alongside status) */}
+            {isHidden && (
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 ${STATUS_CONFIG.hidden.bg} ${STATUS_CONFIG.hidden.color} ${STATUS_CONFIG.hidden.border}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG.hidden.dot} animate-pulse`}></span>
+                HIDDEN
+              </span>
+            )}
+          </div>
+        </div>
                                     
                                     {/* Multi-Platform Badges */}
                                     <div className="flex flex-wrap justify-center md:justify-start gap-3 items-center">
@@ -457,32 +508,43 @@ export default function DashboardClient() {
                                     </div>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                                    <ActionLink 
-                                        href={`/${username}/dashboard/project/${project.id}/edit`}
-                                        icon={Edit} 
-                                        label="Edit"
-                                        color="slate"
-                                    />
-                                    
-                                    <ActionLink 
-                                        href={`/${username}/dashboard/project/${project.id}`}
-                                        icon={Settings} 
-                                        label="Cockpit"
-                                        color="slate"
-                                    />
+{/* Actions */}
+<div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+  {/* Preview - Always show it for now (simpler) */}
+  <ActionLink 
+    href={`/${username}/dashboard/project/${project.id}/preview`}
+    icon={Eye} 
+    label="Preview"
+    color="slate"
+  />
 
-                                    {project.status === 'published' && (
-                                        <ActionLink 
-                                            href={`/view/${project.slug}`}
-                                            icon={Eye} 
-                                            label="View"
-                                            color="emerald"
-                                            external
-                                        />
-                                    )}
-                                </div>
+  {/* Edit */}
+  <ActionLink 
+    href={`/${username}/dashboard/project/${project.id}/edit`}
+    icon={Edit} 
+    label="Edit"
+    color="slate"
+  />
+  
+  {/* Cockpit */}
+  <ActionLink 
+    href={`/${username}/dashboard/project/${project.id}`}
+    icon={Settings} 
+    label="Cockpit"
+    color="slate"
+  />
+
+  {/* Public View - Only for published */}
+  {project.status === 'published' && (
+    <ActionLink 
+      href={`/view/${project.slug}`}
+      icon={Eye} 
+      label="Live"
+      color="emerald"
+      external
+    />
+  )}
+</div>
                             </div>
                         );
                     })}

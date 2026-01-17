@@ -1,3 +1,4 @@
+import { createServerClient as createSSRServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
@@ -8,19 +9,25 @@ import { cookies } from 'next/headers';
  */
 export const createServerClient = async () => {
   const cookieStore = await cookies();
-  
-  return createClient(
+
+  return createSSRServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
-      auth: {
-        persistSession: false, // Server doesn't persist state
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
-      global: {
-        headers: {
-          cookie: cookieStore.toString(), // Pass auth cookies to Supabase
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }

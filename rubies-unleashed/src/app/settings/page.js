@@ -430,7 +430,7 @@ function ArchitectProfileSettings({ formData, setFormData }) {
         
         const lower = val.toLowerCase();
         let detectedLabel = "Website";
-        if (lower.includes('twitter.com') || lower.includes('x.com')) detectedLabel = 'Twitter';
+        if (lower.includes('twitter.com') || lower.includes('x.com')) detectedLabel = 'X(Twitter)';
         else if (lower.includes('github.com')) detectedLabel = 'GitHub';
         else if (lower.includes('linkedin.com')) detectedLabel = 'LinkedIn';
         else if (lower.includes('discord.gg') || lower.includes('discord.com')) detectedLabel = 'Discord';
@@ -442,7 +442,7 @@ function ArchitectProfileSettings({ formData, setFormData }) {
 
     const detectLabelFromUrl = (url) => {
       const lower = url.toLowerCase();
-      if (lower.includes('twitter.com') || lower.includes('x.com')) return 'Twitter';
+      if (lower.includes('twitter.com') || lower.includes('x.com')) return 'X(Twitter)';
       if (lower.includes('github.com')) return 'GitHub';
       if (lower.includes('linkedin.com')) return 'LinkedIn';
       if (lower.includes('discord')) return 'Discord';
@@ -516,7 +516,7 @@ function ArchitectProfileSettings({ formData, setFormData }) {
                         onChange={e => setInputs({...inputs, label: e.target.value})}
                         className="bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 outline-none focus:border-(--user-accent)"
                     >
-                        <option>Website</option><option>GitHub</option><option>Twitter</option><option>LinkedIn</option><option>Discord</option><option>YouTube</option><option>Itch.io</option><option>Instagram</option>
+                        <option>Website</option><option>GitHub</option><option>X(Twitter)</option><option>LinkedIn</option><option>Discord</option><option>YouTube</option><option>Instagram</option>
                     </select>
                     <input 
                         type="url" 

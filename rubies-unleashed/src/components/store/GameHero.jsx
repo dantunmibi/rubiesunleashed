@@ -90,7 +90,7 @@ const handleDownloadClick = (e, url) => {
       // Official store - open directly
       window.open(url, '_blank', 'noopener,noreferrer');
     } else {
-      // Everything else (including itch.io, GitHub releases, etc.) - show warning
+      // Untrusted domain - show warning
       setWarningUrl(url);
     }
   } catch (error) {
