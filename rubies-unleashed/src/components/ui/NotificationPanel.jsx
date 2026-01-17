@@ -1,20 +1,14 @@
 /**
  * ================================================================
- * NOTIFICATION PANEL - Notification Center Dropdown
+ * NOTIFICATION PANEL - Hybrid Notification System
  * ================================================================
  * 
- * Purpose:
- * - Display notification history
- * - Mark as read/unread
- * - Delete/clear notifications
- * - Action buttons (Undo, View)
- * 
  * Features:
+ * - Merges localStorage (project events) + Database (user-targeted)
+ * - Cross-device sync for database notifications
  * - Grouped by date (Today, Yesterday, Earlier)
  * - Unread indicators
  * - Action buttons based on notification type
- * - Empty state
- * - Auto-updates on new notifications
  * ================================================================
  */
 
@@ -22,7 +16,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, Trash2, CheckCheck } from "lucide-react";
+import { X, Trash2, CheckCheck, Loader2 } from "lucide-react";
 import {
   getNotifications,
   markAsRead,
@@ -31,21 +25,29 @@ import {
   clearAllNotifications,
   formatTimeAgo
 } from "@/lib/notificationManager";
+import {
+  fetchDatabaseNotifications,
+  markDatabaseNotificationRead,
+  markAllDatabaseNotificationsRead,
+  deleteDatabaseNotification,
+  clearAllDatabaseNotifications
+} from "@/lib/databaseNotifications";
 import { useToastContext } from "@/components/providers/ToastProvider";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { supabase } from "@/lib/supabase"; 
+import { supabase } from "@/lib/supabase";
 
 export default function NotificationPanel({ isOpen, onClose }) {
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { showToast } = useToastContext();
   const { user } = useAuth();
-  const [confirmClear, setConfirmClear] = useState(false); // New State
-// Helper to check recency
-const isRecent = (timestamp) => {
-    return (Date.now() - timestamp) < 5000; // 60 seconds
-};
+  const [confirmClear, setConfirmClear] = useState(false);
 
+  // Helper to check recency
+  const isRecent = (timestamp) => {
+    return (Date.now() - timestamp) < 5000; // 5 seconds
+  };
 
   useEffect(() => {
     if (confirmClear) {
@@ -56,12 +58,12 @@ const isRecent = (timestamp) => {
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    // Refresh UI every 10s to update "Time Ago" and hide expired Undo buttons
+    // Refresh UI every 3s to update "Time Ago"
     const interval = setInterval(() => {
-        setNotifications(prev => [...prev]); // Force re-render
+      setNotifications(prev => [...prev]); // Force re-render
     }, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -77,30 +79,69 @@ const isRecent = (timestamp) => {
     return () => {
       window.removeEventListener("notificationsChanged", handleNotificationChange);
     };
-  }, []);
+  }, [user]);
 
-  const loadNotifications = () => {
-    setNotifications(getNotifications());
+  const loadNotifications = async () => {
+    setLoading(true);
+    
+    try {
+      // Get localStorage notifications (project lifecycle events)
+      const localNotifs = getNotifications();
+      
+      // Get database notifications (user-targeted)
+      const dbNotifs = user ? await fetchDatabaseNotifications(user.id) : [];
+      
+      // Merge and sort by timestamp
+      const merged = [...dbNotifs, ...localNotifs].sort((a, b) => b.timestamp - a.timestamp);
+      
+      setNotifications(merged);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleMarkAsRead = (notificationId) => {
-    markAsRead(notificationId);
+  const handleMarkAsRead = async (notification) => {
+    if (notification.source === 'database') {
+      await markDatabaseNotificationRead(notification.id);
+    } else {
+      markAsRead(notification.id);
+    }
     loadNotifications();
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
+    // Mark localStorage notifications as read
     markAllAsRead();
+    
+    // Mark database notifications as read
+    if (user) {
+      await markAllDatabaseNotificationsRead(user.id);
+    }
+    
     loadNotifications();
   };
 
-  const handleDelete = (notificationId) => {
-    deleteNotification(notificationId);
+  const handleDelete = async (notification) => {
+    if (notification.source === 'database') {
+      await deleteDatabaseNotification(notification.id);
+    } else {
+      deleteNotification(notification.id);
+    }
     loadNotifications();
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirmClear) {
+      // Clear localStorage notifications
       clearAllNotifications();
+      
+      // Clear database notifications
+      if (user) {
+        await clearAllDatabaseNotifications(user.id);
+      }
+      
       loadNotifications();
       setConfirmClear(false);
     } else {
@@ -108,76 +149,69 @@ const isRecent = (timestamp) => {
     }
   };
 
-
-const performUndoAction = async (action, gameId) => {
+  const performUndoAction = async (action, gameId) => {
     if (user) {
-        // API Call for Auth User
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await fetch('/api/wishlist', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ action, game_id: gameId })
-            });
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ action, game_id: gameId })
+        });
+      }
     }
-};
+  };
 
-const handleUndo = async (notification) => {
+  const handleUndo = async (notification) => {
     const { gameId, game } = notification.actionData;
     
     if (notification.actionData?.type === "wishlist_add") {
-        // Undo Add -> Remove
-        await performUndoAction('remove', gameId);
-        showToast("Removed from wishlist", "info");
+      await performUndoAction('remove', gameId);
+      showToast("Removed from wishlist", "info");
     } else if (notification.actionData?.type === "wishlist_remove") {
-        // Undo Remove -> Add
-        // Note: For guest local add, we need the whole game object. 
-        // Ensure actionData.game is present in addNotification call.
-        if (!user && !game) {
-             showToast("Cannot undo: Missing game data", "error");
-             return;
-        }
-        await performUndoAction('add', gameId); // or game for local
-        showToast("Added back to wishlist", "wishlist");
+      if (!user && !game) {
+        showToast("Cannot undo: Missing game data", "error");
+        return;
+      }
+      await performUndoAction('add', gameId);
+      showToast("Added back to wishlist", "wishlist");
     }
     
-    deleteNotification(notification.id);
-    loadNotifications();
-    window.dispatchEvent(new Event("wishlistUpdated")); // Standardize event name
-};
-const handleView = (notification) => {
-  // ✅ FIXED: Handle project notifications with proper status-based routing
-  if (notification.actionData?.projectId) {
-    const { projectId, type, status } = notification.actionData;
+    await handleDelete(notification);
+    window.dispatchEvent(new Event("wishlistUpdated"));
+  };
+
+  const handleView = (notification) => {
+    // ✅ Use action_url if available (database notifications)
+    if (notification.actionData?.actionUrl) {
+      router.push(notification.actionData.actionUrl);
+      onClose();
+      return;
+    }
     
-    // For draft projects or creation, go to cockpit for editing
-    if (status === 'draft' || type === 'project_created' || type === 'project_updated') {
-      router.push(`/${user?.username}/dashboard/project/${projectId}`);
+    // Legacy routing for localStorage notifications
+    if (notification.actionData?.projectId) {
+      const { projectId, type, status } = notification.actionData;
+      
+      if (status === 'draft' || type === 'project_created' || type === 'project_updated') {
+        router.push(`/${user?.username}/dashboard/project/${projectId}`);
+      } else if (status === 'published' && notification.actionData?.projectSlug) {
+        router.push(`/view/${notification.actionData.projectSlug}`);
+      } else if (type === 'project_deleted' || type === 'project_archived') {
+        router.push(`/${user?.username}/dashboard`);
+      } else {
+        router.push(`/${user?.username}/dashboard/project/${projectId}`);
+      }
+      onClose();
+    } else if (notification.actionData?.gameSlug) {
+      router.push(`/view/${notification.actionData.gameSlug}`);
+      onClose();
     }
-    // For published projects, can go to public view
-    else if (status === 'published' && notification.actionData?.projectSlug) {
-      router.push(`/view/${notification.actionData.projectSlug}`);
-    }
-    // For deleted projects, go to dashboard
-    else if (type === 'project_deleted' || type === 'project_archived') {
-      router.push(`/${user?.username}/dashboard`);
-    }
-    // Fallback to cockpit
-    else {
-      router.push(`/${user?.username}/dashboard/project/${projectId}`);
-    }
-    onClose();
-  }
-  // Legacy game notifications (Blogger content)
-  else if (notification.actionData?.gameSlug) {
-    router.push(`/view/${notification.actionData.gameSlug}`);
-    onClose();
-  }
-};
+  };
+
   // Group notifications by date
   const groupedNotifications = notifications.reduce((groups, notif) => {
     const now = Date.now();
@@ -232,7 +266,12 @@ const handleView = (notification) => {
 
       {/* Notifications List */}
       <div className="max-h-96 max-w-full overflow-y-auto custom-scrollbar">
-        {notifications.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6">
+            <Loader2 size={32} className="animate-spin text-ruby mb-3" />
+            <p className="text-sm text-slate-400">Loading notifications...</p>
+          </div>
+        ) : notifications.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <div className="text-5xl mb-4">🔔</div>
@@ -257,10 +296,10 @@ const handleView = (notification) => {
                 <div
                   key={notif.id}
                   className={`
-                    px-4 py-3 border-b border-white/5 transition-all
+                    px-4 py-3 border-b border-white/5 transition-all cursor-pointer
                     ${!notif.read ? 'bg-ruby/5 hover:bg-ruby/10' : 'hover:bg-white/5'}
                   `}
-                  onClick={() => !notif.read && handleMarkAsRead(notif.id)}
+                  onClick={() => !notif.read && handleMarkAsRead(notif)}
                 >
                   <div className="flex gap-3">
                     {/* Icon */}
@@ -273,22 +312,36 @@ const handleView = (notification) => {
                       <p className="text-sm text-white font-medium leading-snug">
                         {notif.message}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {formatTimeAgo(notif.timestamp)}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-slate-500">
+                          {formatTimeAgo(notif.timestamp)}
+                        </p>
+                        {/* Database notification indicator */}
+                        {notif.source === 'database' && (
+                          <span className="text-[10px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                            Synced
+                          </span>
+                        )}
+                      </div>
 
                       {/* Action Buttons */}
                       {notif.actionData && (
                         <div className="flex gap-2 mt-2">
-                          {/* Existing wishlist undo logic */}
+                          {/* Wishlist undo */}
                           {isRecent(notif.timestamp) && notif.actionData?.type?.includes("wishlist") && (
-                              <button onClick={(e) => { e.stopPropagation(); handleUndo(notif); }} className="text-xs font-bold text-ruby hover:underline">
-                                  Undo
-                              </button>
+                            <button 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                handleUndo(notif); 
+                              }} 
+                              className="text-xs font-bold text-ruby hover:underline"
+                            >
+                              Undo
+                            </button>
                           )}
                           
-                          {/* ✅ ADD PROJECT VIEW BUTTONS */}
-                          {(notif.actionData.gameSlug || notif.actionData.projectSlug || notif.actionData.projectId) && (
+                          {/* View button */}
+                          {(notif.actionData.gameSlug || notif.actionData.projectSlug || notif.actionData.projectId || notif.actionData.actionUrl) && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -307,7 +360,7 @@ const handleView = (notification) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(notif.id);
+                        handleDelete(notif);
                       }}
                       className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
                     >
@@ -348,5 +401,4 @@ const handleView = (notification) => {
       )}
     </div>
   );
-  window.dispatchEvent(new Event("wishlistUpdated"));
 }

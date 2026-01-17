@@ -150,6 +150,19 @@ export default function LoginPage() {
           </button>
         </form>
 
+{/* Forgot Password Link */}
+<div className="mt-4 text-center">
+  <Link 
+    href="/forgot-password" 
+    className="text-sm text-slate-400 hover:text-violet-400 transition-colors font-medium"
+  >
+    Forgot your password?
+  </Link>
+</div>
+
+{/* Divider */}
+<div className="my-6 border-t border-white/5" />
+
         {/* Footer Links */}
         <div className="mt-6 text-center text-sm">
           <p className="text-slate-500">

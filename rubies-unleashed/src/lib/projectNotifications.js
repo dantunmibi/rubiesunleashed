@@ -78,3 +78,33 @@ export function notifyProjectUnpublished(project) {
     }
   });
 }
+
+/**
+ * Notify developer that admin left a comment
+ */
+export function notifyAdminComment({ projectTitle, projectSlug, projectId, commentType, adminUsername }) {
+  if (typeof window === 'undefined') return;
+  
+  const typeLabel = commentType === 'moderation' ? 'moderation note' : 'feedback';
+  
+  addNotification({
+    type: `admin_comment_${commentType}`,
+    message: `Admin left ${typeLabel} on "${projectTitle}"`,
+    icon: commentType === 'moderation' ? '⚠️' : '💬',
+    actionData: {
+      projectId,
+      projectSlug,
+      projectTitle,
+      type: 'admin_comment',
+      commentType,
+      adminUsername
+    }
+  });
+}
+
+// ================================================================
+// SUMMARY
+// ================================================================
+// ✅ Added notifyAdminComment function
+// ✅ Differentiates between feedback and moderation icons
+// ✅ Includes actionData for navigation to dashboard

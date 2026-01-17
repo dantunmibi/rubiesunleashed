@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useState, useMemo, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ModerationNotificationBanner from '@/components/moderation/ModerationNotificationBanner';
+import AdminCommentBanner from '@/components/moderation/AdminCommentBanner';
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase"; 
 import { useToastContext } from '@/components/providers/ToastProvider';
@@ -331,6 +332,9 @@ useEffect(() => {
         </button>
     </div>
         </div>
+
+        {/* ✅ ADD THIS: Admin Comments Banner */}
+        <AdminCommentBanner />
 
         {/* ✅ ADD THIS: Moderation Notification Banner */}
         <ModerationNotificationBanner />

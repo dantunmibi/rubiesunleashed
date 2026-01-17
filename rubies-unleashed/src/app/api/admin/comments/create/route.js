@@ -105,21 +105,39 @@ export async function POST(request) {
     }
 
     // ================================================================
-    // 5. SEND NOTIFICATION TO DEVELOPER
+    // 5. CREATE DATABASE NOTIFICATION FOR DEVELOPER
     // ================================================================
-    // Note: Notifications are handled client-side via event listeners
-    // We return the comment data so the client can trigger the notification
+    const typeLabel = comment_type === 'moderation' ? 'moderation note' : 'feedback';
+    const icon = comment_type === 'moderation' ? '⚠️' : '💬';
+    
+    const { error: notificationError } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: project.user_id,           // ✅ Target: Developer
+        actor_id: user.id,                  // ✅ Actor: Admin
+        type: `admin_comment_${comment_type}`,
+        message: `Admin left ${typeLabel} on "${project.title}"`,
+        icon: icon,
+        action_url: `/${developer.username}/dashboard/project/${project.id}`, // ✅ Direct link to cockpit
+        metadata: {
+          projectId: project.id,
+          projectTitle: project.title,
+          projectSlug: project.slug,
+          commentType: comment_type,
+          adminUsername: profile.username,
+          commentId: adminComment.id
+        }
+      });
+
+    if (notificationError) {
+      console.error('Notification Error:', notificationError);
+      // Don't fail the request if notification fails - comment was still created
+    }
 
     return NextResponse.json({ 
       success: true,
       comment: adminComment,
-      notification_data: {
-        developer_id: project.user_id,
-        project_title: project.title,
-        project_slug: project.slug,
-        comment_type,
-        admin_username: profile.username
-      }
+      notification_sent: !notificationError
     }, { status: 201 });
 
   } catch (error) {
@@ -130,12 +148,3 @@ export async function POST(request) {
     }, { status: 500 });
   }
 }
-
-// ================================================================
-// SUMMARY
-// ================================================================
-// ✅ Verifies admin authentication via token
-// ✅ Validates request body (project_id, comment, comment_type)
-// ✅ Fetches project and developer details
-// ✅ Creates admin comment in database
-// ✅ Returns notification data for client-side handling

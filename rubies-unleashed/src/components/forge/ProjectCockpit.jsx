@@ -14,6 +14,7 @@ import {
   Globe, Eye, Download, Save, Archive, Trash2, Rocket, RefreshCw, AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
+import AdminCommentBanner from '@/components/moderation/AdminCommentBanner';
 
 /**
  * ================================================================
@@ -405,6 +406,8 @@ const confirmDelete = async () => {
                         </div>
                     </div>
                 </div>
+
+                <AdminCommentBanner />
                 
 <div className="flex flex-wrap gap-3">
     {/* ✅ Session Status Indicator */}
@@ -421,7 +424,8 @@ const confirmDelete = async () => {
       {sessionStatus === 'valid' ? 'CONNECTED' : sessionStatus === 'expired' ? 'DISCONNECTED' : 'CHECKING'}
     </div>
 
-    {/* ✅ Preview Button - Always Show */}
+    {/* ✅ Preview Button - Always Show if draft */}
+    {project.status === 'draft' && (
     <a 
       href={`/${user?.user_metadata?.username}/dashboard/project/${project.id}/preview`} 
       target="_blank" 
@@ -430,6 +434,7 @@ const confirmDelete = async () => {
     >
       <Eye size={16} /> Preview
     </a>
+    )}
 
     {/* ✅ Public Page - Only for Published */}
     {project.status === 'published' && (
@@ -728,7 +733,7 @@ const confirmDelete = async () => {
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                    Direct links will show "archived" status
+                    Direct links will return a 404 error
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1 h-1 bg-blue-400 rounded-full"></span>

@@ -16,6 +16,7 @@ import { getSimilarGames } from '@/lib/game-service-client';
 import { Loader2, PackageOpen } from "lucide-react"; 
 import Link from "next/link";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/components/providers/AuthProvider";
 import AuthModal from "@/components/auth/AuthModal";
 
 import GameHero from "@/components/store/GameHero";
@@ -25,6 +26,7 @@ import GameSidebar from "@/components/store/GameSidebar";
 import DownloadCallout from "@/components/store/DownloadCallout";
 import SimilarGames from "@/components/store/SimilarGames";
 import ContentWarningModal from "@/components/store/ContentWarningModal";
+import AdminFloatingMenu from '@/components/admin/AdminFloatingMenu';
 
 export default function ViewClient({ slug, initialGame }) {
   // ✅ Initialize with server data immediately
@@ -35,6 +37,9 @@ export default function ViewClient({ slug, initialGame }) {
   // ✅ Only loading if we truly have nothing
   const [loading, setLoading] = useState(!initialGame);
 
+  const { isAdmin } = useAuth();
+
+  // Wishlist Hook
   const { 
     isWishlisted, 
     toggleWishlist, 
@@ -181,6 +186,9 @@ export default function ViewClient({ slug, initialGame }) {
         onClose={closeAuthModal}
         onContinueAsGuest={handleContinueAsGuest}
       />
+
+      {/* Admin Floating Menu - Only visible to admins */}
+      {isAdmin && <AdminFloatingMenu project={game} />}
       <Footer />
     </div>
   );

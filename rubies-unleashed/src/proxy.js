@@ -13,10 +13,38 @@ export async function proxy(req) {
     
     console.log(`🔍 Proxy checking: ${pathname}`);
     
-    // Define protected path patterns
+    // ✅ CRITICAL: Exclude password recovery routes entirely
+    const publicRoutes = [
+      '/login',
+      '/signup',
+      '/forgot-password',
+      '/reset-password', // ✅ ADD: Allow password recovery
+      '/explore',
+      '/view',
+      '/about',
+      '/help',
+      '/contact',
+      '/privacy',
+      '/terms',
+      '/status',
+      '/publish',
+    ];
+    
+    // Check if current path is public
+    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+    
+    if (isPublicRoute) {
+      console.log(`✅ Allowing public route: ${pathname}`);
+      return NextResponse.next();
+    }
+    
+    // Define protected path patterns (creator dashboard routes)
     const protectedPatterns = [
       /^\/[^\/]+\/dashboard\/project\/[^\/]+\/edit/, // Edit routes
-      /^\/[^\/]+\/dashboard\/project\/[^\/]+\/preview/, // ✅ ADD: Preview routes
+      /^\/[^\/]+\/dashboard\/project\/[^\/]+\/preview/, // Preview routes
+      /^\/[^\/]+\/dashboard/, // All dashboard routes
+      /^\/settings/, // Settings page
+      /^\/admin/, // Admin routes
     ];
     
     // Check if current path is protected
@@ -35,7 +63,6 @@ export async function proxy(req) {
     }
     
     // For protected routes, check for auth token in cookies
-    // ✅ FIX: Check all possible Supabase cookie names
     const allCookies = req.cookies.getAll();
     const authCookie = allCookies.find(c => 
       c.name.includes('sb-') && c.name.includes('auth-token')

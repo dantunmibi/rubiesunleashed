@@ -6,13 +6,14 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import Navbar from "@/components/ui/Navbar";
 import {
   Loader2, ShieldAlert, Users, Flag, CheckCircle, XCircle, EyeOff, Trash2, Plus, RefreshCw, Activity,
-  Star, Award, Sparkles, Search, Filter, AlertTriangle, MessageSquare, Clock, TrendingUp, Shield
+  Star, Award, Sparkles, Search, Filter, AlertTriangle, MessageSquare, Clock, TrendingUp, Shield, Package, Eye
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NotFound from "@/app/not-found"; 
 import ServiceGrid from "@/components/status/ServiceGrid";
 import { useServiceStatus } from "@/hooks/useServiceStatus";
 import { SERVICES } from "@/lib/status/services";
+import AdminCommentModal from '@/components/admin/AdminCommentModal';
 
 
 export default function AdminClient() {
@@ -23,6 +24,7 @@ export default function AdminClient() {
   const [moderationModal, setModerationModal] = useState(null);
   const [moderationReason, setModerationReason] = useState('');
   const [moderating, setModerating] = useState(false);
+  const [commentModal, setCommentModal] = useState(null);
 
   // ✅ NEW: Shared moderation handler
   const handleModerate = async (actionType) => {
@@ -113,6 +115,7 @@ export default function AdminClient() {
         <div className="flex gap-3 mb-8 overflow-x-auto pb-2 border-b border-white/5">
             <TabButton active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={Flag} label="Reports" count={0} />
             <TabButton active={activeTab === "moderation"} onClick={() => setActiveTab("moderation")} icon={MessageSquare} label="Moderation Log" />
+            <TabButton active={activeTab === "projects"} onClick={() => setActiveTab("projects")} icon={Package} label="Recent Projects" />
             <TabButton active={activeTab === "users"} onClick={() => setActiveTab("users")} icon={Users} label="Users" />
             <TabButton active={activeTab === "content"} onClick={() => setActiveTab("content")} icon={EyeOff} label="Content" />
             <TabButton active={activeTab === "migration"} onClick={() => setActiveTab("migration")} icon={Plus} label="Migration" />
@@ -131,6 +134,7 @@ export default function AdminClient() {
                 handleModerate={handleModerate}
               />
             )}
+            {activeTab === 'projects' && <RecentProjectsTab setCommentModal={setCommentModal} />}
             {activeTab === 'moderation' && (
               <ModerationLog 
                 moderationModal={moderationModal}
@@ -210,6 +214,18 @@ export default function AdminClient() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Admin Comment Modal */}
+        {commentModal && (
+          <AdminCommentModal
+            project={commentModal}
+            onClose={() => setCommentModal(null)}
+            onSuccess={() => {
+              setCommentModal(null);
+              // Optionally refresh tab data
+            }}
+          />
         )}
       </main>
     </div>
@@ -1743,5 +1759,205 @@ function UserSearchModal({ searchQuery, setSearchQuery, searchResults, onAssign,
         )}
       </div>
     </div>
+  );
+}
+
+function RecentProjectsTab({ setCommentModal }) {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const filteredProjects = projects.filter(p => {
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return p.title.toLowerCase().includes(query) || 
+             p.developer.toLowerCase().includes(query);
+    }
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="animate-spin text-red-500" size={48} />
+        <span className="ml-4 text-white">Loading projects...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <Package size={20} className="text-red-500" />
+            Recent Published Projects
+          </h3>
+          <p className="text-slate-400 text-sm mt-1">
+            {filteredProjects.length} projects
+          </p>
+        </div>
+        
+        <button
+          onClick={fetchProjects}
+          className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 flex items-center gap-2"
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by title or developer..."
+          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:border-red-500 outline-none"
+        />
+      </div>
+
+      {/* Projects Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredProjects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onComment={() => setCommentModal(project)}
+          />
+        ))}
+      </div>
+
+      {filteredProjects.length === 0 && (
+        <div className="text-center py-20">
+          <Package size={48} className="mx-auto text-slate-600 mb-4" />
+          <p className="text-slate-500 text-lg font-bold">No projects found</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProjectCard({ project, onComment }) {
+  const [moderationModal, setModerationModal] = useState(false);
+
+  return (
+    <>
+      <div className="bg-black/20 border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-all">
+        {/* Cover Image */}
+        <div className="relative aspect-video bg-slate-900">
+          {project.cover_url ? (
+            <img 
+              src={project.cover_url} 
+              alt={project.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-700">
+              <Package size={48} />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-3">
+          <div>
+            <h4 className="font-bold text-white mb-1 line-clamp-1">{project.title}</h4>
+            <p className="text-sm text-slate-400">{project.developer}</p>
+            <p className="text-xs text-slate-600 mt-1">
+              {new Date(project.created_at).toLocaleDateString()}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={onComment}
+              className="flex-1 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 border border-blue-500/30 text-xs font-bold uppercase flex items-center justify-center gap-1"
+            >
+              <MessageSquare size={14} />
+              Comment
+            </button>
+
+            <button
+              onClick={() => setModerationModal(true)}
+              className="flex-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 border border-red-500/30 text-xs font-bold uppercase flex items-center justify-center gap-1"
+            >
+              <ShieldAlert size={14} />
+              Moderate
+            </button>
+
+            
+            <a  href={`/view/${project.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 bg-slate-600/20 text-slate-400 rounded-lg hover:bg-slate-600/40 border border-slate-600/30 text-xs font-bold uppercase flex items-center justify-center"
+            >
+              <Eye size={14} />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Moderation Modal */}
+      {moderationModal && (
+        <div 
+          className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" 
+          onClick={() => setModerationModal(false)}
+        >
+          <div 
+            className="bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-red-500/10 rounded-full border border-red-500/20">
+                <ShieldAlert size={24} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Moderate Project</h3>
+                <p className="text-sm text-slate-400 mt-1">{project.title}</p>
+              </div>
+            </div>
+
+            <p className="text-slate-300 text-sm mb-6">
+              Use the main moderation system in the Reports or Content tabs for full moderation actions (hide/ban/restore).
+            </p>
+
+            <button
+              onClick={() => setModerationModal(false)}
+              className="w-full bg-slate-600 hover:bg-slate-500 text-white px-4 py-3 rounded-xl font-bold uppercase text-sm transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
