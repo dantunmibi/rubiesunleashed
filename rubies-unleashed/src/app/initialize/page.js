@@ -56,24 +56,44 @@ export default function InitializePage() {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleConfirm = async () => {
-    if (!selected || !user) return;
-    setLoading(true);
+const handleConfirm = async () => {
+  if (!selected || !user) return;
+  setLoading(true);
 
+  try {
+    // 1. Update archetype
+    const { error } = await supabase.rpc('update_archetype', { 
+      new_archetype: selected 
+    });
+
+    if (error) throw error;
+
+    // ✅ 2. NEW: Trigger welcome email
     try {
-      const { error } = await supabase.rpc('update_archetype', { 
-        new_archetype: selected 
+      const emailResponse = await fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id })
       });
 
-      if (error) throw error;
-
-      window.location.href = '/'; 
-      
-    } catch (err) {
-      console.error("Initialization Failed:", err.message);
-      setLoading(false);
+      if (emailResponse.ok) {
+        console.log('✅ Welcome email sent successfully');
+      } else {
+        console.error('⚠️ Welcome email failed, but continuing...');
+      }
+    } catch (emailError) {
+      console.error('❌ Email trigger error:', emailError);
+      // Don't block initialization if email fails
     }
-  };
+
+    // 3. Redirect to home
+    window.location.href = '/'; 
+    
+  } catch (err) {
+    console.error("Initialization Failed:", err.message);
+    setLoading(false);
+  }
+};
 
   // Helper to get selected color key
   const selectedColorKey = ARCHETYPES.find(a => a.id === selected)?.colorKey;

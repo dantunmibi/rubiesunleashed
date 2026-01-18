@@ -650,6 +650,9 @@ README.md
  ┃ ┃ ┣ 📂admin
  ┃ ┃ ┃ ┣ 📂assign-blogger-posts
  ┃ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┃ ┣ 📂comments
+ ┃ ┃ ┃ ┃ ┗ 📂create
+ ┃ ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┃ ┗ 📂moderate
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂games
@@ -658,7 +661,9 @@ README.md
  ┃ ┃ ┣ 📂health
  ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂profile
- ┃ ┃ ┃ ┗ 📂update
+ ┃ ┃ ┃ ┣ 📂update
+ ┃ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┃ ┗ 📂upload-avatar
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂projects
  ┃ ┃ ┃ ┣ 📂create
@@ -673,11 +678,15 @@ README.md
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂report
  ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┣ 📂send-welcome-email
+ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┗ 📂wishlist
  ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┣ 📂contact
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂explore
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂forgot-password
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂help
  ┃ ┃ ┗ 📜page.js
@@ -688,6 +697,8 @@ README.md
  ┃ ┣ 📂privacy
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂publish
+ ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂reset-password
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂settings
  ┃ ┃ ┣ 📜layout.js
@@ -730,6 +741,9 @@ README.md
  ┃ ┣ 📜robots.js
  ┃ ┗ 📜sitemap.js
  ┣ 📂components
+ ┃ ┣ 📂admin
+ ┃ ┃ ┣ 📜AdminCommentModal.jsx
+ ┃ ┃ ┗ 📜AdminFloatingMenu.jsx
  ┃ ┣ 📂analytics
  ┃ ┃ ┗ 📜InternalTrafficGuard.js
  ┃ ┣ 📂auth
@@ -754,6 +768,7 @@ README.md
  ┃ ┃ ┣ 📜LandingPage.jsx
  ┃ ┃ ┗ 📜UserDashboard.jsx
  ┃ ┣ 📂moderation
+ ┃ ┃ ┣ 📜AdminCommentBanner.jsx
  ┃ ┃ ┗ 📜ModerationNotificationBanner.jsx
  ┃ ┣ 📂providers
  ┃ ┃ ┣ 📜AuthProvider.jsx
@@ -804,6 +819,7 @@ README.md
  ┣ 📂hooks
  ┃ ┣ 📜useDebounce.js
  ┃ ┣ 📜useGameFilters.js
+ ┃ ┣ 📜useRealtimeNotifications.js
  ┃ ┣ 📜useScrollBehavior.js
  ┃ ┣ 📜useSearch.js
  ┃ ┣ 📜useServiceStatus.js
@@ -828,6 +844,8 @@ README.md
  ┃ ┣ 📜backup-data copy.json.backup
  ┃ ┣ 📜backup-data.json
  ┃ ┣ 📜blogger.js
+ ┃ ┣ 📜databaseNotifications.js
+ ┃ ┣ 📜emailService.js
  ┃ ┣ 📜feed-utils.js
  ┃ ┣ 📜game-service-client.js
  ┃ ┣ 📜game-service.js

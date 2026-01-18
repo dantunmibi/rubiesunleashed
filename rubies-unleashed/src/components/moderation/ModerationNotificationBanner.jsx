@@ -85,13 +85,16 @@ function ModerationAlert({ action, onDismiss }) {
       description: 'Your project has been removed from public listings but you can still edit it.',
       showRequestReview: true // ✅ NEW
     },
-    ban: {
-      color: 'red',
-      icon: Shield,
-      title: 'Project Banned',
-      description: 'This project has been flagged and is no longer accessible. You cannot modify it until reviewed.',
-      showRequestReview: false
-    },
+  ban: {
+    color: 'red',
+    icon: Shield,
+    title: '🚫 Project Banned - Pending Deletion',
+    description: 'This project has been banned and is queued for permanent deletion. All data will be removed.',
+    showRequestReview: false,
+    showExport: true, // ✅ NEW
+    showSupport: true, // ✅ NEW
+    deletionWarning: true // ✅ NEW
+  },
     delete: {
       color: 'red',
       icon: AlertTriangle,
@@ -204,16 +207,71 @@ function ModerationAlert({ action, onDismiss }) {
             {config.description}
           </p>
 
-          {/* Admin Reason */}
-          <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-            <p className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
-              <Shield size={12} />
-              Platform Team Message
-            </p>
-            <p className="text-sm text-white leading-relaxed">
-              {action.reason}
-            </p>
-          </div>
+{/* Admin Reason */}
+<div className="bg-black/30 border border-white/10 rounded-xl p-4">
+  <p className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
+    <Shield size={12} />
+    Platform Team Message
+  </p>
+  <p className="text-sm text-white leading-relaxed">
+    {action.reason}
+  </p>
+</div>
+
+{/* ✅ NEW: Deletion Warning for Banned Projects */}
+{config.deletionWarning && (
+  <div className="mt-4 bg-red-950/30 border border-red-500/30 rounded-xl p-4">
+    <div className="flex items-start gap-3">
+      <AlertTriangle size={20} className="text-red-400 shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <h4 className="font-bold text-red-400 mb-2">Scheduled for Permanent Deletion</h4>
+        <p className="text-sm text-red-300/80 mb-3">
+          This project violated platform guidelines and will be permanently removed. 
+          All project data, files, and statistics will be deleted.
+        </p>
+        <div className="flex items-center gap-2 text-xs text-red-400/70">
+          <Clock size={12} />
+          <span>Banned: {new Date(action.created_at).toLocaleDateString()}</span>
+          <span>•</span>
+          <span>Deletion: Within 30 days (admin discretion)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* ✅ NEW: Export + Support Buttons for Banned Projects */}
+{config.showExport && (
+  <div className="mt-4 pt-4 border-t border-white/10">
+    <p className="text-xs text-slate-400 mb-3">
+      If you believe this is an error, contact support immediately. 
+      You can export your project data before deletion.
+    </p>
+    
+    <div className="grid grid-cols-2 gap-3">
+      <button
+        onClick={() => {
+          // ✅ TODO: Implement export functionality
+          window.open(`/api/projects/export?id=${action.project_id}`, '_blank');
+        }}
+        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+        </svg>
+        Export Project Data
+      </button>
+      
+      <a
+        href="/contact"
+        className="bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+      >
+        <Shield size={16} />
+        Contact Support
+      </a>
+    </div>
+  </div>
+)}
 
           {/* Metadata */}
           {action.metadata && (

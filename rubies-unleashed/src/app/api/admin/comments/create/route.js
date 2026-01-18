@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendAdminCommentEmail } from '@/lib/emailService';
 
 export async function POST(request) {
   const supabase = createClient(
@@ -107,38 +108,74 @@ export async function POST(request) {
     // ================================================================
     // 5. CREATE DATABASE NOTIFICATION FOR DEVELOPER
     // ================================================================
-    const typeLabel = comment_type === 'moderation' ? 'moderation note' : 'feedback';
-    const icon = comment_type === 'moderation' ? '⚠️' : '💬';
-    
-    const { error: notificationError } = await supabase
-      .from('user_notifications')
-      .insert({
-        user_id: project.user_id,           // ✅ Target: Developer
-        actor_id: user.id,                  // ✅ Actor: Admin
-        type: `admin_comment_${comment_type}`,
-        message: `Admin left ${typeLabel} on "${project.title}"`,
-        icon: icon,
-        action_url: `/${developer.username}/dashboard/project/${project.id}`, // ✅ Direct link to cockpit
-        metadata: {
-          projectId: project.id,
-          projectTitle: project.title,
-          projectSlug: project.slug,
-          commentType: comment_type,
-          adminUsername: profile.username,
-          commentId: adminComment.id
-        }
-      });
+// ================================================================
+// 5. SEND NOTIFICATION TO DEVELOPER
+// ================================================================
+const typeLabel = comment_type === 'moderation' ? 'moderation note' : 'feedback';
+const icon = comment_type === 'moderation' ? '⚠️' : '💬';
 
-    if (notificationError) {
-      console.error('Notification Error:', notificationError);
-      // Don't fail the request if notification fails - comment was still created
+// Create database notification
+const { error: notificationError } = await supabase
+  .from('user_notifications')
+  .insert({
+    user_id: project.user_id,
+    actor_id: user.id,
+    type: `admin_comment_${comment_type}`,
+    message: `Admin left ${typeLabel} on "${project.title}"`,
+    icon: icon,
+    action_url: `/${developer.username}/dashboard/project/${project.id}`,
+    metadata: {
+      projectId: project.id,
+      projectTitle: project.title,
+      projectSlug: project.slug,
+      commentType: comment_type,
+      adminUsername: profile.username,
+      commentId: adminComment.id
     }
+  });
 
-    return NextResponse.json({ 
-      success: true,
-      comment: adminComment,
-      notification_sent: !notificationError
-    }, { status: 201 });
+if (notificationError) {
+  console.error('Notification Error:', notificationError);
+}
+
+// ✅ NEW: Send email notification
+let emailSent = false;
+try {
+  // Get developer's email
+  const { data: developerAuth } = await supabase.auth.admin.getUserById(project.user_id);
+  
+  if (developerAuth?.user?.email) {
+    const emailResult = await sendAdminCommentEmail({
+      to: developerAuth.user.email,
+      developerUsername: developer.username,
+      projectTitle: project.title,
+      commentType: comment_type,
+      comment: comment.trim(),
+      adminUsername: profile.username,
+      createdAt: adminComment.created_at
+    });
+    
+    emailSent = emailResult.success;
+    
+    if (emailResult.success) {
+      console.log('✅ Email sent to developer:', developerAuth.user.email);
+    } else {
+      console.error('❌ Email failed:', emailResult.error);
+    }
+  } else {
+    console.warn('⚠️ Developer email not found');
+  }
+} catch (emailError) {
+  console.error('❌ Email sending error:', emailError);
+  // Don't fail the request if email fails
+}
+
+return NextResponse.json({ 
+  success: true,
+  comment: adminComment,
+  notification_sent: !notificationError,
+  email_sent: emailSent // ✅ Track email status
+}, { status: 201 });
 
   } catch (error) {
     console.error('Admin Comment API Error:', error);

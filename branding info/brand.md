@@ -169,6 +169,8 @@ Maintain space around logo equal to half the gemstone height.
 | Instagram      | [@official_rubiesunleashed](https://www.instagram.com/official_rubiesunleashed) | 🔜 Planned |
 | Facebook       | [@rubiesunleashed](https://facebook.com/rubiesunleashed)   | 🔜 Planned
 | Reddit         | r/rubiesunleashed                                          | 🔜 Planned |
+| Bluesky        | rubiesunleashed.bsky.social                                | 🔜 Planned |
+| Threads        | official_rubiesunleashed                                   | 🔜 Planned |
 | Sitemap        | /sitemap.xml                                               | ✅ Live    |
 | Status Page    | /status                                                    | ✅ Live    |
 
@@ -254,6 +256,10 @@ Maintain space around logo equal to half the gemstone height.
 ---
 
 ## 🔟 Brand Evolution (Phase History)
+
+Went Live - December 26, 2025
+Dev accounts Live - January 13, 2026
+Analytics Live - January 7, 2026
 
 | Phase  | Description                                          | Status       |
 |--------|------------------------------------------------------|-------------|

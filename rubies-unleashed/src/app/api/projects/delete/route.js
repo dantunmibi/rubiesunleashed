@@ -22,6 +22,15 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // ✅ NEW: Check if user is admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    const isAdmin = profile?.role === 'admin';
+
     // 2. Parse Query Params
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -46,16 +55,16 @@ export async function DELETE(request) {
       );
     }
 
-    // Verify ownership
-    if (project.user_id !== user.id) {
+    // ✅ MODIFIED: Verify ownership OR admin
+    if (project.user_id !== user.id && !isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized - you do not own this project' },
         { status: 403 }
       );
     }
 
-    // Prevent deletion of banned projects (admin must handle)
-    if (project.status === 'banned') {
+    // ✅ MODIFIED: Only non-admins are blocked from deleting banned projects
+    if (project.status === 'banned' && !isAdmin) {
       return NextResponse.json(
         { error: 'Cannot delete banned project. Contact support for review.' },
         { status: 403 }
@@ -64,23 +73,26 @@ export async function DELETE(request) {
 
     // 4. Handle Hard Delete
     if (hard) {
-      // Require title confirmation
-      if (!confirmTitle || confirmTitle.trim() !== project.title) {
-        return NextResponse.json(
-          { 
-            error: 'Hard delete requires exact title confirmation',
-            hint: 'Send ?confirmTitle=<exact project title>'
-          },
-          { status: 400 }
-        );
+      // ✅ MODIFIED: Admins don't need title confirmation
+      if (!isAdmin) {
+        // Require title confirmation for regular users
+        if (!confirmTitle || confirmTitle.trim() !== project.title) {
+          return NextResponse.json(
+            { 
+              error: 'Hard delete requires exact title confirmation',
+              hint: 'Send ?confirmTitle=<exact project title>'
+            },
+            { status: 400 }
+          );
+        }
       }
 
       // Perform hard delete
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id); // Double-check ownership
+        .eq('id', id);
+        // ✅ REMOVED: .eq('user_id', user.id) - so admins can delete any project
 
       if (error) {
         console.error('Hard delete error:', error);
@@ -90,7 +102,8 @@ export async function DELETE(request) {
       return NextResponse.json({ 
         deleted: true, 
         hard: true,
-        message: 'Project permanently deleted'
+        message: `Project permanently deleted${isAdmin ? ' (admin override)' : ''}`,
+        admin_action: isAdmin
       });
     }
 
@@ -99,7 +112,7 @@ export async function DELETE(request) {
       .from('projects')
       .update({ status: 'archived' })
       .eq('id', id)
-      .eq('user_id', user.id)
+      // ✅ MODIFIED: Don't check user_id for admins
       .select()
       .single();
 
@@ -119,7 +132,8 @@ export async function DELETE(request) {
       deleted: true, 
       hard: false,
       project: archivedProject,
-      message: 'Project archived (can be restored by changing status)'
+      message: `Project archived${isAdmin ? ' (admin override)' : ''}`,
+      admin_action: isAdmin
     });
 
   } catch (error) {

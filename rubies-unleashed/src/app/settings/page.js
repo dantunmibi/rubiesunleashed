@@ -97,7 +97,7 @@ function SettingsContent() {
             console.warn("Save timed out. Triggering session recovery.");
             setLoading(false);
             if (triggerError) triggerError();
-        }, 5000);
+        }, 10000);
     }
     return () => clearTimeout(timer);
   }, [loading, triggerError]);
@@ -337,6 +337,70 @@ function SettingsContent() {
 // --- SUB-COMPONENTS ---
 
 function ProfileSettings({ formData, setFormData, profile }) {
+    const [uploading, setUploading] = useState({ avatar: false, cover: false });
+    const [previewUrls, setPreviewUrls] = useState({ avatar: '', cover: '' }); // ✅ NEW: Separate preview state
+    const { showToast } = useToastContext();
+
+    // ✅ Sync preview with formData on mount and updates
+    useEffect(() => {
+        setPreviewUrls({
+            avatar: formData.avatarUrl || '',
+            cover: formData.coverUrl || ''
+        });
+    }, [formData.avatarUrl, formData.coverUrl]);
+
+    const handleImageUpload = async (file, type) => {
+        if (!file) return;
+
+        // ✅ Validate file size (2MB limit)
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('File too large. Max 2MB allowed.', 'error');
+            return;
+        }
+
+        setUploading(prev => ({ ...prev, [type]: true }));
+        
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            // ✅ FIXED: Use different variable name to avoid shadowing
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', file);
+            uploadFormData.append('type', type); // ✅ This tells API to save as 'avatar' or 'cover'
+
+            const response = await fetch('/api/profile/upload-avatar', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session?.access_token}`
+                },
+                body: uploadFormData
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed');
+            }
+
+            const result = await response.json();
+            
+            // ✅ Update both state and preview immediately
+            if (type === 'avatar') {
+                setFormData(prev => ({ ...prev, avatarUrl: result.url }));
+                setPreviewUrls(prev => ({ ...prev, avatar: result.url }));
+            } else {
+                setFormData(prev => ({ ...prev, coverUrl: result.url }));
+                setPreviewUrls(prev => ({ ...prev, cover: result.url }));
+            }
+
+            showToast(result.message, 'success');
+        } catch (error) {
+            console.error('Upload error:', error);
+            showToast(error.message, 'error');
+        } finally {
+            setUploading(prev => ({ ...prev, [type]: false }));
+        }
+    };
+
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold text-white mb-4">Public Identity</h2>
@@ -360,38 +424,52 @@ function ProfileSettings({ formData, setFormData, profile }) {
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Avatar URL</label>
+            {/* ✅ Avatar Upload */}
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Avatar Image</label>
+                <div className="flex gap-4 items-start">
                     <input 
-                        type="text" 
-                        value={formData.avatarUrl}
-                        onChange={(e) => setFormData({...formData, avatarUrl: e.target.value})}
-                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-(--user-accent) focus:outline-none text-xs font-mono"
-                        placeholder="https://..."
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => handleImageUpload(e.target.files[0], 'avatar')}
+                        disabled={uploading.avatar}
+                        className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-(--user-accent) file:text-white hover:file:brightness-110 disabled:opacity-50"
                     />
+                    {uploading.avatar && <Loader2 className="animate-spin text-(--user-accent)" size={20} />}
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Max 2MB. JPG, PNG, or WebP</p>
+            </div>
 
-                <div>
-                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Cover Image URL</label>
+            {/* ✅ Cover Upload */}
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Cover Image</label>
+                <div className="flex gap-4 items-start">
                     <input 
-                        type="text" 
-                        value={formData.coverUrl}
-                        onChange={(e) => setFormData({...formData, coverUrl: e.target.value})}
-                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-(--user-accent) focus:outline-none text-xs font-mono"
-                        placeholder="https://..."
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => handleImageUpload(e.target.files[0], 'cover')}
+                        disabled={uploading.cover}
+                        className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-(--user-accent) file:text-white hover:file:brightness-110 disabled:opacity-50"
                     />
+                    {uploading.cover && <Loader2 className="animate-spin text-(--user-accent)" size={20} />}
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Max 2MB. JPG, PNG, or WebP</p>
             </div>
             
+            {/* ✅ FIXED: Live Preview using previewUrls state */}
             <div className="mt-8">
                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4">Live Preview</p>
                 
                 <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#0f131f] h-48 group">
                     <div className="absolute inset-0">
-                        {formData.coverUrl ? (
+                        {previewUrls.cover ? (
                             <>
-                                <img src={formData.coverUrl} className="w-full h-full object-cover opacity-60" alt="Cover" />
+                                <img 
+                                    src={previewUrls.cover} 
+                                    className="w-full h-full object-cover opacity-60" 
+                                    alt="Cover Preview"
+                                    key={previewUrls.cover} // ✅ Force re-render on URL change
+                                />
                                 <div className="absolute inset-0 bg-linear-to-t from-[#0f131f] via-[#0f131f]/40 to-transparent" />
                             </>
                         ) : (
@@ -401,8 +479,13 @@ function ProfileSettings({ formData, setFormData, profile }) {
 
                     <div className="absolute bottom-6 left-6 flex items-end gap-4 z-10">
                         <div className="w-20 h-20 rounded-full bg-linear-to-tr from-(--user-accent) to-slate-600 p-1 shadow-2xl overflow-hidden">
-                            {formData.avatarUrl ? (
-                                <img src={formData.avatarUrl} className="w-full h-full object-cover rounded-full bg-[#0b0f19]" alt="Avatar" />
+                            {previewUrls.avatar ? (
+                                <img 
+                                    src={previewUrls.avatar} 
+                                    className="w-full h-full object-cover rounded-full bg-[#0b0f19]" 
+                                    alt="Avatar Preview"
+                                    key={previewUrls.avatar} // ✅ Force re-render on URL change
+                                />
                             ) : (
                                 <div className="w-full h-full rounded-full bg-[#0b0f19] flex items-center justify-center text-white">
                                     <User size={24} />

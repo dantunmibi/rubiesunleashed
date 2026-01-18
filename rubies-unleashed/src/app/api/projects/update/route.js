@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendProjectPublishedEmail } from '@/lib/emailService'; // ✅ ADD
 
 export async function PUT(request) {
   const supabase = createClient(
@@ -8,7 +9,7 @@ export async function PUT(request) {
   );
 
   try {
-    // 1. Verify Auth (Enhanced token extraction)
+    // 1. Verify Auth
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace(/^Bearer\s+/i, '').trim();
     
@@ -30,18 +31,15 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'ID required' }, { status: 400 });
     }
 
-    // 3. Get Current Project State (for validation)
+    // 3. Get Current Project State
     const { data: currentProject, error: fetchError } = await supabase
       .from('projects')
-      .select('status, user_id')
+      .select('status, user_id, slug, title') // ✅ Added slug and title for email
       .eq('id', id)
       .single();
 
     if (fetchError || !currentProject) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     // Verify ownership
@@ -52,7 +50,7 @@ export async function PUT(request) {
       );
     }
 
-    // 4. Sanitize Updates (Immutable Fields)
+    // 4. Sanitize Updates
     delete updates.slug;
     delete updates.user_id;
     delete updates.created_at;
@@ -62,7 +60,6 @@ export async function PUT(request) {
     if (updates.status) {
       const allowedStatuses = ['draft', 'published', 'archived'];
       
-      // Prevent invalid status
       if (!allowedStatuses.includes(updates.status)) {
         return NextResponse.json(
           { error: `Invalid status. Allowed: ${allowedStatuses.join(', ')}` },
@@ -70,7 +67,6 @@ export async function PUT(request) {
         );
       }
       
-      // Prevent un-banning (only admins can do this)
       if (currentProject.status === 'banned') {
         return NextResponse.json(
           { error: 'Cannot modify banned project. Contact support.' },
@@ -88,7 +84,6 @@ export async function PUT(request) {
         );
       }
 
-      // Validate each link has required fields
       const isValid = updates.download_links.every(
         link => 
           link && 
@@ -107,7 +102,6 @@ export async function PUT(request) {
         );
       }
 
-      // Cache first download URL
       updates.download_url = updates.download_links[0]?.url || null;
     }
 
@@ -148,6 +142,9 @@ export async function PUT(request) {
       }
     }
 
+    // ✅ NEW: Detect if publishing for first time
+    const isPublishing = updates.status === 'published' && currentProject.status !== 'published';
+
     // 9. Update Project
     const { data: project, error } = await supabase
       .from('projects')
@@ -167,6 +164,48 @@ export async function PUT(request) {
         { error: 'Update failed - project not found' },
         { status: 404 }
       );
+    }
+
+    // ✅ NEW: Send publishing email if status changed to published
+    if (isPublishing) {
+      console.log('🚀 Project published! Sending email notification');
+      
+      try {
+        // Get user email
+        const { data: { user: authUser }, error: userError } = await supabase.auth.admin.getUserById(user.id);
+        
+        if (userError || !authUser?.email) {
+          console.error('❌ Failed to get user email:', userError);
+        } else {
+          // Get username
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .single();
+
+          if (profileError || !profile) {
+            console.error('❌ Failed to get profile:', profileError);
+          } else {
+            // Send publishing email
+            const emailResult = await sendProjectPublishedEmail({
+              to: authUser.email,
+              username: profile.username,
+              projectTitle: project.title,
+              projectSlug: project.slug
+            });
+
+            if (emailResult.success) {
+              console.log('✅ Project published email sent to:', authUser.email);
+            } else {
+              console.error('❌ Publishing email failed:', emailResult.error);
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error('❌ Publishing email handler error:', emailError);
+        // Don't fail the update if email fails
+      }
     }
 
     return NextResponse.json({ project });

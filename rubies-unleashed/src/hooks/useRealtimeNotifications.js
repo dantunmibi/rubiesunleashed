@@ -24,109 +24,111 @@ export function useRealtimeNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const channelRef = useRef(null);
 
-  useEffect(() => {
-    if (!user?.id) {
-      console.log('⚠️ No user, skipping realtime');
-      setUnreadCount(0);
-      return;
-    }
-
-    console.log('🚀 Setting up realtime for user:', user.id);
-
-    // Cleanup any existing channel first
+useEffect(() => {
+  // ✅ NEW: Early cleanup when user logs out
+  if (!user?.id) {
+    console.log('⚠️ No user, skipping realtime');
+    setUnreadCount(0);
+    
+    // ✅ Cleanup channel when user logs out
     if (channelRef.current) {
-      console.log('🧹 Cleaning up old channel');
+      console.log('🧹 User logged out - cleaning up channel');
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
+    
+    return; // ✅ Exit early
+  }
 
-    // Fetch initial count
-    fetchUnreadCount();
+  console.log('🚀 Setting up realtime for user:', user.id);
 
-    // Create unique channel ID
-    const channelId = `notifications:${user.id}:${Date.now()}`;
-    console.log('📡 Creating channel:', channelId);
+  // Cleanup any existing channel first
+  if (channelRef.current) {
+    console.log('🧹 Cleaning up old channel');
+    supabase.removeChannel(channelRef.current);
+    channelRef.current = null;
+  }
 
-    const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'user_notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('🔔 NEW NOTIFICATION RECEIVED:', payload.new);
-          
-          // Update count
-          fetchUnreadCount();
-          
-          // Refresh notification panel
-          window.dispatchEvent(new Event('notificationsChanged'));
-          
-          // Show toast
-          const notification = payload.new;
-          showToast(notification.message, 'info', {
-            icon: notification.icon || '🔔',
-            duration: 5000
-          });
-          
-          console.log('✅ Notification processed');
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'user_notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          console.log('📝 Notification updated');
-          fetchUnreadCount();
-          window.dispatchEvent(new Event('notificationsChanged'));
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'user_notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          console.log('🗑️ Notification deleted');
-          fetchUnreadCount();
-          window.dispatchEvent(new Event('notificationsChanged'));
-        }
-      )
-      .subscribe((status, err) => {
-        console.log('📡 Channel status:', status);
+  // Fetch initial count
+  fetchUnreadCount();
+
+  console.log('📡 Setting up realtime channel for user:', user.id);
+
+  const channel = supabase.channel(`user-notifications-${user.id}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'user_notifications',
+        filter: `user_id=eq.${user.id}`
+      },
+      (payload) => {
+        console.log('🔔 NEW NOTIFICATION RECEIVED:', payload.new);
         
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ REALTIME CONNECTED');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ CHANNEL ERROR:', err);
-        } else if (status === 'TIMED_OUT') {
-          console.error('❌ TIMED OUT');
-        }
-      });
-
-    channelRef.current = channel;
-
-    // Cleanup on unmount
-    return () => {
-      console.log('🔌 Unmounting - cleaning up channel');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+        fetchUnreadCount();
+        window.dispatchEvent(new Event('notificationsChanged'));
+        
+        const notification = payload.new;
+        showToast(notification.message, 'info', {
+          icon: notification.icon || '🔔',
+          duration: 5000
+        });
+        
+        console.log('✅ Notification processed');
       }
-    };
-  }, [user?.id]);
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'user_notifications',
+        filter: `user_id=eq.${user.id}`
+      },
+      () => {
+        console.log('📝 Notification updated');
+        fetchUnreadCount();
+        window.dispatchEvent(new Event('notificationsChanged'));
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'user_notifications',
+        filter: `user_id=eq.${user.id}`
+      },
+      () => {
+        console.log('🗑️ Notification deleted');
+        fetchUnreadCount();
+        window.dispatchEvent(new Event('notificationsChanged'));
+      }
+    )
+    .subscribe((status, err) => {
+      console.log('📡 Channel status:', status);
+      
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ REALTIME CONNECTED');
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('❌ CHANNEL ERROR:', err);
+      } else if (status === 'TIMED_OUT') {
+        console.error('❌ TIMED OUT');
+      }
+    });
+
+  channelRef.current = channel;
+
+  // Cleanup on unmount
+  return () => {
+    console.log('🔌 Unmounting - cleaning up channel');
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+  };
+}, [user?.id]); // Keep this dependency
 
   const fetchUnreadCount = async () => {
     if (!user?.id) return;

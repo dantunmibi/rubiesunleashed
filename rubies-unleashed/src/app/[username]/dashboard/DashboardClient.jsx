@@ -461,29 +461,47 @@ useEffect(() => {
                                     <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
 
-      {/* Info */}
-      <div className="flex-1 text-center md:text-left space-y-2">
-        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-          <h4 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
-            {project.title}
-          </h4>
-          
-          {/* ✅ ADD: Dual Status Badges */}
-          <div className="flex gap-2 items-center">
-            <span className={`self-center md:self-auto px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${status.bg} ${status.color} ${status.border} flex items-center gap-1.5`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${status.dot} animate-pulse`}></span>
-              {status.label}
-            </span>
-            
-            {/* ✅ NEW: Hidden Badge (shows alongside status) */}
-            {isHidden && (
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 ${STATUS_CONFIG.hidden.bg} ${STATUS_CONFIG.hidden.color} ${STATUS_CONFIG.hidden.border}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG.hidden.dot} animate-pulse`}></span>
-                HIDDEN
-              </span>
-            )}
-          </div>
+{/* Info */}
+<div className="flex-1 text-center md:text-left space-y-2">
+  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+    <h4 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+      {project.title}
+    </h4>
+    
+    {/* ✅ Dual Status Badges */}
+    <div className="flex gap-2 items-center">
+      <span className={`self-center md:self-auto px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${status.bg} ${status.color} ${status.border} flex items-center gap-1.5`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${status.dot} animate-pulse`}></span>
+        {status.label}
+      </span>
+      
+      {/* ✅ Hidden Badge */}
+      {isHidden && (
+        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 ${STATUS_CONFIG.hidden.bg} ${STATUS_CONFIG.hidden.color} ${STATUS_CONFIG.hidden.border}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG.hidden.dot} animate-pulse`}></span>
+          HIDDEN
+        </span>
+      )}
+    </div>
+  </div>
+
+  {/* ✅ NEW: Banned Warning (shows below title/badges) */}
+  {project.status === 'banned' && (
+    <div className="bg-red-950/30 border border-red-500/30 rounded-lg p-3 mt-3">
+      <div className="flex items-start gap-2">
+        <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-xs font-bold text-red-400 uppercase mb-1">
+            🚫 Banned - Pending Deletion
+          </p>
+          <p className="text-xs text-red-300/80">
+            This project violated platform guidelines and is queued for permanent deletion. 
+            Contact support if you believe this is an error.
+          </p>
         </div>
+      </div>
+    </div>
+  )}
                                     
                                     {/* Multi-Platform Badges */}
                                     <div className="flex flex-wrap justify-center md:justify-start gap-3 items-center">

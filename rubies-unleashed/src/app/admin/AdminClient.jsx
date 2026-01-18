@@ -328,9 +328,9 @@ const otherActions = actions.filter(a => a.action_type !== 'review_request');
 
   useEffect(() => { fetchActions(); }, []);
 
-  const filteredActions = filter === 'all' 
-    ? actions 
-    : actions.filter(a => a.action_type === filter);
+const filteredActions = filter === 'all' 
+  ? otherActions  // ✅ CHANGED: Use otherActions instead of actions
+  : otherActions.filter(a => a.action_type === filter); // ✅ CHANGED
 
   const actionColors = {
     hide: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
@@ -363,6 +363,31 @@ const otherActions = actions.filter(a => a.action_type !== 'review_request');
           <option value="restore">Restore</option>
           <option value="unban">Unban</option>
         </select>
+            {/* ✅ NEW: Clear All Button */}
+    <button
+      onClick={async () => {
+        if (!confirm('⚠️ Clear ALL moderation history? This cannot be undone!')) return;
+        
+        try {
+          const { error } = await supabase
+            .from('moderation_actions')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+          
+          if (error) throw error;
+          
+          setActions([]);
+          alert('✅ Moderation history cleared');
+        } catch (error) {
+          console.error('Failed to clear history:', error);
+          alert('❌ Failed to clear history');
+        }
+      }}
+      className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 border border-red-500/30 text-xs font-bold uppercase flex items-center gap-2"
+    >
+      <Trash2 size={14} />
+      Clear All
+    </button>
       </div>
 
       {/* Review Requests Section */}
@@ -400,18 +425,30 @@ const otherActions = actions.filter(a => a.action_type !== 'review_request');
                     Approve & Restore
                   </button>
                   
-                  <button
-                    onClick={async () => {
-                      await supabase
-                        .from('moderation_actions')
-                        .update({ acknowledged: true })
-                        .eq('id', request.id);
-                      fetchActions();
-                    }}
-                    className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-xs font-bold uppercase"
-                  >
-                    Deny
-                  </button>
+<button
+  onClick={async () => {
+    if (!confirm('Delete this review request?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('moderation_actions')
+        .delete()
+        .eq('id', request.id);
+      
+      if (error) throw error;
+      
+      // ✅ FIX: Update local state immediately instead of refetching
+      setActions(prev => prev.filter(action => action.id !== request.id));
+      alert('✅ Review request deleted');
+    } catch (error) {
+      console.error('Failed to delete request:', error);
+      alert('❌ Failed to delete request');
+    }
+  }}
+  className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-xs font-bold uppercase"
+>
+  Deny & Delete
+</button>
                 </div>
               </div>
             ))}
@@ -452,12 +489,39 @@ const otherActions = actions.filter(a => a.action_type !== 'review_request');
                   </div>
                 </div>
                 
-                {!action.acknowledged && (
-                  <div className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg">
-                    <p className="text-amber-400 text-xs font-bold uppercase">Unread</p>
-                  </div>
-                )}
-              </div>
+  <div className="flex gap-2">
+    {!action.acknowledged && (
+      <div className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg">
+        <p className="text-amber-400 text-xs font-bold uppercase">Unread</p>
+      </div>
+    )}
+    
+    {/* ✅ NEW: Delete individual action */}
+    <button
+      onClick={async () => {
+        if (!confirm('Delete this moderation record?')) return;
+        
+        try {
+          const { error } = await supabase
+            .from('moderation_actions')
+            .delete()
+            .eq('id', action.id);
+          
+          if (error) throw error;
+          
+          setActions(prev => prev.filter(a => a.id !== action.id));
+        } catch (error) {
+          console.error('Delete failed:', error);
+          alert('Failed to delete record');
+        }
+      }}
+      className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 border border-red-500/20"
+      title="Delete Record"
+    >
+      <Trash2 size={14} />
+    </button>
+  </div>
+</div>
             </div>
           ))
         )}
@@ -499,94 +563,75 @@ function ReportManager({
     }
   };
 
-  const fetchProjectDetails = async (reports) => {
-    const detailsMap = new Map();
-    
-    // Separate UUIDs from Blogger IDs
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const supabaseIds = [];
-    const bloggerIds = [];
-    
-    reports.forEach(r => {
-      if (uuidRegex.test(r.game_id)) {
-        supabaseIds.push(r.game_id);
-      } else {
-        bloggerIds.push(r.game_id);
-      }
-    });
-    
-    // ✅ Fetch Supabase project details
-    if (supabaseIds.length > 0) {
-      try {
-        const { data: projects } = await supabase
-          .from('projects')
-          .select('id, slug, title, developer')
-          .in('id', supabaseIds);
-        
-        projects?.forEach(p => {
-          detailsMap.set(p.id, {
-            title: p.title,
-            developer: p.developer,
-            slug: p.slug,
-            viewUrl: `/view/${p.slug}`,
-            source: 'Supabase'
+const fetchProjectDetails = async (reports) => {
+  const detailsMap = new Map();
+  
+  // Separate UUIDs from Blogger IDs
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const supabaseIds = [];
+  const bloggerIds = [];
+  
+  reports.forEach(r => {
+    if (uuidRegex.test(r.game_id)) {
+      supabaseIds.push(r.game_id);
+    } else {
+      bloggerIds.push(r.game_id);
+    }
+  });
+  
+  // ✅ Fetch Supabase project details
+  if (supabaseIds.length > 0) {
+    try {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, slug, title, developer')
+        .in('id', supabaseIds);
+      
+      projects?.forEach(p => {
+        detailsMap.set(p.id, {
+          title: p.title,
+          developer: p.developer,
+          slug: p.slug,
+          viewUrl: `/view/${p.slug}`,
+          source: 'Supabase'
+        });
+      });
+    } catch (error) {
+      console.error('Failed to fetch Supabase projects:', error);
+    }
+  }
+  
+  // ✅ Fetch Blogger post details using processed data
+  if (bloggerIds.length > 0) {
+    try {
+      const { getUnifiedFeed } = await import('@/lib/game-service-client');
+      const allGames = await getUnifiedFeed({ limit: 500, includeHidden: true }); // ✅ Admin mode
+      
+      // Filter to only Blogger games
+      const bloggerGames = allGames.filter(game => game.source !== 'supabase');
+      
+      bloggerGames.forEach(game => {
+        if (bloggerIds.includes(game.id)) {
+          detailsMap.set(game.id, {
+            title: game.title,
+            developer: game.developer,
+            slug: game.slug, // ✅ Already in slug-id format!
+            viewUrl: `/view/${game.slug}`,
+            source: 'Blogger'
           });
-        });
-      } catch (error) {
-        console.error('Failed to fetch Supabase projects:', error);
-      }
+        }
+      });
+    } catch (error) {
+      console.error('Failed to fetch Blogger games:', error);
     }
-    
-    // ✅ Fetch Blogger post details
-    if (bloggerIds.length > 0) {
-      try {
-        // Use your existing blogger API
-        const response = await fetch('/api/games');
-        const data = await response.json();
-        const bloggerPosts = data.feed?.entry || [];
-        
-        bloggerPosts.forEach(post => {
-          const postId = post.id?.$t || post.id;
-          const cleanId = postId.includes('post-') ? postId.split('post-')[1] : postId;
-          
-          if (bloggerIds.includes(cleanId)) {
-            const title = post.title?.$t || post.title || 'Unknown Game';
-            
-            // Extract developer from content
-            let developer = 'Unknown Developer';
-            const content = post.content?.$t || post.content || '';
-            const devMatch = content.match(/Developer[:\s]+([^<\n]+)/i);
-            if (devMatch) {
-              developer = devMatch[1].trim();
-            }
-            
-            // Get slug from link
-            let slug = cleanId;
-            const link = post.link?.find(l => l.rel === 'alternate')?.href;
-            if (link) {
-              const urlParts = link.split('/');
-              slug = urlParts[urlParts.length - 1].replace('.html', '');
-            }
-            
-            detailsMap.set(cleanId, {
-              title: title,
-              developer: developer,
-              slug: slug,
-              viewUrl: `/view/${slug}`,
-              source: 'Blogger'
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Failed to fetch Blogger posts:', error);
-      }
-    }
-    
-    setProjectDetails(detailsMap);
-  };
+  }
+  
+  setProjectDetails(detailsMap);
+};
 
   useEffect(() => { fetchReports(); }, []);
 
+  // ✅ MOVED: Define getProjectInfo BEFORE it's used in JSX
   const getProjectInfo = (gameId) => {
     if (projectDetails.has(gameId)) {
       return projectDetails.get(gameId);
@@ -655,7 +700,7 @@ function ReportManager({
     <>
       <div className="space-y-4">
         {reports.map((r) => {
-          const projectInfo = getProjectInfo(r.game_id);
+          const projectInfo = getProjectInfo(r.game_id); // ✅ Now defined
           
           return (
             <div key={r.id} className="bg-black/20 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-all">
@@ -685,32 +730,33 @@ function ReportManager({
                     </span>
                   </div>
                   
-                  {/* Project Info */}
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white text-lg mb-1">{projectInfo.title}</h4>
-                        <p className="text-sm text-slate-400">by {projectInfo.developer}</p>
-                      </div>
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${
-                        projectInfo.source === 'Supabase' 
-                          ? 'bg-emerald-500/20 text-emerald-400' 
-                          : 'bg-blue-500/20 text-blue-400'
-                      }`}>
-                        {projectInfo.source}
-                      </span>
-                    </div>
-                    
-                    <a 
-                      href={projectInfo.viewUrl} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-400 hover:text-blue-300 font-mono underline inline-flex items-center gap-1"
-                    >
-                      View Project
-                      <span className="text-slate-600">({projectInfo.slug})</span>
-                    </a>
-                  </div>
+{/* Project Info */}
+<div className="bg-white/5 border border-white/5 rounded-xl p-4">
+  <div className="flex items-start justify-between gap-3 mb-3">
+    <div className="flex-1">
+      <h4 className="font-bold text-white text-lg mb-1">{projectInfo.title}</h4>
+      <p className="text-sm text-slate-400">by {projectInfo.developer}</p>
+    </div>
+    <span className={`px-2 py-1 rounded text-xs font-bold ${
+      projectInfo.source === 'Supabase' 
+        ? 'bg-emerald-500/20 text-emerald-400' 
+        : 'bg-blue-500/20 text-blue-400'
+    }`}>
+      {projectInfo.source}
+    </span>
+  </div>
+  
+  {/* ✅ FIXED: Use slug, not name */}
+  <a 
+    href={projectInfo.viewUrl} 
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-xs text-blue-400 hover:text-blue-300 font-mono underline inline-flex items-center gap-1"
+  >
+    View Project
+    <span className="text-slate-600">({projectInfo.slug})</span>
+  </a>
+</div>
                   
                   {/* Report Details */}
                   <div className="space-y-2">
@@ -924,39 +970,68 @@ function ContentManager() {
         }
     };
 
-    const fetchBannedProjects = async () => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('status', 'banned')
-                .order('updated_at', { ascending: false });
-            if (error) throw error;
-            setBannedProjects(data || []);
-        } catch (error) {
-            console.error("Banned Projects Error:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+const fetchBannedProjects = async () => {
+  setLoading(true);
+  try {
+    const { data: projects, error: projectsError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'banned')
+      .order('updated_at', { ascending: false });
+    
+    if (projectsError) throw projectsError;
 
-    const fetchFlaggedProjects = async () => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('status', 'flagged')
-                .order('updated_at', { ascending: false });
-            if (error) throw error;
-            setFlaggedProjects(data || []);
-        } catch (error) {
-            console.error("Flagged Projects Error:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ✅ NEW APPROACH: Check moderation_actions to see which were MANUALLY banned
+    const { data: moderationActions } = await supabase
+      .from('moderation_actions')
+      .select('project_id')
+      .eq('action_type', 'ban');
+
+    // Projects with moderation_action = manually banned by admin
+    const manuallyBannedIds = new Set(moderationActions?.map(a => a.project_id) || []);
+
+    // Filter: Only show projects that HAVE a moderation action
+    const manuallyBanned = projects?.filter(p => manuallyBannedIds.has(p.id)) || [];
+    
+    console.log('✅ Manually banned (has moderation_action):', manuallyBanned);
+    setBannedProjects(manuallyBanned);
+  } catch (error) {
+    console.error("Banned Projects Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const fetchFlaggedProjects = async () => {
+  setLoading(true);
+  try {
+    const { data: projects, error: projectsError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'banned')
+      .order('updated_at', { ascending: false });
+    
+    if (projectsError) throw projectsError;
+
+    // ✅ NEW APPROACH: Check moderation_actions
+    const { data: moderationActions } = await supabase
+      .from('moderation_actions')
+      .select('project_id')
+      .eq('action_type', 'ban');
+
+    const manuallyBannedIds = new Set(moderationActions?.map(a => a.project_id) || []);
+
+    // Filter: Only show projects that DON'T have a moderation action (auto-flagged by trigger)
+    const autoFlagged = projects?.filter(p => !manuallyBannedIds.has(p.id)) || [];
+    
+    console.log('✅ Auto-flagged (no moderation_action):', autoFlagged);
+    setFlaggedProjects(autoFlagged);
+  } catch (error) {
+    console.error("Flagged Projects Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
     const fetchProjects = async () => {
         setLoading(true);
@@ -1001,23 +1076,40 @@ function ContentManager() {
         }
     };
 
-    const permanentlyDelete = async (projectId) => {
-        if (!confirm('⚠️ PERMANENTLY DELETE this project? This cannot be undone!')) return;
-        
-        try {
-            const { error } = await supabase
-                .from('projects')
-                .delete()
-                .eq('id', projectId);
-            
-            if (error) throw error;
-            fetchBannedProjects();
-            fetchFlaggedProjects();
-        } catch (error) {
-            alert("Delete failed: " + error.message);
-        }
-    };
-
+const permanentlyDelete = async (projectId, projectTitle) => {
+  // ✅ Simple confirmation for admins (no title typing)
+  if (!confirm(`⚠️ PERMANENTLY DELETE "${projectTitle}"?\n\nThis action cannot be undone!`)) {
+    return;
+  }
+  
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // ✅ Admin delete - no confirmTitle needed
+    const response = await fetch(`/api/projects/delete?id=${projectId}&hard=true`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${session?.access_token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Delete failed');
+    }
+    
+    const result = await response.json();
+    
+    // Update local state
+    setBannedProjects(prev => prev.filter(p => p.id !== projectId));
+    setFlaggedProjects(prev => prev.filter(p => p.id !== projectId));
+    
+    alert('✅ ' + result.message);
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert("❌ Delete failed: " + error.message);
+  }
+};
     const toggleFeatured = async (projectId, currentStatus) => {
         try {
             const nextOrder = !currentStatus ? Math.floor(Date.now() / 1000) : 0;
@@ -1128,51 +1220,40 @@ function ContentManager() {
             </div>
 
             {/* Hidden Content Tab */}
-            {contentTab === 'hidden' && (
-              <>
-                <div className="flex gap-4 p-4 bg-amber-900/10 border border-amber-500/20 rounded-xl items-end">
-                    <div className="flex-1">
-                        <label className="text-xs font-bold text-amber-400 uppercase tracking-widest block mb-2">
-                            Hide by Game ID or Slug
-                        </label>
-                        <input 
-                            value={manualId} 
-                            onChange={(e) => setManualId(e.target.value)} 
-                            placeholder="e.g. game-title-abc123 or 123456789" 
-                            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-amber-500 outline-none" 
-                        />
-                    </div>
-                    <button 
-                        onClick={manualHide} 
-                        className="bg-amber-600 hover:bg-amber-500 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase"
-                    >
-                        Hide
-                    </button>
-                </div>
-                
-                <div>
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                        <EyeOff size={18} className="text-amber-500" /> Hidden Content ({hidden.length})
-                    </h3>
-                    <div className="space-y-2">
-                        {hidden.map(h => (
-                            <div key={h.game_id} className="flex items-center justify-between p-3 bg-black/20 border border-white/5 rounded-lg">
-                                <div>
-                                    <p className="font-mono text-xs text-white">{h.game_id}</p>
-                                    <p className="text-xs text-slate-500 uppercase">{h.reason}</p>
-                                </div>
-                                <button 
-                                    onClick={() => unhide(h.game_id)} 
-                                    className="text-xs bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded hover:bg-emerald-500/20 font-bold uppercase"
-                                >
-                                    Restore
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-              </>
-            )}
+{contentTab === 'hidden' && (
+  <>
+    <div className="flex gap-4 p-4 bg-amber-900/10 border border-amber-500/20 rounded-xl items-end">
+      <div className="flex-1">
+        <label className="text-xs font-bold text-amber-400 uppercase tracking-widest block mb-2">
+          Hide by Game ID or Slug
+        </label>
+        <input 
+          value={manualId} 
+          onChange={(e) => setManualId(e.target.value)} 
+          placeholder="e.g. game-title-abc123 or 123456789" 
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-amber-500 outline-none" 
+        />
+      </div>
+      <button 
+        onClick={manualHide} 
+        className="bg-amber-600 hover:bg-amber-500 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase"
+      >
+        Hide
+      </button>
+    </div>
+    
+    <div>
+      <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+        <EyeOff size={18} className="text-amber-500" /> Hidden Content ({hidden.length})
+      </h3>
+      <div className="space-y-3">
+        {hidden.map(h => (
+          <HiddenContentCard key={h.game_id} hiddenItem={h} onRestore={unhide} />
+        ))}
+      </div>
+    </div>
+  </>
+)}
 
             {/* Moderation Bans Tab */}
             {contentTab === 'banned' && (
@@ -1220,13 +1301,13 @@ function ContentManager() {
                                         <RefreshCw size={16} />
                                     </button>
 
-                                    <button
-                                        onClick={() => permanentlyDelete(project.id)}
-                                        className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 border border-red-500/30"
-                                        title="Permanently Delete"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+<button
+  onClick={() => permanentlyDelete(project.id, project.title)} // ✅ Pass title
+  className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 border border-red-500/30"
+  title="Permanently Delete"
+>
+  <Trash2 size={16} />
+</button>
                                 </div>
                             </div>
                         ))
@@ -1280,13 +1361,13 @@ function ContentManager() {
                                         <CheckCircle size={16} />
                                     </button>
 
-                                    <button
-                                        onClick={() => permanentlyDelete(project.id)}
-                                        className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 border border-red-500/30"
-                                        title="Permanently Delete"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+<button
+  onClick={() => permanentlyDelete(project.id, project.title)} // ✅ Pass title
+  className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 border border-red-500/30"
+  title="Permanently Delete"
+>
+  <Trash2 size={16} />
+</button>
                                 </div>
                             </div>
                         ))
@@ -1358,6 +1439,175 @@ function ContentManager() {
             )}
         </div>
     );
+}
+
+// ✅ FIXED: Use fetchGameById from blogger.js for fully processed data
+function HiddenContentCard({ hiddenItem, onRestore }) {
+  const [projectData, setProjectData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjectData();
+  }, [hiddenItem.game_id]);
+
+  const fetchProjectData = async () => {
+    setLoading(true);
+    try {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      // ✅ Supabase projects (UUID pattern)
+      if (uuidRegex.test(hiddenItem.game_id)) {
+        const { data: project } = await supabase
+          .from('projects')
+          .select('id, title, developer, cover_url, slug')
+          .eq('id', hiddenItem.game_id)
+          .single();
+        
+        if (project) {
+          setProjectData({
+            ...project,
+            source: 'Supabase'
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // ✅ Blogger posts - use existing fetchGameById (fully processed)
+      const { fetchGameById } = await import('@/lib/blogger');
+      const game = await fetchGameById(hiddenItem.game_id);
+      
+      if (game) {
+        setProjectData({
+          id: game.id,
+          title: game.title,
+          developer: game.developer,
+          cover_url: game.image,
+          slug: game.slug,
+          source: 'Blogger'
+        });
+      } else {
+        // Post was deleted from Blogger entirely
+        setProjectData({
+          id: hiddenItem.game_id,
+          title: 'Deleted Post',
+          developer: 'No longer available',
+          cover_url: null,
+          slug: hiddenItem.game_id,
+          source: 'Deleted',
+          isOrphaned: true
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch hidden project data:', error);
+      setProjectData({
+        id: hiddenItem.game_id,
+        title: 'Error Loading',
+        developer: 'Unable to fetch data',
+        cover_url: null,
+        slug: hiddenItem.game_id,
+        source: 'Error',
+        isOrphaned: true
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-20 bg-slate-800 animate-pulse rounded" />
+          <div className="space-y-2">
+            <div className="h-4 w-40 bg-slate-800 animate-pulse rounded" />
+            <div className="h-3 w-24 bg-slate-800 animate-pulse rounded" />
+          </div>
+        </div>
+        <Loader2 className="animate-spin text-slate-600" size={16} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-lg hover:bg-black/30 transition-colors">
+      <div className="flex items-center gap-4 flex-1">
+        {/* Cover Image */}
+        <div className="w-16 h-20 bg-slate-900 rounded border border-white/10 overflow-hidden shrink-0">
+          {projectData?.cover_url ? (
+            <img 
+              src={projectData.cover_url} 
+              alt={projectData.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-700">
+              <Package size={24} />
+            </div>
+          )}
+        </div>
+
+        {/* Project Info */}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-white text-sm mb-1 truncate">
+            {projectData?.title || 'Unknown Project'}
+          </h4>
+          <p className="text-xs text-slate-400 truncate">
+            {projectData?.developer || 'Unknown Developer'}
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="font-mono text-xs text-slate-600 truncate">
+              {hiddenItem.game_id}
+            </p>
+            {projectData?.source && (
+              <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded uppercase ${
+                projectData.source === 'Blogger' 
+                  ? 'bg-blue-500/20 text-blue-400' 
+                  : projectData.source === 'Supabase'
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-slate-500/20 text-slate-400'
+              }`}>
+                {projectData.source}
+              </span>
+            )}
+          </div>
+          {hiddenItem.reason && (
+            <p className="text-xs text-amber-400/70 mt-1 line-clamp-1">
+              {hiddenItem.reason}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2 shrink-0 ml-4">
+        {/* Preview Button */}
+        <a 
+          href={projectData?.source === 'Blogger' 
+            ? `/view/${projectData.slug}` 
+            : `/admin/preview/${projectData.slug}`
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 border border-blue-500/20"
+          title="Preview"
+        >
+          <Eye size={16} />
+        </a>
+        
+        {/* Restore Button */}
+        <button 
+          onClick={() => onRestore(hiddenItem.game_id)} 
+          className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500/20 font-bold uppercase border border-emerald-500/20 text-xs"
+        >
+          Restore
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function SystemManager() {
@@ -1766,29 +2016,89 @@ function RecentProjectsTab({ setCommentModal }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [moderationModal, setModerationModal] = useState(null); // ✅ ADD
+  const [moderationReason, setModerationReason] = useState(''); // ✅ ADD
+  const [moderating, setModerating] = useState(false); // ✅ ADD
 
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+
+const [hiddenIds, setHiddenIds] = useState(new Set());
+
+const fetchProjects = async () => {
+  setLoading(true);
+  try {
+    // Fetch projects
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .in('status', ['published', 'banned', 'flagged'])
+      .order('created_at', { ascending: false })
+      .limit(100);
+    
+    if (error) throw error;
+    
+    // Fetch hidden content IDs
+    const { data: hiddenContent } = await supabase
+      .from('hidden_content')
+      .select('game_id');
+    
+    const hiddenSet = new Set(hiddenContent?.map(h => h.game_id) || []);
+    setHiddenIds(hiddenSet);
+    
+    setProjects(data || []);
+  } catch (error) {
+    console.error('Failed to fetch projects:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // ✅ ADD: Shared moderation handler
+  const handleModerate = async (actionType) => {
+    if (!moderationModal || !moderationReason.trim()) {
+      alert('Please provide a reason for this action');
+      return;
+    }
+
+    setModerating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const res = await fetch('/api/admin/moderate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          project_id: moderationModal.id,
+          action_type: actionType,
+          reason: moderationReason
+        })
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'Moderation failed');
+      }
+
+      alert(`✅ Project ${actionType}d successfully`);
+      setModerationModal(null);
+      setModerationReason('');
+      fetchProjects(); // Refresh list
+      
+    } catch (error) {
+      console.error('Moderation error:', error);
+      alert(`❌ Moderation failed: ${error.message}`);
+    } finally {
+      setModerating(false);
+    }
+  };
 
   const filteredProjects = projects.filter(p => {
     if (searchQuery) {
@@ -1809,155 +2119,226 @@ function RecentProjectsTab({ setCommentModal }) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Package size={20} className="text-red-500" />
-            Recent Published Projects
-          </h3>
-          <p className="text-slate-400 text-sm mt-1">
-            {filteredProjects.length} projects
-          </p>
-        </div>
-        
-        <button
-          onClick={fetchProjects}
-          className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 flex items-center gap-2"
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by title or developer..."
-          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:border-red-500 outline-none"
-        />
-      </div>
-
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProjects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            onComment={() => setCommentModal(project)}
-          />
-        ))}
-      </div>
-
-      {filteredProjects.length === 0 && (
-        <div className="text-center py-20">
-          <Package size={48} className="mx-auto text-slate-600 mb-4" />
-          <p className="text-slate-500 text-lg font-bold">No projects found</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ProjectCard({ project, onComment }) {
-  const [moderationModal, setModerationModal] = useState(false);
-
-  return (
     <>
-      <div className="bg-black/20 border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-all">
-        {/* Cover Image */}
-        <div className="relative aspect-video bg-slate-900">
-          {project.cover_url ? (
-            <img 
-              src={project.cover_url} 
-              alt={project.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-700">
-              <Package size={48} />
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="p-4 space-y-3">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
           <div>
-            <h4 className="font-bold text-white mb-1 line-clamp-1">{project.title}</h4>
-            <p className="text-sm text-slate-400">{project.developer}</p>
-            <p className="text-xs text-slate-600 mt-1">
-              {new Date(project.created_at).toLocaleDateString()}
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Package size={20} className="text-red-500" />
+              Recent Published Projects
+            </h3>
+            <p className="text-slate-400 text-sm mt-1">
+              {filteredProjects.length} projects
             </p>
           </div>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={onComment}
-              className="flex-1 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 border border-blue-500/30 text-xs font-bold uppercase flex items-center justify-center gap-1"
-            >
-              <MessageSquare size={14} />
-              Comment
-            </button>
-
-            <button
-              onClick={() => setModerationModal(true)}
-              className="flex-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 border border-red-500/30 text-xs font-bold uppercase flex items-center justify-center gap-1"
-            >
-              <ShieldAlert size={14} />
-              Moderate
-            </button>
-
-            
-            <a  href={`/view/${project.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-2 bg-slate-600/20 text-slate-400 rounded-lg hover:bg-slate-600/40 border border-slate-600/30 text-xs font-bold uppercase flex items-center justify-center"
-            >
-              <Eye size={14} />
-            </a>
-          </div>
+          
+          <button
+            onClick={fetchProjects}
+            className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 flex items-center gap-2"
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
         </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title or developer..."
+            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:border-red-500 outline-none"
+          />
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+
+  isHidden={hiddenIds.has(project.id)} // ✅ Pass hidden status
+              onComment={() => setCommentModal(project)}
+              onModerate={() => setModerationModal(project)} // ✅ PASS HANDLER
+            />
+          ))}
+        </div>
+
+        {filteredProjects.length === 0 && (
+          <div className="text-center py-20">
+            <Package size={48} className="mx-auto text-slate-600 mb-4" />
+            <p className="text-slate-500 text-lg font-bold">No projects found</p>
+          </div>
+        )}
       </div>
 
-      {/* Moderation Modal */}
+      {/* ✅ ADD: Shared Moderation Modal */}
       {moderationModal && (
-        <div 
-          className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" 
-          onClick={() => setModerationModal(false)}
-        >
-          <div 
-            className="bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" 
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#161b2c] border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-3 bg-red-500/10 rounded-full border border-red-500/20">
                 <ShieldAlert size={24} className="text-red-500" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Moderate Project</h3>
-                <p className="text-sm text-slate-400 mt-1">{project.title}</p>
+                <h3 className="text-xl font-bold text-white">Moderation Action</h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  {moderationModal.title}
+                </p>
               </div>
             </div>
 
-            <p className="text-slate-300 text-sm mb-6">
-              Use the main moderation system in the Reports or Content tabs for full moderation actions (hide/ban/restore).
-            </p>
+            <textarea
+              value={moderationReason}
+              onChange={(e) => setModerationReason(e.target.value)}
+              placeholder="Reason for this action (will be shown to developer)..."
+              className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:border-red-500 outline-none min-h-32 mb-6 resize-none"
+              autoFocus
+            />
 
-            <button
-              onClick={() => setModerationModal(false)}
-              className="w-full bg-slate-600 hover:bg-slate-500 text-white px-4 py-3 rounded-xl font-bold uppercase text-sm transition-colors"
-            >
-              Close
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleModerate('hide')}
+                disabled={moderating || !moderationReason.trim()}
+                className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-xl font-bold uppercase text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                {moderating ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
+                Hide from Feed
+              </button>
+
+              <button
+                onClick={() => handleModerate('restore')}
+                disabled={moderating || !moderationReason.trim()}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-xl font-bold uppercase text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                {moderating ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
+                Restore Project
+              </button>
+
+              <button
+                onClick={() => handleModerate('ban')}
+                disabled={moderating || !moderationReason.trim()}
+                className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-xl font-bold uppercase text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                {moderating ? <Loader2 className="animate-spin" size={16} /> : <XCircle size={16} />}
+                Ban Project
+              </button>
+
+              <button
+                onClick={() => { 
+                  setModerationModal(null); 
+                  setModerationReason(''); 
+                }}
+                disabled={moderating}
+                className="w-full bg-white/5 hover:bg-white/10 disabled:opacity-50 text-slate-300 px-4 py-3 rounded-xl font-bold uppercase text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
     </>
+  );
+}
+
+function ProjectCard({ project, isHidden, onComment, onModerate }) {
+  return (
+    <div className="bg-black/20 border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-all">
+      {/* Cover Image */}
+      <div className="relative aspect-video bg-slate-900">
+        {project.cover_url ? (
+          <img 
+            src={project.cover_url} 
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-700">
+            <Package size={48} />
+          </div>
+        )}
+        
+        {/* ✅ Status Badge Overlay */}
+        {project.status !== 'published' && (
+          <div className="absolute top-2 right-2">
+            <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase ${
+              project.status === 'banned' 
+                ? 'bg-red-500/90 text-white' 
+                : project.status === 'flagged'
+                ? 'bg-amber-500/90 text-white'
+                : 'bg-slate-500/90 text-white'
+            }`}>
+              {project.status}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h4 className="font-bold text-white line-clamp-1 flex-1">{project.title}</h4>
+            
+            {/* ✅ FIXED: Use isHidden prop instead of project.is_hidden */}
+            {isHidden && (
+              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-[10px] font-bold uppercase shrink-0">
+                Hidden
+              </span>
+            )}
+          </div>
+          
+          <p className="text-sm text-slate-400">{project.developer}</p>
+          <p className="text-xs text-slate-600 mt-1">
+            {new Date(project.created_at).toLocaleDateString()}
+          </p>
+          
+          {/* ✅ Show status description */}
+          {project.status !== 'published' && (
+            <p className="text-xs mt-2 px-2 py-1 rounded bg-black/30 border border-white/5">
+              {project.status === 'banned' && (
+                <span className="text-red-400">🚫 Banned by moderation</span>
+              )}
+              {project.status === 'flagged' && (
+                <span className="text-amber-400">⚠️ Auto-flagged (3+ reports)</span>
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Actions - rest stays the same */}
+        <div className="flex gap-2">
+          <button
+            onClick={onComment}
+            className="flex-1 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 border border-blue-500/30 text-xs font-bold uppercase flex items-center justify-center gap-1"
+          >
+            <MessageSquare size={14} />
+            Comment
+          </button>
+
+          <button
+            onClick={onModerate}
+            className="flex-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 border border-red-500/30 text-xs font-bold uppercase flex items-center justify-center gap-1"
+          >
+            <ShieldAlert size={14} />
+            Moderate
+          </button>
+
+          <a  
+            href={`/view/${project.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-2 bg-slate-600/20 text-slate-400 rounded-lg hover:bg-slate-600/40 border border-slate-600/30 text-xs font-bold uppercase flex items-center justify-center"
+          >
+            <Eye size={14} />
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }

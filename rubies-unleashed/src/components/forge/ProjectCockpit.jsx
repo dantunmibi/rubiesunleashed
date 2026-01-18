@@ -11,7 +11,7 @@ import SessionErrorOverlay from '@/components/ui/SessionErrorOverlay';
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import { 
   Loader2, Edit, BarChart3, MessageSquare, ShieldAlert, ArrowLeft, 
-  Globe, Eye, Download, Save, Archive, Trash2, Rocket, RefreshCw, AlertTriangle
+  Globe, Eye, Download, Save, Archive, Trash2, Rocket, RefreshCw, AlertTriangle, Shield
 } from "lucide-react";
 import Link from "next/link";
 import AdminCommentBanner from '@/components/moderation/AdminCommentBanner';
@@ -144,7 +144,7 @@ export default function ProjectCockpit({
             console.warn("Operation timed out. Triggering session recovery.");
             setLoading(false);
             if (triggerError) triggerError();
-        }, 3000);
+        }, 5000);
     }
     return () => clearTimeout(timer);
   }, [loading, triggerError]);
@@ -277,7 +277,7 @@ const executeStatusChange = async (newStatus, session = null) => {
       if (onRefreshProject) {
         setTimeout(() => {
           onRefreshProject();
-        }, 1000);
+        }, 3000);
       }
 
     } catch (error) {
@@ -385,6 +385,74 @@ const confirmDelete = async () => {
             <Link href={`/${user?.user_metadata?.username || 'user'}/dashboard`} className="inline-flex items-center gap-2 text-slate-500 hover:text-white mb-6 transition-colors text-xs font-bold uppercase tracking-widest group">
                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Forge
             </Link>
+
+            {/* ✅ UPDATED: Banned Project Overlay (no export) */}
+{project.status === 'banned' && (
+  <div className="mb-6 bg-red-950/50 backdrop-blur-xl border border-red-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-red-900/20 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="p-8 relative">
+      {/* Animated Background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-linear-to-br from-red-500/30 via-transparent to-red-900/30" />
+        <div className="absolute top-0 left-0 w-40 h-40 bg-red-500/20 rounded-full blur-3xl animate-pulse" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
+        {/* Icon */}
+        <div className="p-6 bg-red-500/20 rounded-2xl border border-red-500/30 shadow-lg shadow-red-500/10 shrink-0">
+          <AlertTriangle size={48} className="text-red-400" />
+        </div>
+
+        {/* Message */}
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="text-3xl font-black uppercase tracking-tight text-red-400">
+              🚫 Project Banned
+            </h3>
+            <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-lg text-xs font-bold uppercase text-red-400">
+              Pending Deletion
+            </span>
+          </div>
+          
+          <p className="text-red-300/90 mb-4 leading-relaxed">
+            This project violated platform guidelines and is queued for permanent deletion. 
+            All data will be removed within 30 days.
+          </p>
+
+          {/* Timeline */}
+          <div className="flex items-center gap-4 text-sm text-red-400/70 mb-6 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Shield size={14} />
+              <span>Banned: {new Date(project.updated_at).toLocaleDateString()}</span>
+            </div>
+            <span className="text-red-500/30">•</span>
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={14} />
+              <span>Deletion: Within 30 days</span>
+            </div>
+          </div>
+
+          {/* Contact Support Button */}
+          <a
+            href="/contact"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-red-900/20"
+          >
+            <ShieldAlert size={16} />
+            Contact Support
+          </a>
+          
+          <p className="text-xs text-red-400/60 mt-3">
+            If you believe this is an error, contact support immediately.
+          </p>
+        </div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-4 right-4 w-2 h-2 bg-red-500/50 rounded-full animate-ping"></div>
+      <div className="absolute bottom-4 left-4 w-1 h-1 bg-red-900/50 rounded-full animate-pulse delay-500"></div>
+    </div>
+  </div>
+)}
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-[#161b2c]/50 rounded-3xl border border-white/5 backdrop-blur-xl">
                 <div className="flex items-center gap-6">
