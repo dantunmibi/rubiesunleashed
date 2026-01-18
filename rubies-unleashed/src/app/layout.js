@@ -66,6 +66,7 @@ export default function RootLayout({ children }) {
             }
           `}
         </Script>
+        <meta name="blogarama-site-verification" content="blogarama-6b2bba5a-d0dd-423a-b697-fe4c28e64bb3" />
       </head>
       <body>
         <AuthProvider>
