@@ -12,8 +12,8 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { fetchGameById } from "@/lib/blogger"; // ✅ Remove fetchGames import
-import { getSimilarGames } from '@/lib/game-service-client';
-import { Loader2, PackageOpen } from "lucide-react"; 
+import { getSimilarGames } from "@/lib/game-service-client";
+import { Loader2, PackageOpen } from "lucide-react";
 import Link from "next/link";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -26,26 +26,26 @@ import GameSidebar from "@/components/store/GameSidebar";
 import DownloadCallout from "@/components/store/DownloadCallout";
 import SimilarGames from "@/components/store/SimilarGames";
 import ContentWarningModal from "@/components/store/ContentWarningModal";
-import AdminFloatingMenu from '@/components/admin/AdminFloatingMenu';
+import AdminFloatingMenu from "@/components/admin/AdminFloatingMenu";
 
 export default function ViewClient({ slug, initialGame }) {
   // ✅ Initialize with server data immediately
   const [game, setGame] = useState(initialGame || null);
   const [similarGames, setSimilarGames] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false); // ✅ Add separate loading state
-  
+
   // ✅ Only loading if we truly have nothing
   const [loading, setLoading] = useState(!initialGame);
 
   const { isAdmin } = useAuth();
 
   // Wishlist Hook
-  const { 
-    isWishlisted, 
-    toggleWishlist, 
-    showAuthModal, 
-    closeAuthModal, 
-    handleContinueAsGuest 
+  const {
+    isWishlisted,
+    toggleWishlist,
+    showAuthModal,
+    closeAuthModal,
+    handleContinueAsGuest,
   } = useWishlist(game?.id);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function ViewClient({ slug, initialGame }) {
         if (!currentGame && slug) {
           const parts = slug.split("-");
           const gameId = parts[parts.length - 1].replace(/\.[^/.]+$/, "");
-          
+
           if (gameId) {
             const data = await fetchGameById(gameId);
             if (isMounted) {
@@ -75,38 +75,39 @@ export default function ViewClient({ slug, initialGame }) {
         // ✅ NEW: Smart Similar Games Logic
         if (currentGame && isMounted && similarGames.length === 0) {
           setLoadingSimilar(true);
-          
+
           try {
             const smartSimilarGames = await getSimilarGames({
               currentGameId: currentGame.id,
               currentGameType: currentGame.type,
               currentGameTags: currentGame.tags,
               currentGameDeveloper: currentGame.developer,
-              limit: 4 // Get more for better variety
+              limit: 4, // Get more for better variety
             });
 
             if (isMounted) {
               setSimilarGames(smartSimilarGames);
-              console.log(`🎯 Found ${smartSimilarGames.length} similar games for "${currentGame.title}"`);
+              console.log(
+                `🎯 Found ${smartSimilarGames.length} similar games for "${currentGame.title}"`,
+              );
             }
           } catch (error) {
-            console.error('❌ Similar games fetch failed:', error);
+            console.error("❌ Similar games fetch failed:", error);
             // Fallback: empty array (component will handle gracefully)
             if (isMounted) setSimilarGames([]);
           } finally {
             if (isMounted) setLoadingSimilar(false);
           }
         }
-
       } catch (err) {
         console.error("Game Load Error:", err);
         if (isMounted) setLoading(false);
       }
     }
-    
+
     // Only run load logic if we don't have recommendations yet OR we don't have the game
     if (!game || similarGames.length === 0) {
-        load();
+      load();
     }
 
     return () => {
@@ -129,12 +130,15 @@ export default function ViewClient({ slug, initialGame }) {
     return (
       <div className="min-h-screen bg-[#0b0f19] text-white flex flex-col items-center justify-center gap-4">
         <PackageOpen size={64} className="text-slate-600 mb-2" />
-        <h2 className="text-2xl font-bold uppercase tracking-widest text-slate-400">Item Not Found</h2>
+        <h2 className="text-2xl font-bold uppercase tracking-widest text-slate-400">
+          Item Not Found
+        </h2>
         <p className="text-slate-500 max-w-md text-center">
-          The item you are looking for might have been moved, removed, or the link is incorrect.
+          The item you are looking for might have been moved, removed, or the
+          link is incorrect.
         </p>
-        <Link 
-          href="/explore" 
+        <Link
+          href="/explore"
           className="mt-4 px-6 py-3 rounded-xl bg-ruby text-white font-bold uppercase tracking-widest text-xs hover:bg-ruby-600 transition-colors shadow-lg shadow-ruby/20"
         >
           Return to Explore
@@ -144,19 +148,20 @@ export default function ViewClient({ slug, initialGame }) {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans selection:bg-ruby/30">
-      {/* ✅ Content Warning Modal */}
+      {/* ✅ Content Warning Modal - Mature Content Only */}
       {game.contentWarnings && game.contentWarnings.length > 0 && (
-        <ContentWarningModal 
-          warnings={game.contentWarnings} 
-          gameId={game.id} 
+        <ContentWarningModal
+          warnings={game.contentWarnings}
+          gameId={game.id}
           gameType={game.type}
+          gameAgeRating={game.ageRating} // ✅ NEW: Pass age rating for filtering
         />
       )}
 
       <div className="hidden md:block">
         <Navbar />
       </div>
-      
+
       <GameHero
         game={game}
         isWishlisted={isWishlisted}
@@ -175,12 +180,12 @@ export default function ViewClient({ slug, initialGame }) {
       </main>
 
       {/* ✅ Updated SimilarGames with loading state */}
-      <SimilarGames 
-        games={similarGames} 
+      <SimilarGames
+        games={similarGames}
         currentGameType={game.type}
         loading={loadingSimilar} // ✅ Pass loading state
       />
-      
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={closeAuthModal}

@@ -4,22 +4,28 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, ShieldAlert } from "lucide-react";
 import { getGameTheme } from "@/lib/theme-utils"; // ✅ Modular Theme
 
-export default function ContentWarningModal({ warnings, gameId, gameType }) { // ✅ Added gameType prop
+export default function ContentWarningModal({ warnings, gameId, gameType, gameAgeRating }) { // ✅ Add prop for age rating
   const [isOpen, setIsOpen] = useState(false);
 
   // --- 🎨 THEME ENGINE ---
   const theme = getGameTheme(gameType);
 
-  useEffect(() => {
-    // Check if user has already acknowledged this game's warning
-    const acknowledgedGames = JSON.parse(
-      localStorage.getItem("ruby_warning_acknowledged") || "[]"
-    );
+useEffect(() => {
+  // Check if user has already acknowledged this game's warning
+  const acknowledgedGames = JSON.parse(
+    localStorage.getItem("ruby_warning_acknowledged") || "[]"
+  );
 
-    if (!acknowledgedGames.includes(gameId)) {
-      setIsOpen(true);
-    }
-  }, [gameId]);
+  // ✅ NEW: Only show modal for Mature/Adults Only content
+  const isMatureContent = 
+    gameAgeRating?.toLowerCase().includes('mature') || 
+    gameAgeRating?.toLowerCase().includes('adults only');
+
+  // Show modal if: not acknowledged AND content is mature
+  if (!acknowledgedGames.includes(gameId) && isMatureContent) {
+    setIsOpen(true);
+  }
+}, [gameId, gameAgeRating]); // ✅ Add gameAgeRating to dependencies
 
   const handleAcknowledge = () => {
     // Save acknowledgment to localStorage

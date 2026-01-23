@@ -383,3 +383,118 @@ export async function GET(request) {
     }, { status: 500 });
   }
 }
+
+// DELETE endpoint: Remove moderation action from history
+export async function DELETE(request) {
+  try {
+    // 1. Verify admin auth
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace(/^Bearer\s+/i, '').trim();
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Missing token' }, { status: 401 });
+    }
+
+    // 2. Verify user
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('❌ Auth error:', authError);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 3. Verify admin role
+    const { data: adminProfile } = await supabase
+      .from('profiles')
+      .select('role, username')
+      .eq('id', user.id)
+      .single();
+    
+    if (adminProfile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
+    // 4. Parse request body
+    const body = await request.json();
+    const { actionId, clearAll } = body;
+
+    console.log('🗑️ Delete request:', { actionId, clearAll, admin: adminProfile.username });
+
+    // 5. Use SERVICE ROLE to bypass RLS
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    if (clearAll) {
+      // Clear ALL moderation history
+      const { error } = await adminClient
+        .from('moderation_actions')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+      
+      if (error) {
+        console.error('❌ Clear all failed:', error);
+        throw error;
+      }
+
+      console.log(`✅ Admin ${adminProfile.username} cleared ALL moderation history`);
+
+      return NextResponse.json({ 
+        success: true,
+        message: 'All moderation history cleared'
+      });
+    } else {
+      // Delete single action
+      if (!actionId) {
+        return NextResponse.json({ 
+          error: 'Missing actionId' 
+        }, { status: 400 });
+      }
+
+      const { data, error } = await adminClient
+        .from('moderation_actions')
+        .delete()
+        .eq('id', actionId)
+        .select();
+      
+      if (error) {
+        console.error('❌ Delete failed:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows deleted for ID:', actionId);
+        return NextResponse.json({ 
+          error: 'Action not found' 
+        }, { status: 404 });
+      }
+
+      console.log(`✅ Admin ${adminProfile.username} deleted moderation action:`, data[0].project_title);
+
+      return NextResponse.json({ 
+        success: true,
+        deleted: data[0]
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Delete Error:', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error.message 
+    }, { status: 500 });
+  }
+}

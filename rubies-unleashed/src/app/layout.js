@@ -23,7 +23,7 @@ export const metadata = {
     template: "%s | Rubies Unleashed"
   },
   description:
-    "Discover indie games, apps, and creative digital projects on Rubies Unleashed — a curated marketplace built to showcase rising creators and hidden gems.",
+    "Discover indie games, apps, and creative digital projects on Rubies Unleashed. A curated marketplace showcasing rising creators and hidden gems.",
   
   // ✅ Default Social Card
   openGraph: {
@@ -44,9 +44,15 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Rubies Unleashed',
-    description: 'Discover indie games and apps.',
+    title: 'Rubies Unleashed | Where New Ideas Rise',
+    description:
+      "Discover indie games, apps, and tools from rising creators on Rubies Unleashed.",
     images: ['/rubieslogo.png'],
+  },
+  
+    // Optional: canonical URL fallback
+  alternates: {
+    canonical: '/',
   },
 };
 

@@ -113,11 +113,11 @@
     useEffect(() => {
       const timer = setTimeout(() => {
         if (loading || authLoading) {
-          console.warn("⚠️ 5s Timeout Reached: Forcing Recovery UI");
+          console.warn("⚠️ 10s Timeout Reached: Forcing Recovery UI");
           setLoading(false);
           triggerError();
         }
-      }, 5000);
+      }, 10000);
 
       return () => clearTimeout(timer);
     }, [loading, authLoading, triggerError]);

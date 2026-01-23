@@ -8,15 +8,16 @@
 
 **Short Description:**  
 > Building a home for rising games, apps, and digital creations.
+> A launchpad for indie games, apps, and digital creators.
 
 **Long Description:**  
-> Rubies Unleashed is a creator-first platform where independent developers publish, showcase, and share their digital projects with a global audience. We provide the tools and visibility for emerging creators to transform their passion projects into recognized works, while giving users access to innovative games, apps, and tools they won't find anywhere else.
+> Rubies Unleashed is a creator-first platform where independent developers publish, showcase, and share their digital projects with a global audience. We focus on visibility, ownership, and long-term value, helping emerging creators turn passion projects into recognized work, while giving users early access to innovative games, apps, and tools they won’t find elsewhere.
 
 **Tagline:**  
 > "Where New Ideas Rise"
 
 **Mission Statement:**  
-> To empower indie developers by providing a curated platform to showcase, publish, and promote their digital projects.
+> To empower indie creators with a curated platform that provides visibility, ownership, and long-term preservation for their digital projects.
 
 **Vision Statement:**  
 > To become the definitive launchpad for emerging digital creators, where quality and creativity triumph over budget and marketing spend.
@@ -26,7 +27,12 @@
 - 🎯 Quality over quantity (Curated, not crowded)  
 - 🌱 Community-driven discovery (Archetypes, not algorithms)  
 - 💎 Preservation and legacy (Projects backed up, protected)  
-- 🤝 Radical transparency (Open policies, creator-first terms)
+- 🤝 Radical transparency (Clear policies, creator-first terms)
+
+**Brand Name: Rubies Unleashed**
+- Brand Tagline (Messaging): Where New Ideas Rise
+- Logo Tagline (Visual Only): Unleash Your Power
+- Core Promise: Visibility, ownership, preservation for indie creators
 
 ---
 
@@ -40,10 +46,12 @@
 - Innovative  
 - Trustworthy  
 - Accessible  
-- Inspiring
+- Craft-focused
 
 **Writing Style:**  
 - Active voice: `"You build. We amplify."`  
+- Plain language first, metaphors second
+- System metaphors are internal-first (Forge, Vault, Deploy)
 - No corporate fluff: `"The Forge"`, not `"Creator Suite"`  
 - System metaphors: `"The Vault"`, `"Protocol"`, `"Deploy"`  
 - Celebrate craft: `"Your code, your canvas, your rules"`
@@ -129,6 +137,17 @@ Maintain space around logo equal to half the gemstone height.
 ## 4️⃣ Brand Guidelines
 
 **Voice Guidelines:**  
+Principles:
+Address creators directly
+Be specific and honest
+Avoid artificial urgency
+Acknowledge beta states clearly
+
+Approved Language:
+“Published” instead of “Uploaded”
+“Deploy” instead of “Submit” (with tooltip explanation)
+“Project” instead of “Game-only” terminology
+
 - Address creators directly: `"Your project, your terms"`  
 - Celebrate craft: `"Built with [Unity/Godot/React]"`  
 - Be specific: `"3 downloads today"` not `"Popular!"`  
@@ -170,7 +189,6 @@ Maintain space around logo equal to half the gemstone height.
 | Facebook       | [@rubiesunleashed](https://facebook.com/rubiesunleashed)   | 🔜 Planned
 | Reddit         | r/rubiesunleashed                                          | 🔜 Planned |
 | Bluesky        | rubiesunleashed.bsky.social                                | 🔜 Planned |
-| Threads        | official_rubiesunleashed                                   | 🔜 Planned |
 | Sitemap        | /sitemap.xml                                               | ✅ Live    |
 | Status Page    | /status                                                    | ✅ Live    |
 
@@ -209,7 +227,7 @@ Maintain space around logo equal to half the gemstone height.
 
 | Class      | Color   | Feed Priority       | Personality                    |
 |-----------|---------|------------------|--------------------------------|
-| Hunter    | Ruby    | Games first        | Plays to win, action-focused  |
+| Hunter    | Ruby    | Games first        | Discovers and plays new games early  |
 | Netrunner | Cyan    | Tools/apps first   | Efficiency-driven, tech-savvy |
 | Curator   | Amber   | Quality first      | Preservationist, collector    |
 | Phantom   | Violet  | Underground focus  | Privacy-first, anonymous      |

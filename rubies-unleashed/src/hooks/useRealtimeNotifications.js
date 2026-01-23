@@ -25,110 +25,53 @@ export function useRealtimeNotifications() {
   const channelRef = useRef(null);
 
 useEffect(() => {
-  // ✅ NEW: Early cleanup when user logs out
+  // ✅ Early cleanup when user logs out
   if (!user?.id) {
-    console.log('⚠️ No user, skipping realtime');
+    console.log('⚠️ No user, skipping notifications');
     setUnreadCount(0);
     
-    // ✅ Cleanup channel when user logs out
+    // ✅ Cleanup polling interval when user logs out
     if (channelRef.current) {
-      console.log('🧹 User logged out - cleaning up channel');
-      supabase.removeChannel(channelRef.current);
+      console.log('🧹 User logged out - cleaning up polling');
+      clearInterval(channelRef.current);
       channelRef.current = null;
     }
     
-    return; // ✅ Exit early
+    return;
   }
 
-  console.log('🚀 Setting up realtime for user:', user.id);
+  console.log('🚀 Setting up notification polling for user:', user.id);
 
-  // Cleanup any existing channel first
+  // Cleanup any existing interval first
   if (channelRef.current) {
-    console.log('🧹 Cleaning up old channel');
-    supabase.removeChannel(channelRef.current);
+    console.log('🧹 Cleaning up old polling interval');
+    clearInterval(channelRef.current);
     channelRef.current = null;
   }
 
-  // Fetch initial count
+  // Fetch initial count immediately
   fetchUnreadCount();
 
-  console.log('📡 Setting up realtime channel for user:', user.id);
+  // ✅ NEW: Poll for updates every 15 seconds (Realtime alternative)
+  console.log('⏰ Starting notification polling (15s interval)');
+  const pollInterval = setInterval(() => {
+    console.log('🔄 Polling for notification updates...');
+    fetchUnreadCount();
+    window.dispatchEvent(new Event('notificationsChanged'));
+  }, 15000); // 15 seconds - good balance between responsiveness and API load
 
-  const channel = supabase.channel(`user-notifications-${user.id}`)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'user_notifications',
-        filter: `user_id=eq.${user.id}`
-      },
-      (payload) => {
-        console.log('🔔 NEW NOTIFICATION RECEIVED:', payload.new);
-        
-        fetchUnreadCount();
-        window.dispatchEvent(new Event('notificationsChanged'));
-        
-        const notification = payload.new;
-        showToast(notification.message, 'info', {
-          icon: notification.icon || '🔔',
-          duration: 5000
-        });
-        
-        console.log('✅ Notification processed');
-      }
-    )
-    .on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'user_notifications',
-        filter: `user_id=eq.${user.id}`
-      },
-      () => {
-        console.log('📝 Notification updated');
-        fetchUnreadCount();
-        window.dispatchEvent(new Event('notificationsChanged'));
-      }
-    )
-    .on(
-      'postgres_changes',
-      {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'user_notifications',
-        filter: `user_id=eq.${user.id}`
-      },
-      () => {
-        console.log('🗑️ Notification deleted');
-        fetchUnreadCount();
-        window.dispatchEvent(new Event('notificationsChanged'));
-      }
-    )
-    .subscribe((status, err) => {
-      console.log('📡 Channel status:', status);
-      
-      if (status === 'SUBSCRIBED') {
-        console.log('✅ REALTIME CONNECTED');
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error('❌ CHANNEL ERROR:', err);
-      } else if (status === 'TIMED_OUT') {
-        console.error('❌ TIMED OUT');
-      }
-    });
-
-  channelRef.current = channel;
+  // Store interval ID for cleanup
+  channelRef.current = pollInterval;
 
   // Cleanup on unmount
   return () => {
-    console.log('🔌 Unmounting - cleaning up channel');
+    console.log('🔌 Unmounting - cleaning up polling interval');
     if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
+      clearInterval(channelRef.current);
       channelRef.current = null;
     }
   };
-}, [user?.id]); // Keep this dependency
+}, [user?.id]);
 
   const fetchUnreadCount = async () => {
     if (!user?.id) return;

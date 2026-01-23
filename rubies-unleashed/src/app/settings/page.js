@@ -106,10 +106,10 @@ function SettingsContent() {
   useEffect(() => {
     const timer = setTimeout(() => {
         if (!initialized) {
-            console.warn("Auth initialization timed out (5s).");
+            console.warn("Auth initialization timed out (10s).");
             triggerError(); 
         }
-    }, 5000);
+    }, 10000);
     return () => clearTimeout(timer);
   }, [initialized, triggerError]);
 
@@ -209,10 +209,16 @@ function SettingsContent() {
         }));
       }
 
-      showToast("Settings saved! Refreshing...", "success");
-      setSuccessMsg("System Updated Successfully.");
-      
-      setTimeout(() => window.location.reload(), 1000);
+// ✅ Only refresh if archetype changed
+const archetypeChanged = formData.archetype !== profile.archetype;
+
+if (archetypeChanged) {
+  showToast("Archetype changed! Applying new theme...", "success");
+  setTimeout(() => window.location.reload(), 1500);
+} else {
+  showToast("Settings saved successfully!", "success");
+  setSuccessMsg("System Updated Successfully.");
+}
       
     } catch (error) {
       console.error("Save Error:", error);
@@ -519,6 +525,7 @@ function ArchitectProfileSettings({ formData, setFormData }) {
         else if (lower.includes('discord.gg') || lower.includes('discord.com')) detectedLabel = 'Discord';
         else if (lower.includes('youtube.com')) detectedLabel = 'YouTube';
         else if (lower.includes('instagram.com')) detectedLabel = 'Instagram';
+        else if (lower.includes('reddit.com')) detectedLabel = 'Reddit'; 
 
         setInputs({ label: detectedLabel, url: val });
     };
@@ -531,6 +538,7 @@ function ArchitectProfileSettings({ formData, setFormData }) {
       if (lower.includes('discord')) return 'Discord';
       if (lower.includes('youtube.com')) return 'YouTube';
       if (lower.includes('instagram.com')) return 'Instagram';
+      if (lower.includes('reddit.com')) return 'Reddit';
       return 'Website';
     };
 
@@ -594,13 +602,20 @@ function ArchitectProfileSettings({ formData, setFormData }) {
             <div className="space-y-3">
                 <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Connect Links</label>
                 <div className="flex gap-2">
-                    <select 
-                        value={inputs.label} 
-                        onChange={e => setInputs({...inputs, label: e.target.value})}
-                        className="bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 outline-none focus:border-(--user-accent)"
-                    >
-                        <option>Website</option><option>GitHub</option><option>X(Twitter)</option><option>LinkedIn</option><option>Discord</option><option>YouTube</option><option>Instagram</option>
-                    </select>
+<select 
+  value={inputs.label} 
+  onChange={e => setInputs({...inputs, label: e.target.value})}
+  className="bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 outline-none focus:border-(--user-accent)"
+>
+  <option>Website</option>
+  <option>GitHub</option>
+  <option>X(Twitter)</option>
+  <option>LinkedIn</option>
+  <option>Discord</option>
+  <option>YouTube</option>
+  <option>Instagram</option>
+  <option>Reddit</option>
+</select>
                     <input 
                         type="url" 
                         value={inputs.url} 

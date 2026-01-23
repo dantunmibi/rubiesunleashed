@@ -39,7 +39,7 @@ export default function EditProjectPage() {
             setLoading(false);
             if (triggerError) triggerError();
         }
-    }, 5000);
+    }, 10000);
     return () => clearTimeout(timer);
   }, [loading, authLoading, triggerError]);
 

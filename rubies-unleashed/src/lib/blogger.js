@@ -538,7 +538,8 @@ function normalizePost(post) {
   let howItWorks = [];
   let socialLinks = [];
   let contentWarnings = [];
-  let ageRating = null; // ✅ NEW
+  let ageRating = null;
+  let license = 'Free';
   let cleanDescriptionLines = [];
   let size = null; // ✅ Initialize
 
@@ -820,6 +821,39 @@ if (lowerLine.startsWith('build') || lowerLine.startsWith('platform')) {
           }
           continue;
       }
+
+    // Parse License from tags
+    if (lowerLine.startsWith('license') || lowerLine.startsWith('price')) {
+        const parts = line.split(/[:\-]/);
+        let rawLicense = '';
+        
+        if (parts.length > 1 && parts[1].trim().length > 0) {
+            rawLicense = parts.slice(1).join(' ').trim();
+        } else if (i + 1 < textLines.length) {
+            const nextLine = textLines[i + 1].trim();
+            const nextLineLower = nextLine.toLowerCase();
+            
+            if (!allSectionHeaders.includes(nextLineLower)) {
+                rawLicense = nextLine;
+                i++;
+            }
+        }
+        
+        if (rawLicense.length > 0) {
+            // Normalize to standard values
+            const lower = rawLicense.toLowerCase();
+            if (lower.includes('paid') || lower.includes('premium') || lower.includes('commercial')) {
+                license = 'Paid';
+            } else if (lower.includes('demo') || lower.includes('trial')) {
+                license = 'Demo';
+            } else if (lower.includes('open source') || lower.includes('opensource')) {
+                license = 'Open Source';
+            } else if (lower.includes('free')) {
+                license = 'Free';
+            }
+        }
+        continue;
+    }
 
       if (lowerLine.startsWith('features:') && lowerLine.length > 10) {
           const afterFeatures = line.substring(9).trim();
@@ -1437,6 +1471,18 @@ if (socialLinks.length > 0) {
     });
 }
 
+// ✅ ADD: Fallback license detection from tags if not explicitly set
+if (license === 'Free' && tags.length > 0) {
+    const lowerTags = tags.map(t => t.toLowerCase());
+    if (lowerTags.includes('paid') || lowerTags.includes('premium')) {
+        license = 'Paid';
+    } else if (lowerTags.includes('trial') || lowerTags.includes('demo')) {
+        license = 'Demo';
+    } else if (lowerTags.includes('open source')) {
+        license = 'Open Source';
+    }
+}
+
   return { 
     id, 
     slug: createSlug(title, id),
@@ -1460,6 +1506,7 @@ if (socialLinks.length > 0) {
     socialLinks,
     contentWarnings,
     ageRating, // ✅ NEW
+    license,
     tag: tags[0] || 'Game', 
     size,
     tags, 
@@ -1470,6 +1517,8 @@ if (socialLinks.length > 0) {
     lastUpdated: lastUpdated
   };
 }
+
+
 
 function getBackupGames(limit) {
     if (!BACKUP_DATA?.feed?.entry) return [];

@@ -91,21 +91,41 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
   }, [user]);
 
   // --- HELPER: AUTH TOKEN REFRESHER ---
-  const getAuthToken = async () => {
-      // 1. Try Cached first (Fast)
-      if (authToken) return authToken;
-      
-      // 2. If missing, try fresh getSession (Fallback)
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session) {
-          if (confirm("Session expired. Reload page to re-authenticate?")) {
-              window.location.reload();
-          }
-          throw new Error("AUTH_EXPIRED");
-      }
-      return session.access_token;
-  };
+const getAuthToken = async () => {
+    // 1. Check if cached token is still valid (not expired)
+    if (authToken) {
+        try {
+            // Decode JWT to check expiration (simple check)
+            const payload = JSON.parse(atob(authToken.split('.')[1]));
+            const expiration = payload.exp * 1000; // Convert to ms
+            
+            // If token expires in more than 5 minutes, use it
+            if (expiration > Date.now() + 300000) {
+                console.log('✅ Using cached token (valid)');
+                return authToken;
+            } else {
+                console.log('⚠️ Cached token expiring soon, refreshing...');
+            }
+        } catch (e) {
+            console.warn('❌ Token decode failed, fetching fresh');
+        }
+    }
+    
+    // 2. Fetch fresh session
+    console.log('🔄 Fetching fresh auth session...');
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+        console.error('❌ Session fetch failed:', error);
+        setShowSessionError(true); // Show overlay instead of confirm
+        throw new Error("AUTH_EXPIRED");
+    }
+    
+    // 3. Update cache
+    console.log('✅ Fresh token acquired');
+    setAuthToken(session.access_token);
+    return session.access_token;
+};
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -431,10 +451,16 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
       }
   };
   // Main Form Submission
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
+    
+    // ✅ PREVENT DOUBLE SUBMISSION
+    if (loading || uploading) {
+        console.warn('⚠️ Already processing, ignoring duplicate submit');
+        return;
+    }
 
+    console.log('💾 Starting save operation...');
     setLoading(true);
     setSaveSuccess(false);
 
@@ -484,7 +510,7 @@ export default function ProjectEditor({ project = null, mode = 'create' }) {
           notifyProjectUpdated(data.project);
       }
       showToast(mode === 'create' ? "Project initialized!" : "Changes saved successfully!", "success");
-      setTimeout(() => setSaveSuccess(false), 2000);
+      setTimeout(() => setSaveSuccess(false), 5000);
       
       if (mode === 'create') {
           router.push(`/${user.username}/dashboard/project/${data.project.id}/edit`);
@@ -574,12 +600,31 @@ useEffect(() => {
                     <div className="flex justify-end items-center mb-2">
 <button
     type="submit"
-    disabled={loading || (!isDirty && mode !== 'create' && !saveSuccess)}
-    className={`hidden md:flex ${saveSuccess ? 'bg-green-500 border-green-600' : themeBg} hover:opacity-90 text-white font-bold uppercase text-xs px-4 py-2 rounded-xl transition-all items-center gap-2 disabled:opacity-50`}
+    disabled={loading || uploading || (!isDirty && mode !== 'create' && !saveSuccess)}
+    className={`hidden md:flex ${saveSuccess ? 'bg-green-500 border-green-600' : themeBg} hover:opacity-90 text-white font-bold uppercase text-xs px-4 py-2 rounded-xl transition-all items-center gap-2 disabled:opacity-50 disabled:cursor-not-wait`}
+    title={loading ? "Saving..." : uploading ? "Upload in progress..." : ""}
 >
-    {loading ? <Loader2 className="animate-spin" size={14} /> : 
-     saveSuccess ? <Check size={14} /> : <Save size={14} />} 
-    {saveSuccess ? 'Saved!' : 'Save Changes'}
+    {loading ? (
+        <>
+            <Loader2 className="animate-spin" size={14} />
+            Saving...
+        </>
+    ) : uploading ? (
+        <>
+            <Loader2 className="animate-spin" size={14} />
+            Processing Upload...
+        </>
+    ) : saveSuccess ? (
+        <>
+            <Check size={14} />
+            Saved!
+        </>
+    ) : (
+        <>
+            <Save size={14} />
+            Save Changes
+        </>
+    )}
 </button>
                     </div>
 
@@ -855,53 +900,123 @@ useEffect(() => {
                         {/* 3. TECH SPECS */}
                         {activeSection === 'tech' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div className="space-y-2">
-    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2">
-      <Scale size={14} /> Install Size
-    </label>
-    <input
-      type="text"
-      value={formData.size}
-      onChange={(e) => {
-        const val = e.target.value.toUpperCase();
+{/* ✅ PWA-Aware Size Field */}
+{(() => {
+  const isPWA = formData.tags.some(t => t.toLowerCase() === 'pwa') ||
+                (formData.type === 'App' && 
+                 formData.download_links.some(link => 
+                   link.platform.toLowerCase().includes('web') ||
+                   link.platform.toLowerCase().includes('browser')
+                 ));
 
-        // Allow digits, space, and valid letters for units only
-        if (/^[0-9\sKMGTPB]*$/i.test(val) || val === '') {
-          updateField('size', val);
-        }
-      }}
-      onBlur={() => {
-        // Extract number and valid unit
-        const match = formData.size.trim().match(/^(\d+)\s*([KMGT]?B)?$/i);
-        if (match) {
-          const number = match[1];
-          let unit = match[2]?.toUpperCase() || 'GB';
-
-          // Restrict unit to only allowed ones
-          const allowedUnits = ['KB', 'MB', 'GB', 'TB', 'PB'];
-          if (!allowedUnits.includes(unit)) unit = 'GB';
-
-          updateField('size', `${number} ${unit}`);
-        }
-      }}
-      placeholder="e.g. 3 GB"
-      className={`w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white text-xs ${themeFocus}`}
-    />
-    <p className="text-xs text-slate-400">
-      Example: <strong>3 GB</strong>. Only numbers and units KB, MB, GB, TB, PB allowed.
-    </p>
-  </div>
-</div>
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2">
+          <Scale size={14} /> Install Size
+          {isPWA && (
+            <span className="text-[10px] font-normal text-blue-400 tracking-normal ml-1">
+              (Optional for PWAs)
+            </span>
+          )}
+        </label>
+<input
+  type="text"
+  value={formData.size}
+  onChange={(e) => {
+    let val = e.target.value.toUpperCase();
+    
+    // ✅ Enhanced Pattern: Allow digits, ONE decimal point, spaces, and unit letters
+    // Examples: "3", "3.5", "3.5 GB", "3GB", "3g", ".5"
+    const validPattern = /^(\d*\.?\d*)\s*([KMGTP]?B?)?$/i;
+    
+    if (validPattern.test(val) || val === '') {
+      updateField('size', val);
+    }
+    // ❌ Silently reject invalid input (no action = character not typed)
+  }}
+  onBlur={() => {
+    // Allow empty for PWAs
+    if (!formData.size.trim()) return;
+    
+    const input = formData.size.trim().toUpperCase();
+    
+    // ✅ Enhanced Regex: Captures decimals (e.g., "1.5", "0.75", ".5")
+    const match = input.match(/^(\d*\.?\d+)\s*([KMGTP]?B?)?$/i);
+    
+    if (match) {
+      let number = parseFloat(match[1]);
+      let unit = match[2]?.toUpperCase() || '';
+      
+      // ✅ Smart Unit Completion
+      if (!unit) {
+        unit = 'GB'; // Default unit
+      } else if (unit.length === 1) {
+        unit = unit + 'B'; // "G" → "GB", "M" → "MB"
+      } else if (unit.length === 2 && !unit.endsWith('B')) {
+        // Invalid 2-char unit without B (e.g., "KM")
+        unit = 'GB'; // Fallback
+      }
+      // If already "GB", "MB", etc. - keep as is
+      
+      // ✅ Validate Unit
+      const allowedUnits = ['KB', 'MB', 'GB', 'TB', 'PB'];
+      if (!allowedUnits.includes(unit)) {
+        unit = 'GB'; // Fallback to default
+      }
+      
+      // ✅ Format Number (max 2 decimals, remove trailing zeros)
+      // 1.50 → 1.5, 2.00 → 2, 3.123 → 3.12
+      const decimals = number % 1 === 0 ? 0 : 2;
+      const formatted = `${parseFloat(number.toFixed(decimals))} ${unit}`;
+      
+      updateField('size', formatted);
+    } else {
+      // ❌ Invalid format - clear field
+      updateField('size', '');
+      showToast('Invalid size format. Examples: "3.5 GB", "500 MB"', 'error');
+    }
+  }}
+  placeholder={isPWA ? "Leave blank for web apps" : "e.g. 3.5 GB or 500 MB"}
+  className={`w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white text-xs ${themeFocus}`}
+/>
+        <p className="text-xs text-slate-400">
+          {isPWA ? (
+            <span className="flex items-center gap-1">
+              <Globe size={12} className="text-blue-400" />
+              <span className="text-blue-400">PWAs run in browser - install size optional</span>
+            </span>
+          ) : (
+            <>
+              Example: <strong>3 GB</strong>. Only numbers and units KB, MB, GB, TB, PB allowed.
+            </>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+})()}
 
 
                                 <ListEditor label="Key Features" placeholder="e.g. Dynamic Lighting" theme={themeFocus} {...listHandler('features', 'feature')} />
                                 <ListEditor label="System Requirements" placeholder="e.g. OS: Windows 10" theme={themeFocus} {...listHandler('requirements', 'req')} />
                                 
-                                {isApp ? (
-                                    <ListEditor label="How It Works (Steps)" placeholder="e.g. Install App" theme={themeFocus} {...listHandler('how_it_works', 'howTo')} />
-                                ) : (
-                                    <ListEditor label="Controls" placeholder="e.g. WASD to move" theme={themeFocus} {...listHandler('controls', 'control')} />
+                                {/* How It Works / How to Play - Universal */}
+                                <ListEditor 
+                                label={isApp ? "How It Works (Steps)" : "How to Play (Gameplay Guide)"} 
+                                placeholder={isApp ? "e.g. Install extension, click icon..." : "e.g. Survive waves of enemies..."} 
+                                theme={themeFocus} 
+                                {...listHandler('how_it_works', 'howTo')} 
+                                />
+
+                                {/* Controls - Games Only */}
+                                {!isApp && (
+                                <ListEditor 
+                                    label="Controls (Input Mappings)" 
+                                    placeholder="e.g. WASD - Movement, Space - Jump..." 
+                                    theme={themeFocus} 
+                                    {...listHandler('controls', 'control')} 
+                                />
                                 )}
                             </div>
                         )}
@@ -967,15 +1082,15 @@ useEffect(() => {
                                 </div>
 
                                 {/* HTML5 Embed */}
-                                <div className="pt-4 border-t border-white/5 space-y-3">
-                                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
-                                        <Globe className="text-blue-400 shrink-0" size={18} />
-                                        <p className="text-xs text-blue-300 leading-relaxed">
-                                            <strong>Web Game Mode:</strong> Provide a direct URL to your HTML5/WebGL build (e.g. index.html) to enable in-browser play.
-                                        </p>
-                                    </div>
-                                    <Input label="HTML5 Embed URL" value={formData.html5_embed_url} onChange={v => updateField('html5_embed_url', v)} placeholder="https://..." icon={Play} theme={themeFocus} />
-                                </div>
+<div className="pt-4 border-t border-white/5 space-y-3">
+    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
+        <Globe className="text-blue-400 shrink-0" size={18} />
+        <p className="text-xs text-blue-300 leading-relaxed">
+            <strong>{isApp ? 'Web App Mode:' : 'Web Game Mode:'}</strong> Provide a direct URL to your {isApp ? 'hosted app' : 'HTML5/WebGL build'} to enable in-browser {isApp ? 'testing' : 'play'}.
+        </p>
+    </div>
+    <Input label="Embed URL" value={formData.html5_embed_url} onChange={v => updateField('html5_embed_url', v)} placeholder="https://..." icon={Play} theme={themeFocus} />
+</div>
                             </div>
                         )}
                     </div>
@@ -1068,12 +1183,23 @@ useEffect(() => {
                 </div>
                 <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Link Severed</h3>
                 <p className="text-slate-400 mb-8 text-sm">Your security token has expired. Re-initialization required.</p>
-                <button 
-                    onClick={() => window.location.reload()}
-                    className="w-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
-                >
-                    <RefreshCw size={18} /> Reconnect
-                </button>
+<button 
+    onClick={() => {
+        setShowSessionError(false);
+        // ✅ Try to refresh session instead of full reload
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                setAuthToken(session.access_token);
+                showToast('Session restored!', 'success');
+            } else {
+                window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+            }
+        });
+    }}
+    className="w-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
+>
+    <RefreshCw size={18} /> Try Again
+</button>
             </div>
         </div>
       )}

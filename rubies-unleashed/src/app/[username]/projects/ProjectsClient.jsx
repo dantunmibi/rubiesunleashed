@@ -13,42 +13,50 @@ import {
   Loader2,
   AlertTriangle,
   Package,
-  ExternalLink,
   Github,
   Twitter,
   Linkedin,
   Globe,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  ChevronRight,
-  LayoutDashboard,
   Instagram,
   MessageCircle,
   Youtube,
+  ExternalLink,
+  Settings,
+  ImagePlus,
+  Edit3,
+  Link as LinkIcon,
+  ArrowRight,
+  UserCircle,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 
-// --- CUSTOM BACKGROUND ---
-const ArchitectBackground = () => (
-  <div className="fixed inset-0 -z-10 bg-[#0b0f19]">
-    <div
-      className="absolute inset-0 opacity-[0.03]"
-      style={{
-        backgroundImage: `radial-gradient(#fff 1px, transparent 1px)`,
-        backgroundSize: "40px 40px",
-      }}
-    />
-    <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/3 blur-[140px]" />
-    <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/2 blur-[120px]" />
+// --- SCANLINE OVERLAY ---
+const ScanlineOverlay = () => (
+  <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.03] overflow-hidden">
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-size-[100%_2px,3px_100%]" />
   </div>
 );
+
+// --- SOCIAL ICON MAPPING ---
+function getSocialIcon(label, url) {
+  const source = `${label ?? ""} ${url ?? ""}`.toLowerCase();
+
+  if (source.includes("twitter") || source.includes("x.com")) return Twitter;
+  if (source.includes("github")) return Github;
+  if (source.includes("linkedin")) return Linkedin;
+  if (source.includes("instagram")) return Instagram;
+  if (source.includes("youtube")) return Youtube;
+  if (source.includes("discord")) return MessageCircle;
+  if (source.includes("reddit")) return MessageSquare;
+
+  return Globe;
+}
 
 export default function ProjectsClient({ username: propUsername }) {
   const { user } = useAuth();
   const targetUsername = decodeURIComponent(propUsername);
 
-  // Hooks & State
   const { showSessionError, checkSupabaseError, triggerError } =
     useSessionGuard();
   const [profile, setProfile] = useState(null);
@@ -61,18 +69,16 @@ export default function ProjectsClient({ username: propUsername }) {
     let isMounted = true;
     if (!targetUsername) return;
 
-    // Safety Timeout
     const timer = setTimeout(() => {
       if (loading) {
         console.warn("Loading timed out.");
         setLoading(false);
         if (triggerError) triggerError();
       }
-    }, 8000);
+    }, 10000);
 
     async function loadData() {
       try {
-        // 1. Fetch Profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -84,18 +90,24 @@ export default function ProjectsClient({ username: propUsername }) {
 
         if (isMounted) setProfile(profileData);
 
-        // 2. Fetch Projects
         const { data: projectsData, error: projectsError } = await supabase
-          .from("projects_public")
+          .from("projects")
           .select("*")
           .eq("user_id", profileData.id)
+          .eq("status", "published")
           .order("created_at", { ascending: false });
 
         if (checkSupabaseError(projectsError)) return;
-        if (projectsError) throw projectsError;
+        if (projectsError) {
+          console.error("Projects fetch error:", projectsError);
+        }
 
-        if (isMounted)
-          setProjects((projectsData || []).map(processSupabaseProject));
+        if (isMounted) {
+          const processedProjects = (projectsData || [])
+            .map(processSupabaseProject)
+            .filter((p) => p !== null);
+          setProjects(processedProjects);
+        }
       } catch (err) {
         console.error("Load Error:", err);
         if (isMounted) setError(true);
@@ -110,310 +122,334 @@ export default function ProjectsClient({ username: propUsername }) {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [targetUsername, checkSupabaseError, triggerError]); // Removed 'loading' from dep to avoid loop
+  }, [targetUsername, checkSupabaseError, triggerError]);
 
   // --- LOADING STATE ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center">
-        <Loader2
-          className="animate-spin text-emerald-500 mb-4"
-          size={32}
-          strokeWidth={1.5}
-        />
-        <span className="text-slate-500 text-[10px] font-bold tracking-[0.4em] uppercase animate-pulse">
-          Initializing System
-        </span>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-ruby" size={48} />
       </div>
     );
   }
 
-// ✅ FIXED - Check role properly with better message
-if (error || !profile) {
-  return (
-    <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
-      <div className="w-16 h-16 rounded-full border border-red-500/20 bg-red-500/5 flex items-center justify-center">
-        <AlertTriangle size={24} className="text-red-500" />
+  // --- ERROR STATE ---
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 text-center px-4">
+        <div className="w-16 h-16 rounded-full border-2 border-red-500/20 flex items-center justify-center">
+          <AlertTriangle size={24} className="text-red-500" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-white mb-2">
+            Profile Not Found
+          </h2>
+          <p className="text-slate-500 text-sm">This user doesn't exist.</p>
+        </div>
+        <Link
+          href="/"
+          className="px-6 py-3 bg-ruby hover:bg-ruby/90 text-white rounded-xl font-bold uppercase text-xs tracking-widest transition-colors"
+        >
+          Back to Home
+        </Link>
       </div>
-      <div>
-        <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-2">
-          Profile Not Found
-        </h2>
-        <p className="text-slate-500 text-xs font-mono">
-          The requested user does not exist.
-        </p>
-      </div>
-      <Link
-        href="/"
-        className="px-6 py-2 border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-full"
-      >
-        Return to Base
-      </Link>
-    </div>
-  );
-}
+    );
+  }
 
-// ✅ SEPARATE CHECK: Show different message for non-architects
-if (profile.role !== "architect" && profile.role !== "admin") {
-  return (
-    <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
-      <div className="w-16 h-16 rounded-full border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center">
-        <Package size={24} className="text-emerald-500" />
+  // --- NON-ARCHITECT CHECK ---
+  if (profile.role !== "architect" && profile.role !== "admin") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 text-center px-4">
+        <div className="w-16 h-16 rounded-full border-2 border-emerald-500/20 flex items-center justify-center">
+          <Package size={24} className="text-emerald-500" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-white mb-2">No Projects Yet</h2>
+          <p className="text-slate-500 text-sm">
+            {profile.username} hasn't published any projects.
+          </p>
+        </div>
+        <Link
+          href={`/${profile.username}`}
+          className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest transition-colors"
+        >
+          View Profile
+        </Link>
       </div>
-      <div>
-        <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-2">
-          No Public Projects
-        </h2>
-        <p className="text-slate-500 text-xs font-mono">
-          {profile.username} hasn't published any projects yet.
-        </p>
-      </div>
-      <Link
-        href={`/${profile.username}`}
-        className="px-6 py-2 border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-full"
-      >
-        View Profile
-      </Link>
-    </div>
-  );
-}
+    );
+  }
 
   const isOwner = user && user.id === profile.id;
 
+  // Profile Completion Checks
+  const needsAvatar = !profile.avatar_url;
+  const needsBio = !profile.architect_bio && !profile.bio;
+  const needsSocials =
+    !profile.social_links || profile.social_links.length === 0;
+  const profileIncomplete =
+    isOwner && (needsAvatar || needsBio || needsSocials);
+
   return (
-    <div className="min-h-screen bg-transparent text-slate-300 font-sans selection:bg-emerald-500/30">
-      <ArchitectBackground />
+    <div className="min-h-screen bg-background text-slate-300 selection:bg-ruby/30">
+      <ScanlineOverlay />
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 pt-40 pb-32">
+      <main className="max-w-7xl mx-auto px-6 py-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          {/* --- LEFT SIDEBAR: PROFILE --- */}
-          <aside className="lg:col-span-4 space-y-10 lg:sticky lg:top-32 h-fit">
-            <div className="relative group w-fit mx-auto lg:mx-0">
-              <div className="w-48 h-48 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+          {/* --- SIDEBAR --- */}
+          <aside className="lg:col-span-4 space-y-8 lg:sticky lg:top-32 h-fit">
+            {/* Avatar */}
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-emerald-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="relative aspect-square w-full max-w-xs border-4 border-surface overflow-hidden shadow-2xl">
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
+                    className="w-full h-full object-cover transition-all duration-700"
                     alt={profile.username}
-                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-700">
-                    <User size={48} />
+                  <div className="w-full h-full bg-surface flex flex-col items-center justify-center gap-4 text-slate-700">
+                    <User size={64} />
+                    {isOwner && (
+                      <Link
+                        href="/settings?tab=profile"
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2"
+                      >
+                        <ImagePlus size={14} /> Add Avatar
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
-              {/* Status Dot */}
-              <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-[#0b0f19] rounded-full flex items-center justify-center border border-white/5">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]" />
-              </div>
             </div>
 
-            <div className="space-y-6 text-center lg:text-left">
+            {/* Identity */}
+            <div className="space-y-4">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-emerald-500 text-[9px] font-bold uppercase tracking-widest mb-4">
-                  <ShieldCheck size={10} /> Verified Architect
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.1] mb-2">
+                <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-2">
                   {profile.display_name || profile.username}
                 </h1>
-                <p className="text-slate-500 font-mono text-xs">
-                  // {profile.username.toUpperCase()}
+                <p className="text-sm text-slate-500 font-medium">
+                  @{profile.username}
                 </p>
               </div>
 
-              {/* ✅ USE ARCHITECT BIO */}
-              <p className="text-slate-400 leading-relaxed text-sm font-light max-w-sm mx-auto lg:mx-0">
-                {profile.architect_bio ||
-                  profile.bio ||
-                  "System data unavailable."}
-              </p>
-
-              {/* ✅ RENDER SOCIAL LINKS */}
-              <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3">
-                {isOwner && (
-                  <Link
-                    href={`/${profile.username}/dashboard`}
-                    className="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-500 rounded-xl transition-all"
-                    title="Manage"
-                  >
-                    <LayoutDashboard size={18} />
-                  </Link>
-                )}
-
-                {profile.social_links?.map((link, i) => {
-                  const IconComponent = getSocialIcon(link.label);
-
-                  return (
-                    <a
-                      key={i}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="..."
+              {/* Bio */}
+              {profile.architect_bio || profile.bio ? (
+                <p className="text-base text-slate-400 leading-relaxed">
+                  {profile.architect_bio || profile.bio}
+                </p>
+              ) : (
+                isOwner && (
+                  <div className="border border-dashed border-white/10 p-4 space-y-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-slate-500">
+                      Add a bio to tell visitors about yourself.
+                    </p>
+                    <Link
+                      href="/settings?tab=architect"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
                     >
-                      {/* Render as Component */}
-                      <IconComponent size={18} />
-                    </a>
-                  );
-                })}
+                      <Edit3 size={12} /> Add Bio
+                    </Link>
+                  </div>
+                )
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                {/* Social Links - Smart Grid */}
+                {profile.social_links && profile.social_links.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 w-full">
+                    {profile.social_links.map((link, i) => {
+                      const IconComponent = getSocialIcon(link.label, link.url);
+                      const totalLinks = profile.social_links.length;
+
+                      // ✅ Special styling for 5th and 6th links
+                      const isLastRow = totalLinks === 5 && i === 4; // 5th link (index 4)
+                      const isSixthLink = totalLinks === 6 && i >= 4; // 5th and 6th links
+
+                      return (
+                        <a
+                          key={i}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`
+            h-12 border border-white/10 rounded-xl 
+            flex items-center justify-center 
+            hover:border-emerald-500/50 hover:text-emerald-500 
+            transition-all
+            ${isLastRow ? "col-span-4" : ""} 
+            ${isSixthLink ? "col-span-2" : ""}
+          `}
+                        >
+                          <IconComponent size={18} />
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  isOwner && (
+                    <Link
+                      href="/settings?tab=architect"
+                      className="col-span-4 border border-dashed border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-emerald-500/5 transition-all group"
+                    >
+                      <LinkIcon
+                        size={20}
+                        className="text-emerald-500/50 group-hover:text-emerald-500 transition-colors"
+                      />
+                      <div className="text-center">
+                        <p className="text-xs font-bold text-slate-400 group-hover:text-emerald-400 transition-colors">
+                          Add Social Links
+                        </p>
+                        <p className="text-[10px] text-slate-600 mt-1">
+                          Connect your platforms in settings
+                        </p>
+                      </div>
+                    </Link>
+                  )
+                )}
               </div>
+
+              {/* Profile Completion */}
+              {profileIncomplete && (
+                <div className="border border-amber-500/20 bg-amber-500/5 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                    <Settings size={14} /> Complete Your Profile
+                  </div>
+                  <ul className="space-y-1 text-xs text-slate-400">
+                    {needsAvatar && <li>• Add a profile picture</li>}
+                    {needsBio && <li>• Write a bio</li>}
+                    {needsSocials && <li>• Add social links</li>}
+                  </ul>
+                  <Link
+                    href="/settings?tab=architect"
+                    className="block w-full text-center py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                  >
+                    Complete Profile
+                  </Link>
+                </div>
+              )}
             </div>
 
-            {/* Stats Module */}
-            <div className="bg-surface/40 border border-white/5 p-6 rounded-2xl font-mono space-y-4 backdrop-blur-sm">
-              <div className="flex justify-between text-[10px] items-center">
-                <span className="text-slate-500 uppercase tracking-wider">
-                  System Status
-                </span>
-                <span className="text-emerald-500 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />{" "}
-                  ONLINE
-                </span>
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-surface border border-white/5 rounded-xl p-4 space-y-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Projects
+                </p>
+                <p className="text-3xl font-black text-white">
+                  {projects.length}
+                </p>
               </div>
-              <div className="flex justify-between text-[10px] items-center">
-                <span className="text-slate-500 uppercase tracking-wider">
-                  projects Deployed
-                </span>
-                <span className="text-white font-bold">{projects.length}</span>
-              </div>
-              <div className="flex justify-between text-[10px] items-center">
-                <span className="text-slate-500 uppercase tracking-wider">
+              <div className="bg-surface border border-white/5 rounded-xl p-4 space-y-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Joined
-                </span>
-                <span className="text-white">
+                </p>
+                <p className="text-3xl font-black text-white">
                   {new Date(profile.created_at).getFullYear()}
-                </span>
-              </div>
-              <div className="h-0.5 w-full bg-white/5 rounded-full mt-2 overflow-hidden">
-                <div className="h-full bg-emerald-500 w-[92%]" />
+                </p>
               </div>
             </div>
           </aside>
 
-          {/* --- RIGHT CONTENT: PORTFOLIO --- */}
-          <section className="lg:col-span-8 space-y-12">
-            <div className="flex items-center justify-between border-b border-white/5 pb-8">
-              <div className="flex items-center gap-4">
-                <h2 className="text-sm font-bold text-white uppercase tracking-[0.3em]">
-                  Projects
-                </h2>
-                <div className="h-px w-12 bg-emerald-500/50" />
-              </div>
-              <span className="text-[10px] font-mono text-slate-500">
-                {projects.length} ENTRIES
+          {/* --- PROJECT GRID --- */}
+          <section className="lg:col-span-8 space-y-10">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-6">
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                Published Projects
+              </h2>
+              <span className="text-xs font-mono text-slate-600">
+                {projects.length}{" "}
+                {projects.length === 1 ? "project" : "projects"}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {projects.length === 0 ? (
-              <div className="col-span-full border border-dashed border-emerald-500/10 rounded-2xl p-20 flex flex-col items-center justify-center gap-4 bg-emerald-500/2">
-                <Package size={48} className="text-emerald-500/30" />
-                <div className="text-center">
-                  <span className="text-sm font-bold uppercase tracking-widest text-white block mb-2">
-                    No Projects Yet
-                  </span>
-                  <p className="text-xs text-slate-500">
-                    {isOwner ? "Publish your first project from The Forge" : "Check back soon for updates"}
-                  </p>
+            {/* Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {projects.length === 0 ? (
+                /* Empty State */
+                <div className="col-span-full border border-dashed border-white/10 rounded-2xl p-16 flex flex-col items-center justify-center gap-6 bg-white/5">
+                  <Package size={64} className="text-slate-700" />
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-white mb-2">
+                      No Projects Yet
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {isOwner
+                        ? "Start creating and publish your first project"
+                        : "Check back soon for new releases"}
+                    </p>
+                  </div>
+                  {isOwner && (
+                    <Link
+                      href={`/${profile.username}/dashboard`}
+                      className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold uppercase text-sm tracking-wider transition-colors"
+                    >
+                      Create First Project
+                    </Link>
+                  )}
                 </div>
-                {isOwner && (
-                  <Link 
-                    href={`/${profile.username}/dashboard`}
-                    className="mt-4 px-6 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold uppercase tracking-widest transition-all rounded-full flex items-center gap-2"
+              ) : (
+                /* Project Cards */
+                projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/view/${project.slug}`}
+                    className="group relative"
                   >
-                    <Zap size={12} /> Create First Project
+                    {/* 2:3 Portrait Card */}
+                    <div className="aspect-2/3 relative overflow-hidden bg-surface border border-white/5 rounded-2xl group-hover:border-emerald-500/30 transition-all duration-300">
+                      {project.image ? (
+                        <img
+                          src={project.image}
+                          className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                          alt={project.title}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-700">
+                          <Package size={48} />
+                        </div>
+                      )}
+
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/50 to-transparent" />
+
+                      {/* Type Badge */}
+                      <div className="absolute top-4 left-4">
+                        <div className="px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-lg text-xs font-bold uppercase tracking-wider text-emerald-400">
+                          {project.type || "Project"}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3">
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-black text-white uppercase tracking-tight leading-tight group-hover:text-emerald-400 transition-colors">
+                            {project.title}
+                          </h3>
+                          <div className="w-12 h-1 bg-emerald-500 group-hover:w-full transition-all duration-500" />
+                        </div>
+                        <p className="text-sm text-white font-medium line-clamp-2 leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                          {project.description}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                          View Details <ArrowRight size={14} />
+                        </div>
+                      </div>
+                    </div>
                   </Link>
-                )}
-              </div>
-) : (
-  projects.map((item) => (
-    <Link
-      key={item.id}
-      href={`/view/${item.slug}`}
-      className="group relative flex flex-col bg-[#0b0f19] border border-white/4 rounded-2xl overflow-hidden hover:border-emerald-500/20 hover:bg-white/1 transition-all duration-500 cursor-pointer"
-    >
-      {/* Thumbnail */}
-      <div className="relative aspect-4/3 overflow-hidden bg-black">
-        {item.image ? (
-          <img
-            src={item.image}
-            alt={item.title}
-            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 grayscale-20 group-hover:grayscale-0"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-slate-900 text-slate-700">
-            <Package size={32} />
-          </div>
-        )}
-
-        <div className="absolute inset-0 bg-linear-to-t from-[#0b0f19] via-transparent to-transparent opacity-90" />
-
-        {/* Badge */}
-        <div className="absolute bottom-4 left-4">
-          <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2 bg-[#0b0f19]/80 backdrop-blur-md px-2 py-1 rounded border border-emerald-500/20">
-            <Zap size={10} /> {item.type || "Module"}
-          </span>
-        </div>
-      </div>
-
-      {/* Details */}
-      <div className="p-6 space-y-4">
-        <div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-            {item.platform || "Multi-Platform"}
-          </p>
-          <h3 className="text-xl font-bold text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
-            {item.title}
-          </h3>
-        </div>
-        <p className="text-sm text-slate-400 font-light leading-relaxed line-clamp-2 italic">
-          "{item.description || "No description provided."}"
-        </p>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2 pt-2">
-          {item.tags?.slice(0, 3).map((t, i) => (
-            <span
-              key={i}
-              className="text-[9px] font-mono text-slate-500 px-2 py-0.5 border border-white/5 rounded bg-white/2"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-
-        {/* Link Indicator */}
-        <div className="pt-4 flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity group-hover:text-emerald-400">
-          View Project
-          <ChevronRight size={12} className="text-emerald-500 group-hover:translate-x-1 transition-transform" />
-        </div>
-      </div>
-    </Link>
-  ))
-)}
+                ))
+              )}
             </div>
           </section>
         </div>
       </main>
 
       <Footer />
-
-      {/* Session Overlay */}
       <SessionErrorOverlay show={showSessionError} />
     </div>
   );
-}
-
-function getSocialIcon(label, url) {
-  const source = `${label ?? ""} ${url ?? ""}`.toLowerCase();
-
-  if (source.includes("twitter") || source.includes("x.com")) return Twitter;
-  if (source.includes("github")) return Github;
-  if (source.includes("linkedin")) return Linkedin;
-  if (source.includes("instagram")) return Instagram;
-  if (source.includes("youtube")) return Youtube;
-  if (source.includes("discord")) return MessageCircle;
-
-  return Globe;
 }

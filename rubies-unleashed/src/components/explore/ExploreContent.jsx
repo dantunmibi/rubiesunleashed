@@ -42,10 +42,10 @@ export default function ExploreContent({ triggerError }) { // ✅ Accept trigger
     let timer;
     if (loading) {
       timer = setTimeout(() => {
-        console.warn("Explore content loading timed out (5s). Triggering session recovery.");
+        console.warn("Explore content loading timed out (10s). Triggering session recovery.");
         setLoading(false);
         if (triggerError) triggerError();
-      }, 5000);
+      }, 10000);
     }
     return () => clearTimeout(timer);
   }, [loading, triggerError]);

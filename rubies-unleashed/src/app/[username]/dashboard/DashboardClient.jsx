@@ -127,7 +127,7 @@ export default function DashboardClient() {
             setLoadingProjects(false);
             setInitializing(false);
             if (triggerError) triggerError();
-        }, 5000); 
+        }, 10000); 
     }
     return () => clearTimeout(timer);
   }, [loadingProjects, initializing, triggerError]);

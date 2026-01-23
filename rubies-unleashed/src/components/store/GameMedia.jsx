@@ -1,40 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Gamepad2, ExternalLink, ImageIcon, X, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Gamepad2, AppWindow, ExternalLink, ImageIcon, X, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { getGameTheme } from "@/lib/theme-utils";
 
 export default function GameMedia({ game }) {
-  console.log('🔍 GameMedia Debug:', {
-    title: game.title,
-    gameEmbed: game.gameEmbed,
-    html5_embed_url: game.html5_embed_url,
-    htmlEmbedUrl: game.htmlEmbedUrl,
-    allFields: Object.keys(game)
-  });
+  const theme = getGameTheme(game.type);
+  const isApp = game.type === 'App';
+  
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  // ✅ UPDATED: Handle undefined screenshots properly
   const screenshots = Array.isArray(game?.screenshots) ? game.screenshots : [];
 
-  // ✅ ADD: Convert YouTube watch URLs to embed URLs
-const convertToEmbedUrl = (url) => {
-  if (!url) return url;
-  
-  // YouTube watch URL to embed URL
-  if (url.includes('youtube.com/watch?v=')) {
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-  
-  // YouTube short URL to embed URL
-  if (url.includes('youtu.be/')) {
-    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-  
-  return url; // Return as-is for other URLs
-};
+  const convertToEmbedUrl = (url) => {
+    if (!url) return url;
+    
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    return url;
+  };
 
-  // Helper: Detect if video needs an Iframe (YouTube/Vimeo) or Native Player
   const isEmbed = (url) => {
     if (!url) return false;
     const lower = url.toLowerCase();
@@ -44,10 +36,9 @@ const convertToEmbedUrl = (url) => {
            lower.includes('dailymotion') || 
            lower.includes('twitch') ||
            lower.includes('itch.io/embed') ||
-                      lower.includes('blogger.com/video');// Explicit embeds
+           lower.includes('blogger.com/video');
   };
 
-  // Keyboard Navigation & Scroll Lock
   useEffect(() => {
     if (lightboxIndex === null) return;
 
@@ -58,7 +49,7 @@ const convertToEmbedUrl = (url) => {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden"; // Lock body scroll
+    document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
@@ -81,79 +72,78 @@ const convertToEmbedUrl = (url) => {
 
   return (
     <>
-      {/* ✅ PRIORITY 1: Playable Game Embed */}
+      {/* Playable Embed */}
       {(game.gameEmbed || game.html5_embed_url) && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-black text-white uppercase">
-              <Gamepad2 size={20} className="text-ruby" /> Play in Browser
+              {isApp ? <AppWindow size={20} className={theme.text} /> : <Gamepad2 size={20} className={theme.text} />}
+              {isApp ? 'Try in Browser' : 'Play in Browser'}
             </h3>
-<a 
-  href={game.gameEmbed || game.html5_embed_url} 
-  target="_blank" 
-  rel="noopener noreferrer"
-  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
->
-  Open Fullscreen <ExternalLink size={14} />
-</a>
+            <a 
+              href={game.gameEmbed || game.html5_embed_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              Open Fullscreen <ExternalLink size={14} />
+            </a>
           </div>
           
-          <div className="relative w-full bg-black rounded-2xl overflow-hidden border-2 border-ruby/20 shadow-[0_0_30px_rgba(224,17,95,0.2)]">
+          <div className={`relative w-full bg-black rounded-2xl overflow-hidden border-2 ${theme.border.replace('border-', 'border-')}/20 shadow-[0_0_30px_${isApp ? 'rgba(6,182,212,0.2)' : 'rgba(224,17,95,0.2)'}]`}>
             <div className="w-full aspect-video max-h-162.5 mx-auto">
-<iframe 
-  src={game.gameEmbed || game.html5_embed_url} 
-  className="w-full h-full" 
-  allowFullScreen 
-  title="Play Game"
-  allow="autoplay; fullscreen; gamepad; microphone; camera"
-/>
+              <iframe 
+                src={game.gameEmbed || game.html5_embed_url} 
+                className="w-full h-full" 
+                allowFullScreen 
+                title={isApp ? 'Try App' : 'Play Game'}
+                allow="autoplay; fullscreen; gamepad; microphone; camera"
+              />
             </div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-ruby via-pink-500 to-ruby" />
+            <div className={`absolute top-0 left-0 w-full h-1 ${isApp ? 'bg-linear-to-r from-netrunner via-cyan-400 to-netrunner' : 'bg-linear-to-r from-ruby via-pink-500 to-ruby'}`} />
           </div>
         </section>
       )}
 
-{/* ✅ UPDATED: Support both video and videoUrl fields */}
-{(game.video || game.videoUrl) && (
-  <section id="video-section" className="space-y-4">
-    <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
-      <Play size={16} /> {game.gameEmbed ? 'Gameplay Trailer' : 'Trailer'}
-    </h3>
-    <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
-      
-      {(() => {
-        const videoUrl = game.video || game.videoUrl;
-        const embedUrl = convertToEmbedUrl(videoUrl);
-        
-        return isEmbed(embedUrl) ? (
-          // 🅰️ YouTube / Vimeo / Embeds
-          <iframe 
-            src={embedUrl} 
-            className="w-full h-full" 
-            allowFullScreen 
-            title="Trailer" 
-            loading="lazy"
-          />
-        ) : (
-          // 🅱️ Native Videos (Blogger/MP4)
-          <video 
-              controls 
-              preload="metadata"
-              className="w-full h-full object-contain"
-              poster={game.image}
-          >
-              <source src={videoUrl} type="video/mp4" />
-              <source src={videoUrl} type="video/webm" />
-              Your browser does not support the video tag.
-          </video>
-        );
-      })()}
+      {/* Video */}
+      {(game.video || game.videoUrl) && (
+        <section id="video-section" className="space-y-4">
+          <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
+            <Play size={16} /> {game.gameEmbed ? 'Gameplay Trailer' : 'Trailer'}
+          </h3>
+          <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
+            
+            {(() => {
+              const videoUrl = game.video || game.videoUrl;
+              const embedUrl = convertToEmbedUrl(videoUrl);
+              
+              return isEmbed(embedUrl) ? (
+                <iframe 
+                  src={embedUrl} 
+                  className="w-full h-full" 
+                  allowFullScreen 
+                  title="Trailer" 
+                  loading="lazy"
+                />
+              ) : (
+                <video 
+                    controls 
+                    preload="metadata"
+                    className="w-full h-full object-contain"
+                    poster={game.image}
+                >
+                    <source src={videoUrl} type="video/mp4" />
+                    <source src={videoUrl} type="video/webm" />
+                    Your browser does not support the video tag.
+                </video>
+              );
+            })()}
 
-    </div>
-  </section>
-)}
+          </div>
+        </section>
+      )}
 
-      {/* ✅ PRIORITY 3: Interactive Gallery */}
+      {/* Gallery */}
       {screenshots.length > 0 && (
         <section id="screenshots-section" className="space-y-6">
           <h3 className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-widest">
@@ -164,7 +154,7 @@ const convertToEmbedUrl = (url) => {
               <div 
                 key={idx} 
                 onClick={() => openLightbox(idx)}
-                className="aspect-video bg-[#161b2c] rounded-lg overflow-hidden border border-white/5 hover:border-ruby/50 transition-all group cursor-pointer relative"
+                className={`aspect-video bg-[#161b2c] rounded-lg overflow-hidden border border-white/5 hover:border-${isApp ? 'netrunner' : 'ruby'}/50 transition-all group cursor-pointer relative`}
               >
                 <img 
                   src={shot} 
@@ -178,13 +168,12 @@ const convertToEmbedUrl = (url) => {
         </section>
       )}
 
-      {/* 🎥 CINEMATIC LIGHTBOX OVERLAY */}
+      {/* Lightbox */}
       {lightboxIndex !== null && (
         <div 
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200"
           onClick={closeLightbox}
         >
-          {/* Close Button */}
           <button 
             onClick={closeLightbox}
             className="absolute top-6 cursor-pointer right-6 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors z-50"
@@ -192,18 +181,15 @@ const convertToEmbedUrl = (url) => {
             <X size={32} />
           </button>
 
-          {/* Main Image Area */}
           <div className="relative w-full h-full flex items-center justify-center p-4 md:p-20" onClick={(e) => e.stopPropagation()}>
             
-            {/* Prev Arrow */}
             <button 
                 onClick={prevImage}
-                className="absolute cursor-pointer left-2 md:left-8 p-3 text-white/50 hover:text-ruby hover:bg-black/50 rounded-full transition-all hover:scale-110 z-40"
+                className={`absolute cursor-pointer left-2 md:left-8 p-3 text-white/50 hover:text-${isApp ? 'netrunner' : 'ruby'} hover:bg-black/50 rounded-full transition-all hover:scale-110 z-40`}
             >
                 <ChevronLeft size={48} />
             </button>
 
-            {/* Current Image */}
             <img 
                 src={screenshots[lightboxIndex]} 
                 alt="Full View" 
@@ -211,16 +197,14 @@ const convertToEmbedUrl = (url) => {
                 referrerPolicy="no-referrer"
             />
 
-            {/* Next Arrow */}
             <button 
                 onClick={nextImage}
-                className="absolute cursor-pointer right-2 md:right-8 p-3 text-white/50 hover:text-ruby hover:bg-black/50 rounded-full transition-all hover:scale-110 z-40"
+                className={`absolute cursor-pointer right-2 md:right-8 p-3 text-white/50 hover:text-${isApp ? 'netrunner' : 'ruby'} hover:bg-black/50 rounded-full transition-all hover:scale-110 z-40`}
             >
                 <ChevronRight size={48} />
             </button>
           </div>
 
-          {/* Thumbnail Strip (Bottom) */}
           <div 
             className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 overflow-x-auto max-w-[90vw] p-2 no-scrollbar" 
             onClick={(e) => e.stopPropagation()}
@@ -231,7 +215,7 @@ const convertToEmbedUrl = (url) => {
                     onClick={() => setLightboxIndex(idx)}
                     className={`w-16 h-10 shrink-0 rounded-sm overflow-hidden border transition-all duration-300 ${
                         idx === lightboxIndex 
-                        ? 'border-ruby scale-110 ring-2 ring-ruby/30 opacity-100' 
+                        ? `border-${isApp ? 'netrunner' : 'ruby'} scale-110 ring-2 ring-${isApp ? 'netrunner' : 'ruby'}/30 opacity-100` 
                         : 'border-white/10 opacity-40 hover:opacity-100 grayscale hover:grayscale-0'
                     }`}
                 >

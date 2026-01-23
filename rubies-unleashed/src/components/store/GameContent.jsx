@@ -11,10 +11,34 @@ export default function GameContent({ game }) {
                 (game.tags && game.tags.some(t => appKeywords.includes(t.toLowerCase())));
                 
   return (
-    <section id="about-section" className="space-y-8">
-      <div>
-        {/* Dynamic Header */}
-        <h3 className={`text-2xl font-black text-white mb-6 uppercase border-l-4 ${theme.border.replace('border-', 'border-')} pl-4`}>
+  <section id="about-section" className="space-y-8">
+    <div>
+      {/* ✅ Content Notice Banner - Non-Mature Ratings Only */}
+      {game.contentWarnings && game.contentWarnings.length > 0 &&(
+        <div className="bg-amber-500/10 border-l-4 border-amber-500 p-5 rounded-lg mb-8 animate-in fade-in slide-in-from-left-4 duration-300">
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-amber-400 mb-2 uppercase tracking-wider">
+                Content Notice
+              </h4>
+              <div className="text-sm text-slate-300 leading-relaxed space-y-1">
+                  {game.contentWarnings.map((line, i) => (
+                  line.trim() && (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-amber-500 mt-1">•</span>
+                      <span>{line.trim()}</span>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Header */}
+      <h3 className={`text-2xl font-black text-white mb-6 uppercase border-l-4 ${theme.border.replace('border-', 'border-')} pl-4`}>
             {isApp ? "About The Software" : "About The Game"}
         </h3>
         

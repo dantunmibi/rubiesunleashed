@@ -129,7 +129,7 @@ export default function WishlistPage() {
         setLoadingGames(false);
         setHasAttemptedLoad(true);
       }
-    }, 5000);
+    }, 10000);
 
     async function loadGames() {
       console.log('🔄 Starting loadGames for user:', viewingProfile.username);

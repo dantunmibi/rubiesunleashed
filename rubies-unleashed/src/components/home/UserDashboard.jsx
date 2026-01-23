@@ -37,15 +37,15 @@ export default function UserDashboard({ initialGames = [] }) {
   const [loading, setLoading] = useState(!initialGames.length); // ✅ Add loading state
   const [loadError, setLoadError] = useState(null);
 
-  // ✅ SAFETY VALVE: 5-second timeout
+  // ✅ SAFETY VALVE: 10-second timeout
   useEffect(() => {
     let timer;
     if (loading) {
       timer = setTimeout(() => {
-        console.warn("UserDashboard loading timed out (5s). Triggering session recovery.");
+        console.warn("UserDashboard loading timed out (10s). Triggering session recovery.");
         setLoading(false);
         if (triggerError) triggerError();
-      }, 5000);
+      }, 10000);
     }
     return () => clearTimeout(timer);
   }, [loading, triggerError]);

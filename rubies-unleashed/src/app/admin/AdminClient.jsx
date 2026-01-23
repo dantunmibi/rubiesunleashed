@@ -364,25 +364,34 @@ const filteredActions = filter === 'all'
           <option value="unban">Unban</option>
         </select>
             {/* ✅ NEW: Clear All Button */}
-    <button
-      onClick={async () => {
-        if (!confirm('⚠️ Clear ALL moderation history? This cannot be undone!')) return;
-        
-        try {
-          const { error } = await supabase
-            .from('moderation_actions')
-            .delete()
-            .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-          
-          if (error) throw error;
-          
-          setActions([]);
-          alert('✅ Moderation history cleared');
-        } catch (error) {
-          console.error('Failed to clear history:', error);
-          alert('❌ Failed to clear history');
-        }
-      }}
+<button
+  onClick={async () => {
+    if (!confirm('⚠️ Clear ALL moderation history? This cannot be undone!')) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const res = await fetch('/api/admin/moderate', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ clearAll: true })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Clear failed');
+      }
+
+      setActions([]);
+      alert('✅ Moderation history cleared');
+    } catch (error) {
+      console.error('Failed to clear history:', error);
+      alert(`❌ ${error.message}`);
+    }
+  }}
       className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 border border-red-500/30 text-xs font-bold uppercase flex items-center gap-2"
     >
       <Trash2 size={14} />
@@ -430,19 +439,27 @@ const filteredActions = filter === 'all'
     if (!confirm('Delete this review request?')) return;
     
     try {
-      const { error } = await supabase
-        .from('moderation_actions')
-        .delete()
-        .eq('id', request.id);
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (error) throw error;
-      
-      // ✅ FIX: Update local state immediately instead of refetching
+      const res = await fetch('/api/admin/moderate', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ actionId: request.id })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Delete failed');
+      }
+
       setActions(prev => prev.filter(action => action.id !== request.id));
       alert('✅ Review request deleted');
     } catch (error) {
       console.error('Failed to delete request:', error);
-      alert('❌ Failed to delete request');
+      alert(`❌ ${error.message}`);
     }
   }}
   className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-xs font-bold uppercase"
@@ -497,24 +514,34 @@ const filteredActions = filter === 'all'
     )}
     
     {/* ✅ NEW: Delete individual action */}
-    <button
-      onClick={async () => {
-        if (!confirm('Delete this moderation record?')) return;
-        
-        try {
-          const { error } = await supabase
-            .from('moderation_actions')
-            .delete()
-            .eq('id', action.id);
-          
-          if (error) throw error;
-          
-          setActions(prev => prev.filter(a => a.id !== action.id));
-        } catch (error) {
-          console.error('Delete failed:', error);
-          alert('Failed to delete record');
-        }
-      }}
+<button
+  onClick={async () => {
+    if (!confirm('Delete this moderation record?')) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const res = await fetch('/api/admin/moderate', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ actionId: action.id })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Delete failed');
+      }
+
+      setActions(prev => prev.filter(a => a.id !== action.id));
+      console.log('✅ Record deleted permanently');
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert(`❌ ${error.message}`);
+    }
+  }}
       className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 border border-red-500/20"
       title="Delete Record"
     >
@@ -909,12 +936,13 @@ function UserManager() {
         {users.map((u) => (
           <div key={u.id} className="flex items-center justify-between p-4 border border-white/5 rounded-xl bg-black/20 hover:bg-black/30 transition-colors">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden flex items-center justify-center text-white">
+                <a href={`/${u.username}`} target="_blank"><div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden flex items-center justify-center text-white">
                     {u.avatar_url && u.avatar_url.startsWith('http') ? 
                       <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : 
                       <span className="text-sm font-bold">{u.username ? u.username[0].toUpperCase() : "?"}</span>
                     }
                 </div>
+                </a>
                 <div>
                     <p className="font-bold text-white">{u.username}</p>
                     <p className="text-xs text-slate-500 uppercase tracking-wider">{u.role} • {u.archetype}</p>
@@ -1719,7 +1747,7 @@ const fetchBloggerData = async () => {
 
   // Handle user search input
   useEffect(() => {
-    const timer = setTimeout(() => searchUsers(searchQuery), 300);
+    const timer = setTimeout(() => searchUsers(searchQuery), 1000);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -2293,7 +2321,7 @@ function ProjectCard({ project, isHidden, onComment, onModerate }) {
             )}
           </div>
           
-          <p className="text-sm text-slate-400">{project.developer}</p>
+          <span className="text-sm text-slate-400">{project.developer}</span>
           <p className="text-xs text-slate-600 mt-1">
             {new Date(project.created_at).toLocaleDateString()}
           </p>
