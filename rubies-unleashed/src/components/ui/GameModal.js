@@ -35,7 +35,12 @@ export default function GameModal({ game, onClose }) {
   const rawWarnings = game?.contentWarnings || game?.contentWarning;
   const hasWarnings = Array.isArray(rawWarnings) ? rawWarnings.length > 0 : !!rawWarnings;
   
-  const [isBlurred, setIsBlurred] = useState(hasWarnings);
+// ✅ NEW: Only blur for mature content
+const isMatureContent = 
+  game?.ageRating?.toLowerCase().includes('mature') || 
+  game?.ageRating?.toLowerCase().includes('adults only');
+
+const [isBlurred, setIsBlurred] = useState(hasWarnings && isMatureContent);
   const [warningUrl, setWarningUrl] = useState(null); // ✅ Add warning state
 
 // ✅ UPDATED: Only warn for actual download links

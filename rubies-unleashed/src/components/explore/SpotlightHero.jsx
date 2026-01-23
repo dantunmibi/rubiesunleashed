@@ -20,39 +20,49 @@ export default function SpotlightHero({ games = [] }) {
   const [featuredContent, setFeaturedContent] = useState([]);
 
   // ✅ UPDATED: Fetch admin-curated featured content
-  useEffect(() => {
-    const fetchFeaturedContent = async () => {
-      try {
-        // Import here to avoid SSR issues
-        const { supabase } = await import('@/lib/supabase');
-        
-        // Get admin-selected featured content (Supabase projects only)
-        const { data: featured, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('status', 'published')
-          .eq('is_featured', true)
-          .order('featured_order', { ascending: true })
-          .limit(SPOTLIGHT_COUNT);
-        
-        if (error) {
-          console.error('Featured content fetch error:', error);
-          return;
+useEffect(() => {
+  const fetchFeaturedContent = async () => {
+    try {
+      // Use anonymous client
+      const { createClient } = await import('@supabase/supabase-js');
+      
+      const anonClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+          },
         }
-        
-        if (featured && featured.length > 0) {
-          // Process Supabase projects
-          const { processSupabaseProject } = await import('@/lib/game-utils');
-          const processedFeatured = featured.map(processSupabaseProject).filter(Boolean);
-          setFeaturedContent(processedFeatured);
-        }
-      } catch (error) {
-        console.error('Failed to fetch featured content:', error);
+      );
+      
+      // Query the PUBLIC VIEW (not base table)
+      const { data: featured, error } = await anonClient
+        .from('projects_public')  // ✅ Use view, not table
+        .select('*')
+        .eq('is_featured', true)
+        .order('featured_order', { ascending: true })
+        .limit(SPOTLIGHT_COUNT);
+      
+      if (error) {
+        console.error('Featured content fetch error:', error);
+        return;
       }
-    };
-    
-    fetchFeaturedContent();
-  }, []);
+      
+      if (featured && featured.length > 0) {
+        // Process Supabase projects
+        const { processSupabaseProject } = await import('@/lib/game-utils');
+        const processedFeatured = featured.map(processSupabaseProject).filter(Boolean);
+        setFeaturedContent(processedFeatured);
+      }
+    } catch (error) {
+      console.error('Failed to fetch featured content:', error);
+    }
+  };
+  
+  fetchFeaturedContent();
+}, []);
 
   // 1. Data Logic - Prioritize admin-curated content
   const spotlightItems = useMemo(() => {

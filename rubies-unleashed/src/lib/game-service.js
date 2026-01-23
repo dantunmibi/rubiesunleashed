@@ -1,32 +1,26 @@
-import { supabase } from '@/lib/supabase'; // Client Singleton
-import { createServerClient } from '@/lib/supabase-server'; // New Server Factory
+import { supabase } from '@/lib/supabase';
+import { createServerClient } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 import { fetchGames, fetchGameById } from '@/lib/blogger';
 import { processSupabaseProject } from '@/lib/game-utils';
 
 const SUPABASE_FEED_LIMIT = 100;
 
-/**
- * Helper to get the correct client based on environment
- */
+// Authenticated client (for dashboard, user data)
 const getClient = async () => {
   if (typeof window === 'undefined') {
-    // We are on the Server -> Use fresh client with cookies
     return await createServerClient();
   }
-  // We are on the Client -> Use singleton
   return supabase;
 };
 
-// ✅ Server-safe public client
-const getPublicClient = async () => {
-  // Server: use server client with cookie handling
-  if (typeof window === 'undefined') {
-    return await createServerClient();
-  }
-  // Client: use singleton
-  return supabase;
+// ✅ PUBLIC client (for everyone, no auth needed)
+const getPublicClient = () => {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 };
-
 /**
  * Get unified feed (Supabase + Blogger)
  * Uses 'projects_public' VIEW for safety and speed.
@@ -35,7 +29,7 @@ export async function getUnifiedFeed(options = {}) {
   const { limit = SUPABASE_FEED_LIMIT } = options;
   
   try {
-    const client = await getPublicClient(); // ✅ ADDED await
+    const client = getPublicClient(); // ✅ No await, works for everyone
     
     const { data: supabaseProjects, error } = await client
       .from('projects_public')
@@ -45,15 +39,10 @@ export async function getUnifiedFeed(options = {}) {
     
     if (error) {
       console.error('Supabase fetch error:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      console.error('Error code:', error?.code);
-      console.error('Error message:', error?.message);
-      console.error('Error hint:', error?.hint);
     }
     
     console.log('📊 Found Supabase projects:', supabaseProjects?.length || 0);
     
-    // Rest stays the same...
     const processedSupabase = (supabaseProjects || [])
       .map(processSupabaseProject)
       .filter(Boolean);
@@ -93,7 +82,7 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
   console.log('🔍 Searching for slug:', slug);
 
   try {
-    const client = await getPublicClient(); // ✅ ADDED await
+    const client = getPublicClient(); // ✅ No await
     
     let { data: project, error } = await client
       .from('projects_public')
@@ -171,7 +160,7 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
  * Uses Public View
  */
 export async function getUserPublicProjects(userId) {
-  const client = await getPublicClient(); // ✅ ADDED await
+  const client = getPublicClient(); // ✅ ADDED await
   
   const { data, error } = await client
     .from('projects_public')
@@ -193,7 +182,7 @@ export async function getUserPublicProjects(userId) {
  */
 export async function getSitemapData() {
   try {
-    const client = await getPublicClient(); // ✅ ADDED await
+    const client = getPublicClient(); // ✅ ADDED await
     const { data } = await client
       .from('projects_public')
       .select('slug, updated_at');

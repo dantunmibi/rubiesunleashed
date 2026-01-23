@@ -1,12 +1,26 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { fetchGames, fetchGameById } from '@/lib/blogger';
 import { processSupabaseProject } from '@/lib/game-utils';
 
 const SUPABASE_FEED_LIMIT = 100;
 
-// ✅ SIMPLIFIED: Just use the existing singleton
+// Create a fresh anonymous client (no auth context)
+let anonClient = null;
+
 const getPublicClient = () => {
-  return supabase;
+  if (!anonClient) {
+    anonClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        auth: {
+          persistSession: false, // Don't use stored sessions
+          autoRefreshToken: false,
+        },
+      }
+    );
+  }
+  return anonClient;
 };
 
 export async function getUnifiedFeed(options = {}) {
