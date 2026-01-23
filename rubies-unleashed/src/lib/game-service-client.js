@@ -1,54 +1,35 @@
 import { supabase } from '@/lib/supabase';
-import { createClient } from '@supabase/supabase-js';
 import { fetchGames, fetchGameById } from '@/lib/blogger';
 import { processSupabaseProject } from '@/lib/game-utils';
 
 const SUPABASE_FEED_LIMIT = 100;
 
-// ✅ FIX: Create client once, reuse it
-let publicClientInstance = null;
-
+// ✅ SIMPLIFIED: Just use the existing singleton
 const getPublicClient = () => {
-  if (!publicClientInstance) {
-    publicClientInstance = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-  }
-  return publicClientInstance;
+  return supabase;
 };
 
 export async function getUnifiedFeed(options = {}) {
   const { limit = SUPABASE_FEED_LIMIT, includeArchived = false } = options;
   
   try {
-    // ✅ FIX: Use public client for public data
-    const client = getPublicClient();
+    const client = getPublicClient(); // Now returns the working singleton
     
-    // ✅ ADD: Fetch hidden content list (using authenticated client if available)
-    let hiddenIds = new Set();
-    try {
-      const { data: hiddenContent } = await supabase
-        .from('hidden_content')
-        .select('game_id');
-      hiddenIds = new Set(hiddenContent?.map(h => h.game_id) || []);
-      console.log('🚫 Hidden content IDs:', hiddenIds);
-    } catch (error) {
-      console.log('⚠️ Could not fetch hidden content (guest user)');
-    }
+    console.log('ℹ️ Using projects_public view (hidden content pre-filtered)');
     
-    // ✅ FIX: Always query Supabase projects (using public view)
     let supabaseProjects = [];
     
     try {
       const { data, error } = await client
-        .from('projects_public') // ✅ Use public view
+        .from('projects_public')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);
       
       if (error) {
         console.error('Supabase fetch error:', error);
+        console.error('Error code:', error?.code);
+        console.error('Error message:', error?.message);
       } else {
         supabaseProjects = data || [];
       }
@@ -58,16 +39,15 @@ export async function getUnifiedFeed(options = {}) {
     
     console.log('📊 Found Supabase projects:', supabaseProjects.length);
     
-    // Process Supabase projects and filter hidden
+    // Process Supabase projects (no filtering needed - view handles it)
     const processedSupabase = supabaseProjects
       .map(processSupabaseProject)
-      .filter(Boolean)
-      .filter(project => !hiddenIds.has(project.id));
+      .filter(Boolean);
     
     // Fetch Blogger games
     const bloggerGames = await fetchGames();
     
-    // Filter out claimed and hidden Blogger games
+    // Filter out claimed Blogger games
     const claimedBloggerIds = new Set(
       processedSupabase
         .filter(p => p.original_blogger_id)
@@ -75,15 +55,13 @@ export async function getUnifiedFeed(options = {}) {
     );
     
     const activeBloggerGames = bloggerGames
-      .filter(game => !claimedBloggerIds.has(game.id))
-      .filter(game => !hiddenIds.has(game.id));
+      .filter(game => !claimedBloggerIds.has(game.id));
     
     // Merge and sort by date (newest first)
     const combined = [...processedSupabase, ...activeBloggerGames];
     combined.sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
     
     console.log(`📊 Unified feed: ${processedSupabase.length} community + ${activeBloggerGames.length} classic = ${combined.length} total`);
-    console.log(`🚫 Filtered out ${hiddenIds.size} hidden items`);
     
     return combined;
     
@@ -104,19 +82,8 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
   try {
     const client = getPublicClient();
     
-    // ✅ Fetch hidden content list (unless admin)
-    let hiddenIds = new Set();
-    if (!isAdmin) {
-      try {
-        const { data: hiddenContent } = await supabase
-          .from('hidden_content')
-          .select('game_id');
-        hiddenIds = new Set(hiddenContent?.map(h => h.game_id) || []);
-        console.log('🚫 Hidden content IDs:', Array.from(hiddenIds));
-      } catch (error) {
-        console.log('⚠️ Could not fetch hidden content');
-      }
-    }
+    // ✅ View filters hidden content automatically
+    console.log('ℹ️ Using projects_public view (hidden content pre-filtered)');
     
     // Strategy A: Direct slug match (Supabase project)
     let { data: project, error } = await client
@@ -130,12 +97,6 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
     }
     
     if (project) {
-      // ✅ Check if hidden (admins bypass this check)
-      if (!isAdmin && hiddenIds.has(project.id)) {
-        console.log('🚫 Project is hidden:', project.id);
-        return null;
-      }
-      
       console.log('✅ Found Supabase project:', project.title);
       return processSupabaseProject(project);
     }
@@ -152,12 +113,6 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
         .single();
       
       if (claimedProject) {
-        // ✅ Check if hidden
-        if (!isAdmin && hiddenIds.has(claimedProject.id)) {
-          console.log('🚫 Claimed project is hidden:', claimedProject.id);
-          return null;
-        }
-        
         console.log('✅ Found claimed project:', claimedProject.title);
         return processSupabaseProject(claimedProject);
       }
@@ -167,12 +122,6 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
     const bloggerGame = await fetchGameById(slug);
     
     if (bloggerGame) {
-      // ✅ Check if Blogger post is hidden
-      if (!isAdmin && hiddenIds.has(bloggerGame.id)) {
-        console.log('🚫 Blogger post is hidden:', bloggerGame.id);
-        return null;
-      }
-      
       // Check if it's been claimed
       const { data: claimed } = await client
         .from('projects_public')

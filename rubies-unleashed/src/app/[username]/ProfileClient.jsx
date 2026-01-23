@@ -354,9 +354,11 @@ export default function ProfileClient() {
                         {profile.display_name || profile.username}
                     </h1>
                     {profile.role === 'architect' && (
+                      <a href={`/${profile.username}/projects` || "#"}>
                         <span className="px-3 py-1 bg-linear-to-r from-emerald-500/20 to-emerald-400/20 border border-emerald-500/30 rounded-full text-emerald-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
                             <LayoutDashboard size={12} /> Developer
                         </span>
+                      </a>
                     )}
                     {isOwner && (
                         <Link href="/settings" className="p-2 text-slate-400 hover:text-white transition-colors bg-black/40 backdrop-blur-md rounded-full border border-white/10 hover:border-white/30">
@@ -394,6 +396,11 @@ export default function ProfileClient() {
                 <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Bio</h3>
                 <p className="text-slate-300 leading-relaxed text-lg font-light border-l-2 border-(--user-accent)/30 pl-6 italic">
                     "{profile.bio || "This user prefers to remain mysterious."}"
+                    {isOwner && (
+                        <Link href="/settings" className="float-right ml-4 text-slate-400 hover:text-white transition-colors bg-black/40 backdrop-blur-md rounded-full border border-white/10 hover:border-white/30 p-1">
+                            <Edit size={16} />
+                        </Link>
+                    )}
                 </p>
             </div>
         </section>

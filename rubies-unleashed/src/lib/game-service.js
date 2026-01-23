@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase'; // Client Singleton
 import { createServerClient } from '@/lib/supabase-server'; // New Server Factory
-import { createClient } from '@supabase/supabase-js'; // ✅ ADD: Direct client
 import { fetchGames, fetchGameById } from '@/lib/blogger';
 import { processSupabaseProject } from '@/lib/game-utils';
 
@@ -18,12 +17,14 @@ const getClient = async () => {
   return supabase;
 };
 
-// ✅ ADD: Public client for non-authenticated access
-const getPublicClient = () => {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+// ✅ Server-safe public client
+const getPublicClient = async () => {
+  // Server: use server client with cookie handling
+  if (typeof window === 'undefined') {
+    return await createServerClient();
+  }
+  // Client: use singleton
+  return supabase;
 };
 
 /**
@@ -34,8 +35,7 @@ export async function getUnifiedFeed(options = {}) {
   const { limit = SUPABASE_FEED_LIMIT } = options;
   
   try {
-    // ✅ FIX: Use public client for public data
-    const client = getPublicClient();
+    const client = await getPublicClient(); // ✅ ADDED await
     
     const { data: supabaseProjects, error } = await client
       .from('projects_public')
@@ -45,6 +45,10 @@ export async function getUnifiedFeed(options = {}) {
     
     if (error) {
       console.error('Supabase fetch error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+      console.error('Error hint:', error?.hint);
     }
     
     console.log('📊 Found Supabase projects:', supabaseProjects?.length || 0);
@@ -89,8 +93,7 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
   console.log('🔍 Searching for slug:', slug);
 
   try {
-    // ✅ FIX: Use public client for public data
-    const client = getPublicClient();
+    const client = await getPublicClient(); // ✅ ADDED await
     
     let { data: project, error } = await client
       .from('projects_public')
@@ -168,7 +171,7 @@ export async function getGame(slug, userId = null, isAdmin = false, depth = 0) {
  * Uses Public View
  */
 export async function getUserPublicProjects(userId) {
-  const client = getPublicClient(); // ✅ FIX: Use public client
+  const client = await getPublicClient(); // ✅ ADDED await
   
   const { data, error } = await client
     .from('projects_public')
@@ -190,7 +193,7 @@ export async function getUserPublicProjects(userId) {
  */
 export async function getSitemapData() {
   try {
-    const client = getPublicClient(); // ✅ FIX: Use public client
+    const client = await getPublicClient(); // ✅ ADDED await
     const { data } = await client
       .from('projects_public')
       .select('slug, updated_at');

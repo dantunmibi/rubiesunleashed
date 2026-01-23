@@ -230,36 +230,21 @@ export default function ProjectsClient({ username: propUsername }) {
                 <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-2">
                   {profile.display_name || profile.username}
                 </h1>
-                <p className="text-sm text-slate-500 font-medium">
+              <a href={`/${profile.username}`}>
+                <p className="text-sm text-blue-500 hover:text-blue-600 font-medium cursor-pointer transition-colors">
                   @{profile.username}
                 </p>
+              </a>
               </div>
 
               {/* Bio */}
-              {profile.architect_bio || profile.bio ? (
                 <p className="text-base text-slate-400 leading-relaxed">
                   {profile.architect_bio || profile.bio}
                 </p>
-              ) : (
-                isOwner && (
-                  <div className="border border-dashed border-white/10 p-4 space-y-3 bg-white/5 rounded-xl">
-                    <p className="text-xs text-slate-500">
-                      Add a bio to tell visitors about yourself.
-                    </p>
-                    <Link
-                      href="/settings?tab=architect"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
-                    >
-                      <Edit3 size={12} /> Add Bio
-                    </Link>
-                  </div>
-                )
-              )}
 
               {/* Actions */}
               <div className="flex gap-3">
                 {/* Social Links - Smart Grid */}
-                {profile.social_links && profile.social_links.length > 0 ? (
                   <div className="grid grid-cols-4 gap-2 w-full">
                     {profile.social_links.map((link, i) => {
                       const IconComponent = getSocialIcon(link.label, link.url);
@@ -289,27 +274,6 @@ export default function ProjectsClient({ username: propUsername }) {
                       );
                     })}
                   </div>
-                ) : (
-                  isOwner && (
-                    <Link
-                      href="/settings?tab=architect"
-                      className="col-span-4 border border-dashed border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-emerald-500/5 transition-all group"
-                    >
-                      <LinkIcon
-                        size={20}
-                        className="text-emerald-500/50 group-hover:text-emerald-500 transition-colors"
-                      />
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-slate-400 group-hover:text-emerald-400 transition-colors">
-                          Add Social Links
-                        </p>
-                        <p className="text-[10px] text-slate-600 mt-1">
-                          Connect your platforms in settings
-                        </p>
-                      </div>
-                    </Link>
-                  )
-                )}
               </div>
 
               {/* Profile Completion */}
