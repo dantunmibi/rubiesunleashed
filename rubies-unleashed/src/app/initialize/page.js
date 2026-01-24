@@ -68,7 +68,7 @@ const handleConfirm = async () => {
 
     if (error) throw error;
 
-    // ✅ 2. NEW: Trigger welcome email
+    // 2. Trigger welcome email
     try {
       const emailResponse = await fetch('/api/send-welcome-email', {
         method: 'POST',
@@ -83,11 +83,20 @@ const handleConfirm = async () => {
       }
     } catch (emailError) {
       console.error('❌ Email trigger error:', emailError);
-      // Don't block initialization if email fails
     }
 
-    // 3. Redirect to home
-    window.location.href = '/'; 
+    // ✅ 3. Get username and redirect to profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.username) {
+      window.location.href = `/${profile.username}`;
+    } else {
+      window.location.href = '/';
+    }
     
   } catch (err) {
     console.error("Initialization Failed:", err.message);

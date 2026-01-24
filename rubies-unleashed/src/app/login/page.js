@@ -38,9 +38,24 @@ export default function LoginPage() {
 
       if (signInError) throw signInError;
 
-      // AuthProvider handles global state update
-      // We push to explore, but AuthProvider might intercept to /initialize if needed
-      router.push("/");
+      // ✅ Smart redirect based on profile state
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('archetype, username')
+        .eq('id', data.user.id)
+        .single();
+
+      // Redirect logic
+      if (!profile?.archetype) {
+        // New user needs to initialize
+        router.push('/initialize');
+      } else if (profile?.username) {
+        // Existing user goes to their profile
+        router.push(`/${profile.username}`);
+      } else {
+        // Fallback
+        router.push('/');
+      }
 
     } catch (err) {
       console.error("Login Error:", err.message);

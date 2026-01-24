@@ -33,6 +33,10 @@ export default function ProfileClient() {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
   const [projectsPreview, setProjectsPreview] = useState([]);
+  const [needsAvatar, setNeedsAvatar] = useState(false);
+  const [needsBio, setNeedsBio] = useState(false);
+  const [needsCover, setNeedsCover] = useState(false);
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -73,8 +77,20 @@ export default function ProfileClient() {
             return;
         }
         
-        if (data && isMounted) {
-            setProfile(data);
+            if (data && isMounted) {
+                setProfile(data);
+                
+                // ✅ ADD: Check profile completion (only for owner)
+                if (user && user.id === data.id) {
+                    const missingAvatar = !data.avatar_url;
+                    const missingBio = !data.bio || data.bio.trim() === '';
+                    const missingCover = !data.cover_url;
+                    
+                    setNeedsAvatar(missingAvatar);
+                    setNeedsBio(missingBio);
+                    setNeedsCover(missingCover);
+                    setProfileIncomplete(missingAvatar || missingBio || missingCover);
+                }
             
             // 2. Fetch Wishlist (Only if public or owner)
             if (data.is_public_wishlist !== false || (user && user.id === data.id)) {
@@ -404,6 +420,56 @@ export default function ProfileClient() {
                 </p>
             </div>
         </section>
+
+        {/* ✅ ADD: PROFILE COMPLETION BANNER */}
+        {isOwner && profileIncomplete && (
+          <section className="px-6 pb-12 max-w-5xl mx-auto">
+            <div className="border border-amber-500/20 bg-amber-500/5 rounded-xl p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                  <Edit size={20} className="text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider">
+                    Complete Your Profile
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Enhance your profile to stand out in the community
+                  </p>
+                </div>
+              </div>
+              
+              <ul className="space-y-2 text-sm text-slate-400 pl-4">
+                {needsAvatar && (
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Add a profile picture
+                  </li>
+                )}
+                {needsBio && (
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Write a bio
+                  </li>
+                )}
+                {needsCover && (
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Upload a cover image
+                  </li>
+                )}
+              </ul>
+              
+              <Link
+                href="/settings"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-amber-500 hover:bg-amber-600 text-black rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-amber-500/20"
+              >
+                <Edit size={14} />
+                Complete Profile
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* --- STATS GRID --- */}
         {(wishlistCount > 0 || profile.role === 'architect') && (
