@@ -11,11 +11,8 @@ export default function HomeWrapper({ games }) {
 
   // Prevent flicker: Wait until we know for sure if user is logged in
   if (loading || !initialized) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-ruby/50 animate-spin" />
-      </div>
-    );
+    // Show landing page immediately while auth resolves in background
+    return <LandingPage games={games} authLoading={true} />;
   }
 
   // Once initialized, make the binary choice

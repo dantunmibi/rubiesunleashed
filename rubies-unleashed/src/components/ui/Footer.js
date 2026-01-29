@@ -13,15 +13,12 @@
 
 import React from "react";
 import Link from "next/link";
+import SocialLinks from './SocialLinks';
 import {
   ArrowRight,
   Map,
   Shield,
   Scroll,
-  Twitter,
-  Mail,
-  Instagram,
-  Linkedin,
 } from "lucide-react";
 
 export default function Footer() {
@@ -43,35 +40,13 @@ export default function Footer() {
               become LEGENDARY! 💎
             </p>
 
-            <a
-              href="https://rubyapks.blogspot.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-surface border border-slate-800 hover:border-ruby text-white font-bold rounded-lg transition-all group"
-            >
-              Visit RubyApks{" "}
-              <ArrowRight
-                size={16}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </a>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              <strong className="text-white">Est. 2020</strong> — Evolved from RubyApks, 
+              now empowering indie creators with The Forge publishing platform.
+            </p>
 
-            <div className="flex items-center gap-4 pt-2">
-              <SocialLink
-                href="https://x.com/rubiesunleashed"
-                icon={<Twitter size={18} />}
-                label="X(Twitter)"
-              />
-              <SocialLink
-                href="mailto:officialrubiesunleashed@gmail.com"
-                icon={<Mail size={18} />}
-                label="Email"
-              />
-              <SocialLink
-                href="https://linkedin.com/company/rubies-unleashed"
-                icon={<Linkedin size={18} />}
-                label="LinkedIn"
-              />
+            <div className="pt-2">
+              <SocialLinks variant="minimal" color="text-slate-400 hover:text-ruby" />
             </div>
           </div>
 
@@ -198,19 +173,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  );
-}
-
-function SocialLink({ href, icon, label }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="w-10 h-10 rounded-lg bg-surface border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-ruby transition-all hover:scale-110"
-      aria-label={label}
-    >
-      {icon}
-    </a>
   );
 }

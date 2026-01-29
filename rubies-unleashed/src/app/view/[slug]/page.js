@@ -1,46 +1,35 @@
 /**
- * 💎 RUBIES UNLEASHED - Item Details Page (Hybrid Server Entry)
- * ------------------------------------------------------
- * - Supports both Legacy (Blogger) and Forge (Supabase) content.
- * - Server-Side Rendering for SEO & Performance.
+ * 💎 RUBIES UNLEASHED - Item Details Page (AI-Optimized)
  */
 
-// ✅ ISR: Regenerate every hour, serve stale content while revalidating
-export const revalidate = 3600; // 1 hour
+export const revalidate = 3600;
 
-import { getGame } from '@/lib/game-service'; // ✅ Hybrid Service
-import { generateJsonLd, generateMetaTags } from '@/lib/seo-utils';
+import { getGame } from '@/lib/game-service';
+import { generateJsonLd, generateMetaTags, generateSpeakableSchema } from '@/lib/seo-utils';
 import ViewClient from '@/components/store/ViewClient';
 import { notFound } from 'next/navigation';
 
-// 1. Dynamic Metadata Generation (SEO)
 export async function generateMetadata({ params }) {
-  const { slug } = await params; // Next.js 15 async params
-  
-  // Fetch from Hybrid Service (Supabase -> Blogger)
+  const { slug } = await params;
   const game = await getGame(slug);
   
   if (!game) {
-      return { title: 'Item Not Found - Rubies Unleashed' };
+    return { title: 'Item Not Found - Rubies Unleashed' };
   }
   
   return generateMetaTags(game);
 }
 
-// 2. Server Page Component
 export default async function ViewPage({ params }) {
   const { slug } = await params;
-  console.log("👉 Viewing Slug:", slug); // DEBUG
-
   const game = await getGame(slug);
-  console.log("👉 Game Found:", game ? game.title : "NULL"); // DEBUG
 
   if (!game) {
-      notFound();
+    notFound();
   }
 
-  // Generate Schema (JSON-LD)
   const jsonLd = generateJsonLd(game);
+  const speakableSchema = generateSpeakableSchema(['h1', '.game-description']);
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -69,7 +58,6 @@ export default async function ViewPage({ params }) {
 
   return (
     <>
-      {/* Inject Structured Data for Search Engines */}
       {jsonLd && (
         <script
           type="application/ld+json"
@@ -77,7 +65,18 @@ export default async function ViewPage({ params }) {
         />
       )}
       
-      {/* Render Client UI with Initial Data (Fast Load) */}
+      {/* ✅ Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
+      {/* ✅ Speakable Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
+      />
+      
       <ViewClient slug={slug} initialGame={game} />
     </>
   );

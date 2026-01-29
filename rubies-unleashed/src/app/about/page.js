@@ -1,18 +1,10 @@
 /**
  * ================================================================
- * ABOUT PAGE - The Manifesto (Current Reality Edition)
+ * ABOUT PAGE - The Manifesto (AI-Optimized Edition)
  * ================================================================
- *
- * Purpose:
- * - Tells the story of RubyApks -> Rubies Unleashed
- * - Explains the mission, values, and current capabilities
- * - Reflects actual Phase 4 implementation (The Forge)
- * - Removes unimplemented features (Ruby Economy)
- * - Cinematic, digestible layout
+ * NEW: Person Schema, Speakable Schema, Enhanced SEO
  * ================================================================
  */
-
-"use client";
 
 import React from "react";
 import Navbar from "@/components/ui/Navbar";
@@ -32,110 +24,162 @@ import {
   Search
 } from "lucide-react";
 import Link from "next/link";
+import { generatePersonSchema, generateSpeakableSchema, generateBreadcrumbSchema, BRAND } from "@/lib/seo-utils";
+
+// ✅ Metadata for SEO
+export const metadata = {
+  title: "About Us",
+  description: `Learn about ${BRAND.name}, founded by ${BRAND.founder.name} in July 2020. Our mission: To empower indie creators with a curated platform that provides visibility, ownership, and long-term preservation for their digital projects.`,
+  openGraph: {
+    title: `About ${BRAND.name} | ${BRAND.slogan}`,
+    description: `The story behind ${BRAND.name} - from RubyApks to a creator-first digital marketplace.`,
+  },
+  alternates: {
+    canonical: '/about',
+  }
+};
 
 export default function AboutPage() {
+  // Generate schemas
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": BRAND.founder.name,
+    "alternateName": BRAND.founder.alternateName,
+    "description": `Founder of ${BRAND.name} (established July 2020), a digital marketplace for independent creators. Previously created RubyApks, a curated platform for indie Android apps and games.`,
+    "jobTitle": "Founder & Creator",
+    "worksFor": {
+      "@type": "Organization",
+      "name": BRAND.name
+    },
+    "url": BRAND.url,
+    "sameAs": BRAND.socialProfiles
+  };
+
+  const speakableSchema = generateSpeakableSchema(['h1', 'h2', '.speakable-content']);
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'About', url: '/about' }
+  ]);
+
   return (
-    <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-ruby/30 selection:text-white overflow-x-hidden">
-      <BackgroundEffects />
-      <Navbar />
+    <>
+      {/* ✅ Inject Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
 
-      <main className="relative z-10">
-        {/* 1. HERO - THE VISION */}
-        <section className="relative pt-40 pb-20 px-6 lg:px-8 text-center overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-ruby/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-ruby/30 selection:text-white overflow-x-hidden">
+        <BackgroundEffects />
+        <Navbar />
 
-          <div className="relative z-10 max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-ruby/10 border border-ruby/30 rounded-full mb-8 font-bold text-sm text-ruby uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <Gem size={14} />
-              <span>Our Purpose</span>
+        <main className="relative z-10">
+          {/* 1. HERO - THE VISION */}
+          <section className="relative pt-40 pb-20 px-6 lg:px-8 text-center overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-ruby/10 blur-[120px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10 max-w-4xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-ruby/10 border border-ruby/30 rounded-full mb-8 font-bold text-sm text-ruby uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <Gem size={14} />
+                <span>Our Purpose</span>
+              </div>
+
+              {/* ✅ H1 Tag with Brand Name */}
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 tracking-tight text-white leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+                {BRAND.name}: <br />
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-ruby to-rose-500">
+                  CREATIVITY UNLEASHED
+                </span>
+              </h1>
+
+              <p className="speakable-content text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+                We believe independent creators are the source of the most
+                original ideas in technology. Too often, they are buried by
+                algorithms. <br />
+                <span className="text-white font-bold">
+                  Our purpose is to change that.
+                </span>
+              </p>
             </div>
+          </section>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 tracking-tight text-white leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-              CREATIVITY <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-ruby to-rose-500">
-                UNLEASHED
-              </span>
-            </h1>
-
-            <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-              We believe independent creators are the source of the most
-              original ideas in technology. Too often, they are buried by
-              algorithms. <br />
-              <span className="text-white font-bold">
-                Our purpose is to change that.
-              </span>
-            </p>
-          </div>
-        </section>
-
-        {/* 2. THE ROOTS (History) */}
-        <section className="py-24 px-6 relative border-t border-white/5 bg-surface/20">
-          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-            <div className="order-2 md:order-1 relative">
-              <div className="absolute inset-0 bg-cyan-500/10 blur-[80px] rounded-full" />
-              <div className="relative bg-[#0b0f19] border border-white/10 rounded-2xl p-8 shadow-2xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <History size={32} className="text-cyan-400" />
-                  <h3 className="text-2xl font-black text-white">July 2020</h3>
+          {/* 2. THE ROOTS (History) */}
+          <section className="py-24 px-6 relative border-t border-white/5 bg-surface/20">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+              <div className="order-2 md:order-1 relative">
+                <div className="absolute inset-0 bg-cyan-500/10 blur-[80px] rounded-full" />
+                <div className="relative bg-[#0b0f19] border border-white/10 rounded-2xl p-8 shadow-2xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <History size={32} className="text-cyan-400" />
+                    <h3 className="text-2xl font-black text-white">July 2020</h3>
+                  </div>
+                  <p className="speakable-content text-slate-400 mb-4">
+                    Founded by <strong>{BRAND.founder.name}</strong> in <strong>July 2020</strong>, 
+                    <em> {BRAND.alternateName}</em> began with a simple promise: discover indie apps 
+                    without barriers. No hidden costs, no gatekeeping.
+                  </p>
+                  <p className="text-slate-400">
+                    It quickly became a trusted space for players seeking unique
+                    experiences and developers looking for visibility without
+                    friction.
+                  </p>
                 </div>
-                <p className="text-slate-400 mb-4">
-                  Founded by <strong>Tkprobix</strong>, <em>RubyApks</em> began
-                  with a simple promise: discover indie apps without barriers.
-                  No hidden costs, no gatekeeping.
+              </div>
+              <div className="order-1 md:order-2">
+                <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
+                  The Evolution
+                </h2>
+                <p className="speakable-content text-slate-400 text-lg leading-relaxed mb-6">
+                  Evolving from its foundation platform, <strong>{BRAND.alternateName}</strong>,
+                  {BRAND.name} now combines curated discovery with 
+                  <span className="text-emerald-400 font-bold"> community-driven publishing</span>.
                 </p>
-                <p className="text-slate-400">
-                  It quickly became a trusted space for players seeking unique
-                  experiences and developers looking for visibility without
-                  friction.
+                <p className="text-slate-400 text-lg leading-relaxed">
+                  What started as a showcase has become a full creator ecosystem where 
+                  developers can publish directly alongside curated content.
                 </p>
               </div>
             </div>
-            <div className="order-1 md:order-2">
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
-                The Evolution
+          </section>
+
+          {/* 3. CORE VALUES */}
+          <section className="py-32 px-6 relative">
+            <div className="max-w-7xl mx-auto text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
+                Why It Matters
               </h2>
-              <p className="text-slate-400 text-lg leading-relaxed mb-6">
-                Evolving from its foundation platform, <strong>RubyApks</strong>,
-                Rubies Unleashed now combines curated discovery with 
-                <span className="text-emerald-400 font-bold"> community-driven publishing</span>.
-              </p>
-              <p className="text-slate-400 text-lg leading-relaxed">
-                What started as a showcase has become a full creator ecosystem where 
-                developers can publish directly alongside curated content.
+              <p className="text-slate-400 max-w-2xl mx-auto">
+                The principles that guide everything we build.
               </p>
             </div>
-          </div>
-        </section>
 
-        {/* 3. CORE VALUES */}
-        <section className="py-32 px-6 relative">
-          <div className="max-w-7xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
-              Why It Matters
-            </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              The principles that guide everything we build.
-            </p>
-          </div>
-
-          <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-            <ValueCard
-              icon={<Zap size={32} className="text-amber-400" />}
-              title="Creator-First"
-              desc="Indie developers drive innovation. We provide tools for direct publishing, project management, and community building without restrictive gatekeeping."
-            />
-            <ValueCard
-              icon={<Users size={32} className="text-cyan-400" />}
-              title="Player-Focused"
-              desc="Players deserve creativity, not repetition. Our unified discovery system surfaces both curated gems and fresh community projects in one place."
-            />
-            <ValueCard
-              icon={<Shield size={32} className="text-emerald-400" />}
-              title="Transparent"
-              desc="Browse without barriers. Download with confidence. Our external link warnings and content moderation keep the experience safe and honest."
-            />
-          </div>
-        </section>
+            <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+              <ValueCard
+                icon={<Zap size={32} className="text-amber-400" />}
+                title="Creator-First"
+                desc="Indie developers drive innovation. We provide tools for direct publishing, project management, and community building without restrictive gatekeeping."
+              />
+              <ValueCard
+                icon={<Users size={32} className="text-cyan-400" />}
+                title="Player-Focused"
+                desc="Players deserve creativity, not repetition. Our unified discovery system surfaces both curated gems and fresh community projects in one place."
+              />
+              <ValueCard
+                icon={<Shield size={32} className="text-emerald-400" />}
+                title="Transparent"
+                desc="Browse without barriers. Download with confidence. Our external link warnings and content moderation keep the experience safe and honest."
+              />
+            </div>
+          </section>
 
         {/* 4. WHAT WE OFFER TODAY */}
         <section className="py-24 px-6 bg-[#161b2c] border-y border-white/5 relative overflow-hidden">
@@ -263,9 +307,10 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 }
 

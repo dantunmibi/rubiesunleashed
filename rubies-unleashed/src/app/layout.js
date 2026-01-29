@@ -7,11 +7,11 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import InternalTrafficGuard from "@/components/analytics/InternalTrafficGuard";
 import Script from "next/script";
 import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
+import { generateOrganizationSchema, generateWebSiteSchema, BRAND } from "@/lib/seo-utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  // ✅ CRITICAL: Defines the base URL for all relative links (OG images, canonicals)
   metadataBase: new URL('https://rubiesunleashed.netlify.app'),
 
   verification: {
@@ -19,24 +19,22 @@ export const metadata = {
   },
   
   title: {
-    default: "Rubies Unleashed | Indie Games & App Marketplace",
-    template: "%s | Rubies Unleashed"
+    default: `${BRAND.name} | Indie Games & App Marketplace`,
+    template: `%s | ${BRAND.name}`
   },
-  description:
-    "Discover indie games, apps, and creative digital projects on Rubies Unleashed. A curated marketplace showcasing rising creators and hidden gems.",
+  description: "A launchpad for indie games, apps, and digital creators. Building a home for rising games, apps, and digital creations.",
   
-  // ✅ Default Social Card
   openGraph: {
-    title: 'Rubies Unleashed | Where New Ideas Rise',
-    description: 'A creator-first marketplace to discover, publish, and support games, apps, and digital tools.',
-    url: 'https://rubiesunleashed.netlify.app',
-    siteName: 'Rubies Unleashed',
+    title: `${BRAND.name} | ${BRAND.slogan}`,
+    description: "A creator-first platform where independent developers publish, showcase, and share their digital projects with a global audience.",
+    url: BRAND.url,
+    siteName: BRAND.name,
     images: [
       {
         url: '/rubieslogo.png',
         width: 800,
         height: 600,
-        alt: 'Rubies Unleashed Logo',
+        alt: `${BRAND.name} Logo - Where New Ideas Rise`,
       },
     ],
     locale: 'en_US',
@@ -44,26 +42,39 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Rubies Unleashed | Where New Ideas Rise',
-    description:
-      "Discover indie games, apps, and tools from rising creators on Rubies Unleashed.",
+    title: `${BRAND.name} | ${BRAND.slogan}`,
+    description: "Building a home for rising games, apps, and digital creations.",
     images: ['/rubieslogo.png'],
   },
   
-    // Optional: canonical URL fallback
   alternates: {
     canonical: '/',
   },
 };
 
 export default function RootLayout({ children }) {
+  // Generate schemas for homepage
+  const organizationSchema = generateOrganizationSchema();
+  const websiteSchema = generateWebSiteSchema();
+
   return (
     <html lang="en" className={inter.className}>
       <head>
-        {/* ✅ Block GA in development/localhost BEFORE it loads */}
+        {/* ✅ Organization Schema (Critical for Brand Recognition) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+
+        {/* ✅ WebSite Schema (Enables Search in AI) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+
+        {/* GA Blocker */}
         <Script id="ga-blocker" strategy="beforeInteractive">
           {`
-            // Block localhost/dev traffic
             if (window.location.hostname === 'localhost' || 
                 window.location.hostname === '127.0.0.1' ||
                 window.location.port === '3000') {
@@ -85,7 +96,6 @@ export default function RootLayout({ children }) {
           </ThemeProvider>
         </AuthProvider>
       </body>
-      {/* ✅ GA loads AFTER the guard is set */}
       <GoogleAnalytics gaId="G-DWTBY4B7M6" />
     </html>
   );

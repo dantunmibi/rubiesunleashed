@@ -4,6 +4,9 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
 
+const SESSION_CACHE_KEY = 'ruby_session_state';
+const SESSION_CACHE_TTL = 300000; // 5 minutes
+
 const AuthContext = createContext({});
 export const useAuth = () => useContext(AuthContext);
 
@@ -164,9 +167,9 @@ export default function AuthProvider({ children }) {
 
     if (typeof window !== "undefined") {
       localStorage.removeItem("ruby_profile");
-      // ✅ CLEAN UP: Remove any remaining guest data
       localStorage.removeItem("ruby_user_data");
       localStorage.removeItem("ruby_wishlist");
+      localStorage.removeItem(SESSION_CACHE_KEY); // ✅ NEW: Clear session cache
     }
   }, [user?.id]);
 
@@ -196,16 +199,59 @@ export default function AuthProvider({ children }) {
 
     const initSession = async () => {
       try {
+        // ✅ NEW: Check cache first for instant guest state
+        const cachedState = localStorage.getItem(SESSION_CACHE_KEY);
+        if (cachedState) {
+          try {
+            const { hasSession, timestamp } = JSON.parse(cachedState);
+            const cacheAge = Date.now() - timestamp;
+            
+            // If cache is fresh and says "no session", instantly show guest UI
+            if (!hasSession && cacheAge < SESSION_CACHE_TTL) {
+              console.log('⚡ Using cached guest state (instant render)');
+              setLoading(false);
+              setInitialized(true);
+              
+              // Still verify in background (but don't block UI)
+              setTimeout(async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user && active) {
+                  // Cache was wrong, update state
+                  setUser(session.user);
+                  await fetchProfile(session.user.id);
+                }
+              }, 100);
+              return;
+            }
+          } catch (e) {
+            console.warn('Cache parse error:', e);
+          }
+        }
+
+        // Original session check (for logged-in users or cache miss)
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!active) return;
 
         if (error || !session?.user) {
           if (error) console.error("Session error:", error);
+          
+          // ✅ NEW: Cache the "no session" state
+          localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({
+            hasSession: false,
+            timestamp: Date.now()
+          }));
+          
           clearAuthState();
           setLoading(false);
           setInitialized(true);
           return;
         }
+
+        // ✅ NEW: Cache the "has session" state
+        localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({
+          hasSession: true,
+          timestamp: Date.now()
+        }));
 
         setUser(session.user);
         await fetchProfile(session.user.id);

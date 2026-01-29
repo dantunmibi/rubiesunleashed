@@ -183,13 +183,15 @@ Approved Language:
 | Platform       | Handle / URL                                               | Status      |
 |----------------|------------------------------------------------------------|------------|
 | Website        | [rubiesunleashed.netlify.app](https://rubiesunleashed.netlify.app) | ✅ Live    |
-| Discord        | Rubies Unleashed Community                                 | 🔜 Planned |
-| Twitter/X      | [@rubiesunleashed](https://twitter.com/rubiesunleashed)    | 🔜 Planned |
-| Instagram      | [@official_rubiesunleashed](https://www.instagram.com/official_rubiesunleashed) | 🔜 Planned |
-| Facebook       | [@rubiesunleashed](https://facebook.com/rubiesunleashed)   | 🔜 Planned
-| Reddit         | r/rubiesunleashed                                          | 🔜 Planned |
-| Bluesky        | rubiesunleashed.bsky.social                                | 🔜 Planned |
+| Discord        | Rubies Unleashed Community (https://discord.gg/zgCh55JfWF)                                 | ✅ Live  |
+| Twitter/X      | [@rubiesunleashed](https://twitter.com/rubiesunleashed)    | ✅ Live  |
+| Instagram      | [@official_rubiesunleashed](https://www.instagram.com/official_rubiesunleashed) | ✅ Live  |
+| Facebook       | [@rubiesunleashed](https://facebook.com/rubiesunleashed)   | ✅ Live 
+| Reddit         | r/rubiesunleashed                                          | ✅ Live  |
+| Bluesky        | rubiesunleashed.bsky.social                                | ✅ Live  |
 | Sitemap        | /sitemap.xml                                               | ✅ Live    |
+| Linkedin        | /company/rubies-unleashed                                              | ✅ Live    |
+| RSS Feed       | /rss file to be created                                          | 🔜 Planned    |
 | Status Page    | /status                                                    | ✅ Live    |
 
 ---
