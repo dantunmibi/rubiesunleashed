@@ -1048,51 +1048,149 @@ useEffect(() => {
                             </div>
                         )}
 
-                        {/* 5. DISTRIBUTION */}
-                        {activeSection === 'distribution' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-                                <div className={`p-4 ${themeBgLight} ${themeBorderLight} border rounded-xl mb-4 flex items-start gap-3`}>
-                                    <ShieldCheck className={themeText} size={20} />
-                                    <p className="text-xs text-slate-300 leading-relaxed">
-                                        Ensure download links are accessible. You can add multiple platforms.
-                                    </p>
-                                </div>
+{/* 5. DISTRIBUTION */}
+{activeSection === 'distribution' && (
+    <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+        <div className={`p-4 ${themeBgLight} ${themeBorderLight} border rounded-xl mb-4 flex items-start gap-3`}>
+            <ShieldCheck className={themeText} size={20} />
+            <p className="text-xs text-slate-300 leading-relaxed">
+                Ensure download links are accessible. You can add multiple platforms.
+            </p>
+        </div>
 
-                                {/* Download Links */}
-                                <div className="space-y-3">
-                                    <label className="block text-xs font-bold uppercase text-slate-500 tracking-widest">Download Sources</label>
-                                    <div className="flex flex-col md:flex-row gap-2">
-                                        <select value={inputs.dlPlatform} onChange={e => setInputs(p => ({...p, dlPlatform: e.target.value}))} className={`bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 py-3 outline-none md:w-28 ${themeFocus}`}>
-                                            {PLATFORM_OPTIONS.map(p => <option key={p.id}>{p.id}</option>)}
-                                        </select>
-                                        <input type="url" value={inputs.dlUrl} onChange={e => setInputs(p => ({...p, dlUrl: e.target.value}))} className={`flex-1 bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-mono ${themeFocus} focus:outline-none`} placeholder="Download Link URL..." />
-                                        <button type="button" onClick={handleAddDownload} className="bg-white/10 hover:bg-white/20 px-4 py-3 rounded-xl text-white transition-colors flex items-center justify-center"><Plus size={18} /></button>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {formData.download_links.map((link, i) => (
-                                            <div key={i} className="flex items-center justify-between px-4 py-3 bg-[#0b0f19] rounded-lg border border-white/5 text-sm">
-                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                    <span className={`font-bold uppercase text-[10px] ${themeBgLight} ${themeText} px-2 py-0.5 rounded shrink-0`}>{link.platform}</span>
-                                                    <span className="text-slate-400 truncate font-mono text-xs">{link.url}</span>
-                                                </div>
-                                                <button type="button" onClick={() => handleArrayRemove('download_links', i)}><X size={14} className="text-slate-600 hover:text-red-400"/></button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+        {/* ✅ NEW: Dedicated Web App/PWA Section (Apps Only) */}
+        {isApp && (
+            <div className="space-y-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                <div className="flex items-start gap-3 mb-3">
+                    <Globe className="text-blue-400 shrink-0" size={20} />
+                    <div className="flex-1">
+                        <h4 className="text-sm font-bold text-blue-300 uppercase tracking-wide mb-1">
+                            Web App URL
+                        </h4>
+                        <p className="text-xs text-blue-200/80 leading-relaxed">
+                            For PWAs, SaaS tools, and browser-based apps. This will be listed as your primary web access point.
+                        </p>
+                    </div>
+                </div>
+                
+                <Input 
+                    value={(() => {
+                        // Extract existing "Web" link if present
+                        const webLink = formData.download_links.find(link => 
+                            link.platform.toLowerCase() === 'web' || 
+                            link.platform.toLowerCase() === 'browser'
+                        );
+                        return webLink?.url || '';
+                    })()} 
+                    onChange={(v) => {
+                        handleChange(() => {
+                            const otherLinks = formData.download_links.filter(link => 
+                                link.platform.toLowerCase() !== 'web' && 
+                                link.platform.toLowerCase() !== 'browser'
+                            );
+                            
+                            // Only add if URL is not empty
+                            const newLinks = v.trim() 
+                                ? [{ platform: 'Web', url: v }, ...otherLinks]
+                                : otherLinks;
+                            
+                            setFormData(prev => ({ 
+                                ...prev, 
+                                download_links: newLinks 
+                            }));
+                        });
+                    }}
+                    placeholder="https://app.yourdomain.com" 
+                    icon={Globe} 
+                    theme={themeFocus} 
+                />
+                
+                <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                    <Lightbulb size={10} className="text-blue-400" />
+                    Examples: yourapp.com, app.domain.com, or Chrome Web Store link
+                </p>
+            </div>
+        )}
 
-                                {/* HTML5 Embed */}
-<div className="pt-4 border-t border-white/5 space-y-3">
-    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
-        <Globe className="text-blue-400 shrink-0" size={18} />
-        <p className="text-xs text-blue-300 leading-relaxed">
-            <strong>{isApp ? 'Web App Mode:' : 'Web Game Mode:'}</strong> Provide a direct URL to your {isApp ? 'hosted app' : 'HTML5/WebGL build'} to enable in-browser {isApp ? 'testing' : 'play'}.
-        </p>
-    </div>
-    <Input label="Embed URL" value={formData.html5_embed_url} onChange={v => updateField('html5_embed_url', v)} placeholder="https://..." icon={Play} theme={themeFocus} />
-</div>
+        {/* Download Links */}
+        <div className="space-y-3">
+            <label className="block text-xs font-bold uppercase text-slate-500 tracking-widest">
+                {isApp ? 'Additional Download Sources' : 'Download Sources'}
+            </label>
+            <div className="flex flex-col md:flex-row gap-2">
+                <select 
+                    value={inputs.dlPlatform} 
+                    onChange={e => setInputs(p => ({...p, dlPlatform: e.target.value}))} 
+                    className={`bg-[#0b0f19] text-white text-xs border border-white/10 rounded-xl px-3 py-3 outline-none md:w-28 ${themeFocus}`}
+                >
+                    {PLATFORM_OPTIONS.filter(p => 
+                        // Hide "Web" option for apps since we have dedicated field
+                        !(isApp && p.id === 'Web')
+                    ).map(p => <option key={p.id}>{p.id}</option>)}
+                </select>
+                <input 
+                    type="url" 
+                    value={inputs.dlUrl} 
+                    onChange={e => setInputs(p => ({...p, dlUrl: e.target.value}))} 
+                    className={`flex-1 bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-mono ${themeFocus} focus:outline-none`} 
+                    placeholder="Download Link URL..." 
+                />
+                <button 
+                    type="button" 
+                    onClick={handleAddDownload} 
+                    className="bg-white/10 hover:bg-white/20 px-4 py-3 rounded-xl text-white transition-colors flex items-center justify-center"
+                >
+                    <Plus size={18} />
+                </button>
+            </div>
+            <div className="space-y-2">
+                {formData.download_links
+                    .filter(link => 
+                        // Filter out "Web" links for apps (shown in dedicated section)
+                        !(isApp && (link.platform.toLowerCase() === 'web' || link.platform.toLowerCase() === 'browser'))
+                    )
+                    .map((link, i) => {
+                        // Get actual index in full array for removal
+                        const actualIndex = formData.download_links.findIndex(l => l === link);
+                        return (
+                            <div key={i} className="flex items-center justify-between px-4 py-3 bg-[#0b0f19] rounded-lg border border-white/5 text-sm">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <span className={`font-bold uppercase text-[10px] ${themeBgLight} ${themeText} px-2 py-0.5 rounded shrink-0`}>
+                                        {link.platform}
+                                    </span>
+                                    <span className="text-slate-400 truncate font-mono text-xs">{link.url}</span>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleArrayRemove('download_links', actualIndex)}
+                                >
+                                    <X size={14} className="text-slate-600 hover:text-red-400"/>
+                                </button>
                             </div>
-                        )}
+                        );
+                    })}
+            </div>
+        </div>
+
+        {/* HTML5 Embed */}
+        <div className="pt-4 border-t border-white/5 space-y-3">
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
+                <Globe className="text-blue-400 shrink-0" size={18} />
+                <p className="text-xs text-blue-300 leading-relaxed">
+                    <strong>{isApp ? 'Web App Mode:' : 'Web Game Mode:'}</strong> Provide a direct URL to your {isApp ? 'hosted app' : 'HTML5/WebGL build'} to enable in-browser {isApp ? 'testing' : 'play'}.
+                </p>
+            </div>
+            <Input 
+                label="Embed URL" 
+                value={formData.html5_embed_url} 
+                onChange={v => updateField('html5_embed_url', v)} 
+                placeholder="https://..." 
+                icon={Play} 
+                theme={themeFocus} 
+            />
+        </div>
+    </div>
+)}
                     </div>
 
                     {/* Footer Navigation Buttons */}

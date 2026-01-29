@@ -29,7 +29,7 @@ export default async function ViewPage({ params }) {
   }
 
   const jsonLd = generateJsonLd(game);
-  const speakableSchema = generateSpeakableSchema(['h1', '.game-description']);
+  const speakableSchema = generateSpeakableSchema(['h1', '.prose']);
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",

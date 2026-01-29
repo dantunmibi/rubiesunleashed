@@ -193,6 +193,7 @@ export function generateOrganizationSchema() {
           "@type": "Product",
           "name": "The Forge - Creator Publishing Platform",
           "url": "https://rubiesunleashed.netlify.app/publish",
+          "image": "https://rubiesunleashed.netlify.app/rubieslogo.png",
           "description": "Direct publishing platform for indie developers to upload and manage their games and applications. Includes asset management, project dashboards, and community features.",
           "category": "Publishing Tools",
           "offers": {
@@ -208,6 +209,7 @@ export function generateOrganizationSchema() {
           "@type": "Product",
           "name": "The Vault - Discovery Platform",
           "url": "https://rubiesunleashed.netlify.app/explore",
+          "image": "https://rubiesunleashed.netlify.app/rubieslogo.png",
           "description": "Unified discovery system for players to find curated indie games and applications. Features personalized feeds, archetype-based recommendations, and community wishlists.",
           "category": "Game Discovery",
           "offers": {
@@ -223,6 +225,7 @@ export function generateOrganizationSchema() {
           "@type": "Product",
           "name": "Creator Dashboards",
           "url": "https://rubiesunleashed.netlify.app/publish",
+          "image": "https://rubiesunleashed.netlify.app/rubieslogo.png",
           "description": "Comprehensive project management tools for creators including analytics, version control, and community engagement features.",
           "category": "Creator Tools",
           "offers": {
