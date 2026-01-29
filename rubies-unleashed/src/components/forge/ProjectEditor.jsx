@@ -52,11 +52,11 @@ const PLACEHOLDER_COVER =
   "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&h=900";
 
 const SECTIONS = [
-  { id: 'basics', label: 'Identity', icon: User },
-  { id: 'tech', label: 'Features', icon: Layers },
-  { id: 'media', label: 'Media Assets', icon: ImageIcon },
-  { id: 'safety', label: 'Safety & Ratings', icon: ShieldCheck },
-  { id: 'distribution', label: 'Distribution', icon: Globe },
+  { id: "basics", label: "Identity", icon: User },
+  { id: "tech", label: "Features", icon: Layers },
+  { id: "media", label: "Media Assets", icon: ImageIcon },
+  { id: "safety", label: "Safety & Ratings", icon: ShieldCheck },
+  { id: "distribution", label: "Distribution", icon: Globe },
 ];
 
 const PLATFORM_OPTIONS = [
@@ -695,28 +695,33 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
 
             {/* Section Tabs Navigation */}
             <div className="flex flex-wrap gap-2 mb-6 border-b border-white/5 pb-4">
-{SECTIONS.map(section => {
-    // ✅ Dynamic label for tech section
-    const displayLabel = section.id === 'tech' 
-        ? (isApp ? 'Features & Info' : 'Gameplay & Features')
-        : section.label;
-    
-    return (
-        <button
-            key={section.id}
-            type="button"
-            onClick={() => setActiveSection(section.id)}
-            className={`
+              {SECTIONS.map((section) => {
+                // ✅ Dynamic label for tech section
+                const displayLabel =
+                  section.id === "tech"
+                    ? isApp
+                      ? "Features & Info"
+                      : "Gameplay & Features"
+                    : section.label;
+
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => setActiveSection(section.id)}
+                    className={`
                 flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all
-                ${activeSection === section.id 
-                    ? `${themeBg} text-white shadow-lg` 
-                    : "text-slate-500 hover:text-white bg-white/5"}
+                ${
+                  activeSection === section.id
+                    ? `${themeBg} text-white shadow-lg`
+                    : "text-slate-500 hover:text-white bg-white/5"
+                }
             `}
-        >
-            <section.icon size={12} /> {displayLabel}
-        </button>
-    );
-})}
+                  >
+                    <section.icon size={12} /> {displayLabel}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Header Action (Save) */}
@@ -898,24 +903,24 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
                     </p>
                   </div>
 
-<Input 
-    area 
-    label="Short Summary (Card Description)" 
-    value={formData.description} 
-    onChange={v => updateField('description', v)} 
-    placeholder="Brief hook for browse cards (e.g., 'Survive the neon wasteland in this cyberpunk roguelike')" 
-    theme={themeFocus} 
-    h="h-24" 
-/>
-<Input 
-    area 
-    label="Project Description" 
-    value={formData.full_description} 
-    onChange={v => updateField('full_description', v)} 
-    placeholder="Expand on your project: What's the core experience? The story? What makes it special?💡 Save structured info (features, requirements, controls) for the Features tab." 
-    theme={themeFocus} 
-    h="h-40" 
-/>
+                  <Input
+                    area
+                    label="Short Summary (Card Description)"
+                    value={formData.description}
+                    onChange={(v) => updateField("description", v)}
+                    placeholder="Brief hook for browse cards (e.g., 'Survive the neon wasteland in this cyberpunk roguelike')"
+                    theme={themeFocus}
+                    h="h-24"
+                  />
+                  <Input
+                    area
+                    label="Project Description"
+                    value={formData.full_description}
+                    onChange={(v) => updateField("full_description", v)}
+                    placeholder="Expand on your project: What's the core experience? The story? What makes it special?💡 Save structured info (features, requirements, controls) for the Features tab."
+                    theme={themeFocus}
+                    h="h-40"
+                  />
 
                   {/* Tagging System */}
                   <div className="space-y-3">
