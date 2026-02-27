@@ -12,7 +12,7 @@ import { generateOrganizationSchema, generateWebSiteSchema, BRAND } from "@/lib/
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  metadataBase: new URL('https://rubiesunleashed.netlify.app'),
+  metadataBase: new URL('https://rubiesunleashed.app'),
 
   verification: {
     google: 'LBbxq-Qizd1DQakDQ2vUfJrd-PAV8oCJ-ufn20kaRXM',

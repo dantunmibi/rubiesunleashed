@@ -11,7 +11,7 @@ export const BRAND = {
   alternateName: "RubyApks", // Legacy reference only
   
   // Messaging
-  tagline: "Where New Ideas Rise",
+  slogan: "Where New Ideas Rise",
   logoTagline: "Unleash Your Power", // Visual only, not for metadata
   shortDescription: "Building a home for rising games, apps, and digital creations.",
   launchpadDescription: "A launchpad for indie games, apps, and digital creators.",
@@ -23,8 +23,8 @@ export const BRAND = {
   visionStatement: "To become the definitive launchpad for emerging digital creators, where quality and creativity triumph over budget and marketing spend.",
   
   // Platform Info
-  url: "https://rubiesunleashed.netlify.app",
-  logo: "https://rubiesunleashed.netlify.app/rubieslogo.png",
+  url: "https://rubiesunleashed.app",
+  logo: "https://rubiesunleashed.app/rubieslogo.png",
   foundingDate: "2020-07-01",
   
   // Founder

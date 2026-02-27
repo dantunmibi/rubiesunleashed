@@ -12,7 +12,7 @@ Data Source: Dual-Blog Headless CMS (Primary: rubyapks.blogspot.com [DOWN] | Bac
 Rendering Strategy: Hybrid Server/Client (Server for SEO/Metadata, Client for Interactivity)
 Hosting: Netlify (Static Export / Edge)
 Form Handling: Netlify Forms (via public/__forms.html bypass)
-Production URL: https://rubiesunleashed.netlify.app
+Production URL: https://rubiesunleashed.app
 Current Phase: Phase 3 Ready (Identity & The Forge)
 🎨 2. Visual Design System (Strict Tailwind v4)
 Theme: "Hyper-Professional Cinematic Dark Mode"
@@ -282,7 +282,7 @@ Use this prompt to initialize **Phase 3**.
 *   **Backend:** Supabase (Auth + Postgres + Storage)
 *   **Hosting:** Netlify (Static Export / Edge)
 *   **Form Handling:** Netlify Forms (via `public/__forms.html` bypass)
-*   **Production URL:** `https://rubiesunleashed.netlify.app`
+*   **Production URL:** `https://rubiesunleashed.app`
 *   **Current Phase:** **Phase 4 Complete** (The Forge - Creator Platform)
 
 ## 🎨 2. Visual Design System (Strict Tailwind v4)

@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 21600; // Revalidate every 6 hours
 
 export default async function sitemap() {
-  const baseUrl = 'https://rubiesunleashed.netlify.app';
+  const baseUrl = 'https://rubiesunleashed.app';
 
   try {
     // 1. Get Optimized Sitemap Data (Unified Feed - Supabase + Blogger)

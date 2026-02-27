@@ -12,6 +12,6 @@ export default function robots() {
       allow: '/',
       disallow: ['/api/', '/private/', '/admin/'], // Security exclusions
     },
-    sitemap: 'https://rubiesunleashed.netlify.app/sitemap.xml',
+    sitemap: 'https://rubiesunleashed.app/sitemap.xml',
   }
 }

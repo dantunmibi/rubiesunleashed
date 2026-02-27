@@ -182,7 +182,7 @@ Approved Language:
 
 | Platform       | Handle / URL                                               | Status      |
 |----------------|------------------------------------------------------------|------------|
-| Website        | [rubiesunleashed.netlify.app](https://rubiesunleashed.netlify.app) | ✅ Live    |
+| Website        | [rubiesunleashed.app](https://rubiesunleashed.app) | ✅ Live    |
 | Discord        | Rubies Unleashed Community (https://discord.gg/zgCh55JfWF)                                 | ✅ Live  |
 | Twitter/X      | [@rubiesunleashed](https://twitter.com/rubiesunleashed)    | ✅ Live  |
 | Instagram      | [@official_rubiesunleashed](https://www.instagram.com/official_rubiesunleashed) | ✅ Live  |
@@ -259,7 +259,7 @@ Approved Language:
 
 **Useful Links:**  
 
-- [Explore The Vault](https://rubiesunleashed.netlify.app/explore)  
+- [Explore The Vault](https://rubiesunleashed.app/explore)  
 - About The Platform  
 - Publishing Guidelines  
 - Help Center  

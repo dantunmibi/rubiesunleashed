@@ -19,7 +19,7 @@ import { BRAND } from './brand';
 // ✅ Re-export for convenience
 export { BRAND };
 
-const DEFAULT_IMAGE = 'https://rubiesunleashed.netlify.app/rubieslogo.png';
+const DEFAULT_IMAGE = 'https://rubiesunleashed.app/rubieslogo.png';
 
 /**
  * 1. ORGANIZATION SCHEMA (Enhanced with AI Entity Graph)
@@ -44,7 +44,7 @@ export function generateOrganizationSchema() {
     // Descriptions (Multiple Lengths for AI Context)
     "description": BRAND.longDescription,
     "abstract": "Rubies Unleashed is a curated marketplace and distribution platform for independent games, apps, and creative digital projects.",
-    "slogan": BRAND.tagline,
+    "slogan": BRAND.slogan,
     
     // Founding & History
     "foundingDate": BRAND.foundingDate,
@@ -61,7 +61,7 @@ export function generateOrganizationSchema() {
       "@type": "ContactPoint",
       "contactType": "Customer Support",
       "email": "officialrubiesunleashed@gmail.com",
-      "url": "https://rubiesunleashed.netlify.app/contact"
+      "url": "https://rubiesunleashed.app/contact"
     },
     "sameAs": BRAND.socialProfiles,
     
@@ -137,49 +137,49 @@ export function generateOrganizationSchema() {
       {
         "@type": "WebPage",
         "name": "The Vault",
-        "url": "https://rubiesunleashed.netlify.app/explore",
+        "url": "https://rubiesunleashed.app/explore",
         "description": "Discovery platform for browsing curated indie games and applications"
       },
       {
         "@type": "WebPage",
         "name": "The Forge",
-        "url": "https://rubiesunleashed.netlify.app/publish",
+        "url": "https://rubiesunleashed.app/publish",
         "description": "Creator platform for publishing and managing digital projects"
       },
       {
         "@type": "WebPage",
         "name": "Help Center",
-        "url": "https://rubiesunleashed.netlify.app/help",
+        "url": "https://rubiesunleashed.app/help",
         "description": "Support resources for creators and users"
       },
       {
         "@type": "WebPage",
         "name": "Platform Status",
-        "url": "https://rubiesunleashed.netlify.app/status",
+        "url": "https://rubiesunleashed.app/status",
         "description": "Real-time platform health monitoring"
       },
       {
         "@type": "WebPage",
         "name": "About",
-        "url": "https://rubiesunleashed.netlify.app/about",
+        "url": "https://rubiesunleashed.app/about",
         "description": "Platform history and mission"
       },
       {
         "@type": "WebPage",
         "name": "Contact",
-        "url": "https://rubiesunleashed.netlify.app/contact",
+        "url": "https://rubiesunleashed.app/contact",
         "description": "Get in touch with the team"
       },
       {
         "@type": "WebPage",
         "name": "Privacy Policy",
-        "url": "https://rubiesunleashed.netlify.app/privacy",
+        "url": "https://rubiesunleashed.app/privacy",
         "description": "Data privacy practices and policies"
       },
       {
         "@type": "WebPage",
         "name": "Terms of Service",
-        "url": "https://rubiesunleashed.netlify.app/terms",
+        "url": "https://rubiesunleashed.app/terms",
         "description": "Platform usage terms and conditions"
       }
     ],
@@ -192,13 +192,13 @@ export function generateOrganizationSchema() {
         {
           "@type": "Product",
           "name": "The Forge - Creator Publishing Platform",
-          "url": "https://rubiesunleashed.netlify.app/publish",
-          "image": "https://rubiesunleashed.netlify.app/rubieslogo.png",
+          "url": "https://rubiesunleashed.app/publish",
+          "image": "https://rubiesunleashed.app/rubieslogo.png",
           "description": "Direct publishing platform for indie developers to upload and manage their games and applications. Includes asset management, project dashboards, and community features.",
           "category": "Publishing Tools",
           "offers": {
             "@type": "Offer",
-            "url": "https://rubiesunleashed.netlify.app/publish",
+            "url": "https://rubiesunleashed.app/publish",
             "price": "0.00",
             "priceCurrency": "USD",
             "availability": "https://schema.org/InStock",
@@ -208,13 +208,13 @@ export function generateOrganizationSchema() {
         {
           "@type": "Product",
           "name": "The Vault - Discovery Platform",
-          "url": "https://rubiesunleashed.netlify.app/explore",
-          "image": "https://rubiesunleashed.netlify.app/rubieslogo.png",
+          "url": "https://rubiesunleashed.app/explore",
+          "image": "https://rubiesunleashed.app/rubieslogo.png",
           "description": "Unified discovery system for players to find curated indie games and applications. Features personalized feeds, archetype-based recommendations, and community wishlists.",
           "category": "Game Discovery",
           "offers": {
             "@type": "Offer",
-            "url": "https://rubiesunleashed.netlify.app/explore",
+            "url": "https://rubiesunleashed.app/explore",
             "price": "0.00",
             "priceCurrency": "USD",
             "availability": "https://schema.org/InStock",
@@ -224,8 +224,8 @@ export function generateOrganizationSchema() {
         {
           "@type": "Product",
           "name": "Creator Dashboards",
-          "url": "https://rubiesunleashed.netlify.app/publish",
-          "image": "https://rubiesunleashed.netlify.app/rubieslogo.png",
+          "url": "https://rubiesunleashed.app/publish",
+          "image": "https://rubiesunleashed.app/rubieslogo.png",
           "description": "Comprehensive project management tools for creators including analytics, version control, and community engagement features.",
           "category": "Creator Tools",
           "offers": {
@@ -243,7 +243,7 @@ export function generateOrganizationSchema() {
       {
         "@type": "WebApplication",
         "name": "The Forge",
-        "url": "https://rubiesunleashed.netlify.app/publish",
+        "url": "https://rubiesunleashed.app/publish",
         "description": "Complete creator platform for publishing and managing indie games and applications",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web Browser"
@@ -251,7 +251,7 @@ export function generateOrganizationSchema() {
       {
         "@type": "WebApplication",
         "name": "The Vault",
-        "url": "https://rubiesunleashed.netlify.app/explore",
+        "url": "https://rubiesunleashed.app/explore",
         "description": "Discovery and exploration platform for finding curated indie content",
         "applicationCategory": "EntertainmentApplication",
         "operatingSystem": "Web Browser"
@@ -309,7 +309,7 @@ export function generateWebSiteSchema() {
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://rubiesunleashed.netlify.app/explore?q={search_term_string}"
+        "urlTemplate": "https://rubiesunleashed.app/explore?q={search_term_string}"
       },
       "query-input": "required name=search_term_string"
     },
@@ -401,7 +401,7 @@ export function generateBreadcrumbSchema(items) {
       "@type": "ListItem",
       "position": index + 1,
       "name": item.name,
-      "item": item.url ? `https://rubiesunleashed.netlify.app${item.url}` : undefined
+      "item": item.url ? `https://rubiesunleashed.app${item.url}` : undefined
     }))
   };
 }
@@ -416,7 +416,7 @@ export function generateCollectionPageSchema(items = []) {
     "@type": "CollectionPage",
     "name": "The Vault - Explore Indie Games & Apps",
     "description": "Discover curated indie games, applications, and digital projects. Browse by platform, genre, and archetype.",
-    "url": "https://rubiesunleashed.netlify.app/explore",
+    "url": "https://rubiesunleashed.app/explore",
     "mainEntity": {
       "@type": "ItemList",
       "name": "Featured Indie Projects",
@@ -428,7 +428,7 @@ export function generateCollectionPageSchema(items = []) {
         "item": {
           "@type": isApp(item.tags) ? "SoftwareApplication" : "VideoGame",
           "name": item.title,
-          "url": `https://rubiesunleashed.netlify.app/view/${item.slug}`,
+          "url": `https://rubiesunleashed.app/view/${item.slug}`,
           "image": item.image || DEFAULT_IMAGE
         }
       }))
@@ -448,7 +448,7 @@ export function generateJsonLd(game) {
   if (!game) return null;
 
   const isApplication = isApp(game.tags);
-  const canonicalUrl = `https://rubiesunleashed.netlify.app/view/${game.slug}`;
+  const canonicalUrl = `https://rubiesunleashed.app/view/${game.slug}`;
   
   const operatingSystem = game.buildPlatform && 
                           game.buildPlatform !== 'Multi-Platform' && 
@@ -471,7 +471,7 @@ export function generateJsonLd(game) {
     "author": {
       "@type": "Person",
       "name": game.developer,
-      "url": game.developerUrl ? `https://rubiesunleashed.netlify.app${game.developerUrl}` : undefined,
+      "url": game.developerUrl ? `https://rubiesunleashed.app${game.developerUrl}` : undefined,
       "description": `Independent creator on ${BRAND.name}`
     },
     

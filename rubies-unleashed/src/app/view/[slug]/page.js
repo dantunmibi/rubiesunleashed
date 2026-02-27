@@ -39,19 +39,19 @@ export default async function ViewPage({ params }) {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://rubiesunleashed.netlify.app"
+        "item": "https://rubiesunleashed.app"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "Explore",
-        "item": "https://rubiesunleashed.netlify.app/explore"
+        "item": "https://rubiesunleashed.app/explore"
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": game.title,
-        "item": `https://rubiesunleashed.netlify.app/view/${game.slug}`
+        "item": `https://rubiesunleashed.app/view/${game.slug}`
       }
     ]
   };

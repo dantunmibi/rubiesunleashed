@@ -21,7 +21,7 @@ export default function ExplorePage() {
     "@type": "CollectionPage",
     "name": "The Vault - Explore Indie Games & Apps",
     "description": "Discover curated indie games, applications, and digital projects.",
-    "url": "https://rubiesunleashed.netlify.app/explore"
+    "url": "https://rubiesunleashed.app/explore"
   };
 
   const speakableSchema = generateSpeakableSchema(['h1', 'h2']);

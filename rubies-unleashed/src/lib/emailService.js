@@ -78,7 +78,7 @@ From: ${adminUsername}
 Date: ${formattedDate}
 
 View your project dashboard:
-https://rubiesunleashed.netlify.app/${developerUsername}/dashboard
+https://rubiesunleashed.app/${developerUsername}/dashboard
 
 Best regards,
 The Rubies Unleashed Team
@@ -130,7 +130,7 @@ You received this email because you have a project on Rubies Unleashed.
                 </table>
               </div>
               <div style="margin-top: 32px; text-align: center;">
-                <a href="https://rubiesunleashed.netlify.app/${developerUsername}/dashboard" style="display: inline-block; background-color: ${
+                <a href="https://rubiesunleashed.app/${developerUsername}/dashboard" style="display: inline-block; background-color: ${
       isModeration ? "#f59e0b" : "#8b5cf6"
     }; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">
                   View Dashboard
@@ -244,7 +244,7 @@ ${content.headline}
 As a ${content.title}, you'll get:
 ${content.features.map((f) => `• ${f}`).join("\n")}
 
-Your dashboard awaits: https://rubiesunleashed.netlify.app/
+Your dashboard awaits: https://rubiesunleashed.app/
 
 ${content.closing},
 Rubies Unleashed Team`;
@@ -264,7 +264,7 @@ Rubies Unleashed Team`;
       .map((f) => `<p style="margin:8px 0;color:#cbd5e1">✦ ${f}</p>`)
       .join(
         ""
-      )}</div><div style="text-align:center;margin:32px 0"><a href="https://rubiesunleashed.netlify.app/" style="display:inline-block;background:${
+      )}</div><div style="text-align:center;margin:32px 0"><a href="https://rubiesunleashed.app/" style="display:inline-block;background:${
       content.color
     };color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:bold;text-transform:uppercase">${
       content.ctaText
@@ -303,7 +303,7 @@ export async function sendForgeWelcomeEmail({
     }
 
     const subject = "🏗️ Welcome to The Forge, Creator!";
-    const projectUrl = `https://rubiesunleashed.netlify.app/${username}/dashboard/project/${projectId}`;
+    const projectUrl = `https://rubiesunleashed.app/${username}/dashboard/project/${projectId}`;
 
     const textContent = `Hi ${username},
 
@@ -354,8 +354,8 @@ export async function sendProjectPublishedEmail({
     }
 
     const subject = `🚀 "${projectTitle}" is Live on Rubies Unleashed!`;
-    const publicUrl = `https://rubiesunleashed.netlify.app/view/${projectSlug}`;
-    const dashboardUrl = `https://rubiesunleashed.netlify.app/${username}/dashboard`;
+    const publicUrl = `https://rubiesunleashed.app/view/${projectSlug}`;
+    const dashboardUrl = `https://rubiesunleashed.app/${username}/dashboard`;
 
     const textContent = `Congrats ${username}!
 

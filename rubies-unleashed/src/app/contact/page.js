@@ -67,7 +67,7 @@ function ContactFormLogic() {
 I would like to claim this game listing: ${gameInfo}
 
 USERNAME: ${username}${developerName ? `\nDEVELOPER NAME: ${developerName}` : ''}
-PROFILE LINK: https://rubiesunleashed.netlify.app/${username}
+PROFILE LINK: https://rubiesunleashed.app/${username}
 
 PROOF OF OWNERSHIP: 
 [Please describe how you can prove this is your game. For example:
@@ -90,7 +90,7 @@ I would like to claim this game listing: ${gameInfo}
 This helps us verify your identity and speeds up the approval process.
 
 If you don't have an account yet, please sign up at:
-https://rubiesunleashed.netlify.app/signup
+https://rubiesunleashed.app/signup
 
 USERNAME (after login): [Will be auto-filled when you log in]
 
