@@ -46,7 +46,6 @@ export const BRAND = {
     "https://www.instagram.com/official_rubiesunleashed",
     "https://facebook.com/rubiesunleashed",
     "https://discord.gg/zgCh55JfWF",
-    "https://www.reddit.com/r/rubiesunleashed"
   ],
   
   // Detailed social links for UI usage (includes email & LinkedIn)
@@ -74,12 +73,6 @@ export const BRAND = {
       handle: "@rubiesunleashed",
       url: "https://facebook.com/rubiesunleashed",
       icon: "facebook"
-    },
-    reddit: {
-      name: "Reddit",
-      handle: "r/rubiesunleashed",
-      url: "https://www.reddit.com/r/rubiesunleashed",
-      icon: "reddit"
     },
     linkedin: {
       name: "LinkedIn",
