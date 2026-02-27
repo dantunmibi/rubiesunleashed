@@ -45,7 +45,6 @@ export const BRAND = {
     "https://x.com/rubiesunleashed",
     "https://www.instagram.com/official_rubiesunleashed",
     "https://facebook.com/rubiesunleashed",
-    "https://rubiesunleashed.bsky.social",
     "https://discord.gg/zgCh55JfWF",
     "https://www.reddit.com/r/rubiesunleashed"
   ],
@@ -81,12 +80,6 @@ export const BRAND = {
       handle: "r/rubiesunleashed",
       url: "https://www.reddit.com/r/rubiesunleashed",
       icon: "reddit"
-    },
-    bluesky: {
-      name: "Bluesky",
-      handle: "rubiesunleashed.bsky.social",
-      url: "https://rubiesunleashed.bsky.social",
-      icon: "cloud"
     },
     linkedin: {
       name: "LinkedIn",

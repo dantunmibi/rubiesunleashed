@@ -188,7 +188,7 @@ Approved Language:
 | Instagram      | [@official_rubiesunleashed](https://www.instagram.com/official_rubiesunleashed) | ✅ Live  |
 | Facebook       | [@rubiesunleashed](https://facebook.com/rubiesunleashed)   | ✅ Live 
 | Reddit         | r/rubiesunleashed                                          | ✅ Live  |
-| Bluesky        | rubiesunleashed.bsky.social                                | ✅ Live  |
+| Bluesky        | rubiesunleashed.bsky.social  banned                              | ✅ Live  |
 | Sitemap        | /sitemap.xml                                               | ✅ Live    |
 | Linkedin        | /company/rubies-unleashed                                              | ✅ Live    |
 | RSS Feed       | /rss file to be created                                          | 🔜 Planned    |
