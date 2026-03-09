@@ -128,7 +128,7 @@ export default function AboutPage() {
                     without barriers. No hidden costs, no gatekeeping.
                   </p>
                   <p className="text-slate-400">
-                    It quickly became a trusted space for players seeking unique
+                    It quickly became a trusted space for users seeking unique
                     experiences and developers looking for visibility without
                     friction.
                   </p>
@@ -170,8 +170,8 @@ export default function AboutPage() {
               />
               <ValueCard
                 icon={<Users size={32} className="text-cyan-400" />}
-                title="Player-Focused"
-                desc="Players deserve creativity, not repetition. Our unified discovery system surfaces both curated gems and fresh community projects in one place."
+                title="User-Focused"
+                desc="Users deserve creativity, not repetition. Our unified discovery system surfaces both curated gems and fresh community projects in one place."
               />
               <ValueCard
                 icon={<Shield size={32} className="text-emerald-400" />}

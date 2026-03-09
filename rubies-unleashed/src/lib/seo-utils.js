@@ -117,7 +117,7 @@ export function generateOrganizationSchema() {
         "Players",
         "Digital Content Consumers"
       ],
-      "description": "Serves both independent creators looking for visibility and distribution, and players seeking unique gaming experiences and applications"
+      "description": "Serves both independent creators looking for visibility and distribution, and users seeking unique gaming experiences and applications"
     },
     
     // Knowledge Areas (Topical Authority)

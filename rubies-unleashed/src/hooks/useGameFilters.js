@@ -161,15 +161,48 @@ export function useGameFilters(games, searchParams) {
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
-  const updatePlatform = (platform) => {
-    dispatch({ type: "SET_PLATFORM", payload: platform });
-  };
+const updatePlatform = (platform) => {
+  dispatch({ type: "SET_PLATFORM", payload: platform });
+  
+  // Update URL params
+  const params = new URLSearchParams(searchParams);
+  
+  if (platform && platform !== "All") {
+    params.set("platform", platform);
+  } else {
+    params.delete("platform");
+  }
+  
+  // Preserve search/genre if set
+  if (filters.searchQuery) {
+    params.set("q", filters.searchQuery);
+  }
+  
+  router.replace(`?${params.toString()}`, { scroll: false });
+};
 
-  const updateGenre = (genre) => {
-    dispatch({ type: "SET_GENRE", payload: genre });
-    if (genre === "All") updateSearch("");
-    else updateSearch(genre);
-  };
+const updateGenre = (genre) => {
+  dispatch({ type: "SET_GENRE", payload: genre });
+  
+  // Update URL params while preserving platform
+  const params = new URLSearchParams(searchParams);
+  
+  // Handle search/genre param
+  if (genre === "All") {
+    params.delete("q");
+  } else {
+    params.set("q", genre);
+  }
+  
+  // Preserve platform param
+  if (filters.selectedPlatform && filters.selectedPlatform !== "All") {
+    params.set("platform", filters.selectedPlatform);
+  } else {
+    params.delete("platform");
+  }
+  
+  router.replace(`?${params.toString()}`, { scroll: false });
+};
 
   const updateCollection = (collectionId) => {
     const newCollection =
