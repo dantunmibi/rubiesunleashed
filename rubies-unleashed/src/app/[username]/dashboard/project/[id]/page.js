@@ -117,7 +117,7 @@
           setLoading(false);
           triggerError();
         }
-      }, 10000);
+      }, 15000);
 
       return () => clearTimeout(timer);
     }, [loading, authLoading, triggerError]);

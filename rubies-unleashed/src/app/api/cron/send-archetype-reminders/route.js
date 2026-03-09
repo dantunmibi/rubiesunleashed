@@ -12,20 +12,10 @@ import { sendArchetypeReminderEmail } from "@/lib/emailService";
  */
 
 export async function GET(request) {
-  try {
-    // 🔍 DEBUG: Log all headers
-    console.log("📋 All headers received:");
-    for (const [key, value] of request.headers.entries()) {
-      console.log(`  ${key}: ${value.substring(0, 20)}...`);
-    }
-    
+  try {    
     // 🔐 Security: Verify cron authorization
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
-    
-    console.log("🔍 Auth values:");
-    console.log("  authHeader:", authHeader);
-    console.log("  cronSecret exists:", !!cronSecret);
 
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       console.error("❌ Unauthorized cron attempt");

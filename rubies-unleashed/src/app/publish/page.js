@@ -54,7 +54,7 @@ export default function PublishPage() {
         console.warn("Project creation timed out. Triggering session recovery.");
         setCreating(false);
         if (triggerError) triggerError();
-      }, 8000); // 8 second timeout
+      }, 10000); // 10 second timeout
     }
     return () => clearTimeout(timer);
   }, [creating, triggerError]);

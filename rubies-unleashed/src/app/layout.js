@@ -3,6 +3,7 @@ import "./globals.css";
 import ToastProvider from "@/components/providers/ToastProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import InternalTrafficGuard from "@/components/analytics/InternalTrafficGuard";
 import Script from "next/script";
@@ -86,15 +87,17 @@ export default function RootLayout({ children }) {
         <meta name="blogarama-site-verification" content="blogarama-6b2bba5a-d0dd-423a-b697-fe4c28e64bb3" />
       </head>
       <body>
-        <AuthProvider>
-          <ThemeProvider>
-            <ToastProvider>
-              <InternalTrafficGuard />
-              {children}
-              <SessionErrorOverlay />
-            </ToastProvider>
-          </ThemeProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ThemeProvider>
+              <ToastProvider>
+                <InternalTrafficGuard />
+                {children}
+                <SessionErrorOverlay />
+              </ToastProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
       <GoogleAnalytics gaId="G-DWTBY4B7M6" />
     </html>

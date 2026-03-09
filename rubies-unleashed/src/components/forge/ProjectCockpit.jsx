@@ -144,7 +144,7 @@ export default function ProjectCockpit({
             console.warn("Operation timed out. Triggering session recovery.");
             setLoading(false);
             if (triggerError) triggerError();
-        }, 10000);
+        }, 20000);
     }
     return () => clearTimeout(timer);
   }, [loading, triggerError]);
