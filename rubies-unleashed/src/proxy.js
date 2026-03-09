@@ -101,31 +101,11 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
-     * - _next (Next.js internals)
-     * - _static (inside /public)
-     * - _vercel (Vercel internals)
-     * - Static files (images, fonts, etc.)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
      */
-    {
-      source: '/((?!api|_next|_static|_vercel|[\\w-]+\\.\\w+).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
-    
-    {
-      source: '/((?!api|_next|_static|_vercel|[\\w-]+\\.\\w+).*)',
-      has: [
-        { type: 'header', key: 'next-router-prefetch' },
-      ],
-    },
-    
-    {
-      source: '/((?!api|_next|_static|_vercel|[\\w-]+\\.\\w+).*)',
-      has: [
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
