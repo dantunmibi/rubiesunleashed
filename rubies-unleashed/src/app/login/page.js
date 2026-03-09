@@ -50,8 +50,8 @@ export default function LoginPage() {
         // New user needs to initialize
         router.push('/initialize');
       } else if (profile?.username) {
-        // Existing user goes to their profile
-        router.push(`/${profile.username}`);
+        // Existing user goes to their feed
+        router.push(`/`);
       } else {
         // Fallback
         router.push('/');
