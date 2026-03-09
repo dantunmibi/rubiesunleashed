@@ -30,6 +30,10 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
+  generateBuildId: async () => {
+    return `${Date.now()}`;
+  },
+
   // ✅ Strict Mode
   reactStrictMode: true,
 

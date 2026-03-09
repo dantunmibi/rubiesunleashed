@@ -1,0 +1,25 @@
+# No caching for HTML pages
+/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff
+
+# Strong caching for hashed static assets (they never change)
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Image optimization
+/_next/image/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Public assets
+/rubieslogo.png
+  Cache-Control: public, max-age=604800
+
+/*.svg
+  Cache-Control: public, max-age=604800
+
+/*.png
+  Cache-Control: public, max-age=604800
+
+/*.jpg
+  Cache-Control: public, max-age=604800
