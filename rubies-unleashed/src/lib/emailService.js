@@ -443,7 +443,7 @@ You can complete this anytime at: ${initializeUrl}`;
               </div>
               
               <h1 style="margin: 0 0 16px 0; text-align: center; color: #fff; font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">
-                Complete Your Profile
+                Complete Account Setup
               </h1>
               
               <p style="margin: 0 0 24px 0; font-size: 16px; color: #e2e8f0;">Hi <strong style="color: #fff;">${username}</strong>,</p>
@@ -453,7 +453,7 @@ You can complete this anytime at: ${initializeUrl}`;
               </p>
               
               <p style="margin: 0 0 24px 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
-                Your archetype personalizes your entire experience - from your dashboard feed to content recommendations.
+                Your archetype personalizes your entire experience, from your dashboard feed to content recommendations.
               </p>
               
               <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; margin: 24px 0;">
