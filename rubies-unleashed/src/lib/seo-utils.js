@@ -30,7 +30,7 @@ export function generateOrganizationSchema() {
     "@type": "Organization",
     
     // Core Identity
-    "name": BRAND.name,
+    "name": "Rubies Unleashed",
     "legalName": BRAND.legalName,
     "alternateName": BRAND.alternateName,
     "url": BRAND.url,
@@ -291,13 +291,17 @@ export function generateWebSiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": BRAND.name,
-    "alternateName": BRAND.alternateName,
+    "name": "Rubies Unleashed",
+    "alternateName": [
+      "Rubies Unleashed App",
+      "RubiesUnleashed",
+      BRAND.alternateName
+    ],
     "url": BRAND.url,
     "description": BRAND.longDescription,
     "publisher": {
       "@type": "Organization",
-      "name": BRAND.name,
+      "name": "Rubies Unleashed"  ,
       "logo": {
         "@type": "ImageObject",
         "url": BRAND.logo
@@ -362,7 +366,7 @@ export function generatePersonSchema() {
     "jobTitle": "Founder & Creator",
     "worksFor": {
       "@type": "Organization",
-      "name": BRAND.name,
+      "name": "Rubies Unleashed",
       "url": BRAND.url
     },
     "url": BRAND.url,
@@ -435,7 +439,7 @@ export function generateCollectionPageSchema(items = []) {
     },
     "isPartOf": {
       "@type": "WebSite",
-      "name": BRAND.name,
+      "name": "Rubies Unleashed",
       "url": BRAND.url
     }
   };
@@ -477,7 +481,7 @@ export function generateJsonLd(game) {
     
     "publisher": {
       "@type": "Organization",
-      "name": BRAND.name,
+      "name": "Rubies Unleashed",
       "url": BRAND.url,
       "logo": {
         "@type": "ImageObject",

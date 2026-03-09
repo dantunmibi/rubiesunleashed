@@ -388,6 +388,159 @@ Rubies Unleashed Team`;
 }
 
 /**
+ * Send archetype initialization reminder email
+ */
+export async function sendArchetypeReminderEmail({ to, username }) {
+  try {
+    if (!to || !username) {
+      throw new Error("Missing required fields for archetype reminder email");
+    }
+
+    const subject = "🎭 Complete Your Rubies Unleashed Profile";
+    const initializeUrl = "https://rubiesunleashed.app/initialize";
+
+    const textContent = `Hi ${username},
+
+Welcome to Rubies Unleashed! 
+
+We noticed you haven't selected your archetype yet. Your archetype personalizes your entire experience - from your dashboard feed to content recommendations.
+
+Choose from 4 unique classes:
+• 🎮 Hunter - Latest games first, action-focused
+• 💻 Netrunner - Tools and apps prioritized
+• 📚 Curator - Quality-first, hidden gems
+• 👤 Phantom - Randomized underground content
+
+This only takes 30 seconds and unlocks your personalized dashboard.
+
+Complete your profile: ${initializeUrl}
+
+Your journey awaits,
+Rubies Unleashed Team
+
+────────────────────────────────
+You can complete this anytime at: ${initializeUrl}`;
+
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0b0f19; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #161b2c; border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 16px; overflow: hidden;">
+          <tr>
+            <td style="background: linear-gradient(to right, #E0115F, #8b5cf6, #06b6d4, #f59e0b); height: 4px;"></td>
+          </tr>
+          
+          <tr>
+            <td style="padding: 40px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 64px; line-height: 1;">🎭</div>
+              </div>
+              
+              <h1 style="margin: 0 0 16px 0; text-align: center; color: #fff; font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">
+                Complete Your Profile
+              </h1>
+              
+              <p style="margin: 0 0 24px 0; font-size: 16px; color: #e2e8f0;">Hi <strong style="color: #fff;">${username}</strong>,</p>
+              
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+                Welcome to Rubies Unleashed! We noticed you haven't selected your <strong style="color: #fff;">archetype</strong> yet.
+              </p>
+              
+              <p style="margin: 0 0 24px 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+                Your archetype personalizes your entire experience - from your dashboard feed to content recommendations.
+              </p>
+              
+              <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; text-align: center;">
+                  Choose Your Path
+                </p>
+                
+                <table width="100%" cellpadding="8" cellspacing="0">
+                  <tr>
+                    <td style="font-size: 20px; width: 40px;">🎮</td>
+                    <td>
+                      <strong style="color: #E0115F; font-size: 14px;">Hunter</strong>
+                      <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Latest games first, action-focused</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 20px;">💻</td>
+                    <td>
+                      <strong style="color: #06b6d4; font-size: 14px;">Netrunner</strong>
+                      <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Tools and apps prioritized</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 20px;">📚</td>
+                    <td>
+                      <strong style="color: #f59e0b; font-size: 14px;">Curator</strong>
+                      <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Quality-first, hidden gems</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 20px;">👤</td>
+                    <td>
+                      <strong style="color: #8b5cf6; font-size: 14px;">Phantom</strong>
+                      <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Randomized underground content</p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              
+              <p style="margin: 0 0 24px 0; font-size: 13px; color: #94a3b8; text-align: center;">
+                This only takes <strong style="color: #fff;">30 seconds</strong> and unlocks your personalized dashboard.
+              </p>
+              
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${initializeUrl}" style="display: inline-block; background: linear-gradient(135deg, #E0115F, #8b5cf6); color: #fff; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 4px 12px rgba(224, 17, 95, 0.3);">
+                  Choose Your Archetype
+                </a>
+              </div>
+              
+              <p style="margin: 32px 0 0 0; font-size: 14px; color: #cbd5e1; text-align: center;">
+                Your journey awaits,<br>
+                <strong style="color: #fff;">Rubies Unleashed Team</strong>
+              </p>
+            </td>
+          </tr>
+          
+          <tr>
+            <td style="background-color: rgba(0, 0, 0, 0.3); padding: 20px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+              <p style="margin: 0; font-size: 11px; color: #64748b;">
+                You can complete this anytime at: <a href="${initializeUrl}" style="color: #8b5cf6; text-decoration: none;">${initializeUrl}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const info = await getTransporter().sendMail({
+      from: process.env.SMTP_FROM,
+      to,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    console.log("✅ Archetype reminder email sent:", info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("❌ Archetype reminder email failed:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Verify SMTP connection
  */
 export async function verifyEmailConnection() {
