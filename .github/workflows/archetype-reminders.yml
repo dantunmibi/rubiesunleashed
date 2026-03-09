@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: '0 10 * * 1'  # Every Monday at 10 AM UTC
   
-  # Allow manual trigger from GitHub UI
+  # Allow manual trigger from GitHub
   workflow_dispatch:
 
 jobs:
