@@ -183,7 +183,8 @@ export default function ViewClient({ slug, initialGame }) {
       <SimilarGames
         games={similarGames}
         currentGameType={game.type}
-        loading={loadingSimilar} // ✅ Pass loading state
+        loading={loadingSimilar} 
+        slug={game.slug}
       />
 
       <AuthModal

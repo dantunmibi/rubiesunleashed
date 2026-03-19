@@ -3,14 +3,14 @@
  * ---------------------------------------------------------
  * - Fast Initial Paint: Resolves User immediately.
  * - Lazy Data Load: Shows Skeleton while fetching games.
- * - Authentication Required: No guest wishlists.
+  * - Anonymous Support: Public wishlists are viewable without an account.
  */
 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Heart, Trash2, UserX } from "lucide-react";
+import { Heart, Trash2, UserX, Shield } from "lucide-react";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
@@ -129,7 +129,7 @@ export default function WishlistPage() {
         setLoadingGames(false);
         setHasAttemptedLoad(true);
       }
-    }, 10000);
+    }, 8000);
 
     async function loadGames() {
       console.log('🔄 Starting loadGames for user:', viewingProfile.username);
@@ -374,30 +374,61 @@ export default function WishlistPage() {
     );
   }
 
-  // ✅ SIMPLIFIED: No guest access - require authentication
-  if (!user || !viewingProfile) {
+  // ✅ Profile resolved but something went wrong
+  if (!viewingProfile) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] text-slate-200 font-sans flex flex-col relative overflow-hidden">
+        <BackgroundEffects />
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10 pt-24">
+          <div className="bg-[#161b2c]/80 backdrop-blur-xl border border-white/10 p-10 rounded-3xl max-w-md w-full shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+            <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+              <UserX size={40} className="text-red-500" />
+            </div>
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-3">Profile Not Found</h1>
+            <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+              The profile <span className="text-white font-bold font-mono bg-white/5 px-2 py-0.5 rounded">@{targetUsername}</span> could not be located.
+            </p>
+            <button
+              onClick={() => router.push('/explore')}
+              className="w-full bg-white text-black hover:bg-slate-200 px-6 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+            >
+              Return to Exploration
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ✅ Anonymous user hitting a private wishlist
+  if (!user && viewingProfile?.is_public_wishlist === false) {
     return (
       <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-(--user-accent)/30">
         <BackgroundEffects />
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10 pt-24">
           <div className="bg-[#161b2c]/80 backdrop-blur-xl border border-white/10 p-10 rounded-3xl max-w-md w-full shadow-[0_0_60px_rgba(0,0,0,0.5)]">
-            <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-(--user-accent)/10 flex items-center justify-center border border-(--user-accent)/20">
-              <Heart size={40} className="text-(--user-accent)" />
+            <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+              <Shield size={40} className="text-slate-400" />
             </div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-3">Sign In Required</h1>
-            <p className="text-slate-400 mb-8 text-sm leading-relaxed">
-              Create an account to save and manage your wishlist.
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-3">Private Collection</h1>
+            <p className="text-slate-400 mb-2 text-sm leading-relaxed">
+              <span className="text-white font-bold">@{viewingProfile.username}</span> has set their wishlist to private.
+            </p>
+            <p className="text-slate-500 mb-8 text-xs leading-relaxed">
+              Sign up to build your own collection and connect with creators on Rubies Unleashed.
             </p>
             <div className="flex flex-col gap-3">
-              <button 
-                onClick={() => router.push('/signup')} 
-                className="w-full bg-(--user-accent) text-white px-6 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+              <button
+                onClick={() => router.push('/signup')}
+                className="w-full bg-white text-black hover:bg-slate-200 px-6 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
               >
                 Create Account
               </button>
-              <button 
-                onClick={() => router.push('/login')} 
+              <button
+                onClick={() => router.push('/login')}
                 className="w-full bg-white/5 border border-white/10 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest transition-all hover:bg-white/10"
               >
                 Sign In

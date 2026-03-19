@@ -18,7 +18,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
 import GameCard from "@/components/store/GameCard";
-import { fetchGames } from "@/lib/blogger";
+import { getUnifiedFeed } from "@/lib/game-service-client";
 import { 
   SearchIcon, 
   HomeIcon, 
@@ -37,7 +37,7 @@ export default function NotFound() {
   useEffect(() => {
     async function loadPopularItems() {
       try {
-        const data = await fetchGames(100);
+        const data = await getUnifiedFeed({ limit: 100 });
         
         // Filter for "Featured" tag (Case Insensitive)
         const featured = data.filter(

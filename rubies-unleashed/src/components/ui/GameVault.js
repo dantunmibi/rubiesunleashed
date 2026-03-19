@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
-import { fetchGames } from "@/lib/blogger";
+import { getUnifiedFeed } from "@/lib/game-service-client";
 import Link from "next/link";
-import GameCard from "@/components/store/GameCard"; // ✅ IMPORT
+import GameCard from "@/components/store/GameCard";
 
 export default function GameVault() {
   const [games, setGames] = useState([]);
@@ -13,8 +13,8 @@ export default function GameVault() {
   useEffect(() => {
     async function load() {
       // Fetch 8 for a nice grid
-      const data = await fetchGames(8);
-      setGames(data);
+      const data = await getUnifiedFeed({ limit: 100 });
+      setGames(data.slice(0, 8));
       setLoading(false);
     }
     load();

@@ -11,6 +11,7 @@ import { User, Calendar, Edit, Shield, Diamond, Loader2, Cpu, Crown, Ghost, Layo
 import Link from "next/link";
 import GameGrid from "@/components/explore/GameGrid"; 
 import { fetchGameById } from "@/lib/blogger";
+import { getUnifiedFeed } from "@/lib/game-service-client";
 
 const ArchetypeIcon = ({ type, size = 20 }) => {
     switch (type) {
@@ -43,6 +44,17 @@ export default function ProfileClient() {
   const [error, setError] = useState(false);
   const [timeout, setTimeoutState] = useState(false);
 
+  // ✅ Init Timeout — guards against auth never resolving
+  useEffect(() => {
+    if (initialized) return;
+
+    const initTimer = setTimeout(() => {
+      setTimeoutState(true);
+    }, 8000);
+
+    return () => clearTimeout(initTimer);
+  }, [initialized]);
+
   // Load Profile Logic
   useEffect(() => {
     if (!targetUsername) return;
@@ -58,7 +70,7 @@ export default function ProfileClient() {
             setTimeoutState(true);
             setLoading(false); 
         }
-    }, 10000);
+    }, 8000);
 
     async function loadProfile() {
       try {
@@ -117,52 +129,41 @@ export default function ProfileClient() {
                     
                     if (wishData && wishData.length > 0) {
                         console.log('📋 Fetching wishlist preview:', wishData.length, 'items');
-                        
-                        const games = await Promise.all(
-                            wishData.map(async (item) => {
-                                try {
-                                    // First try to fetch from Supabase projects
-                                    const { data: project, error: projectError } = await supabase
-                                        .from('projects')
-                                        .select('*')
-                                        .eq('id', item.game_id)
-                                        .eq('status', 'published')
-                                        .single();
-                                    
-                                    if (project && !projectError) {
-                                        console.log('✅ Project loaded from Supabase:', project.title);
-                                        return {
-                                            id: project.id,
-                                            title: project.title,
-                                            slug: project.slug,
-                                            description: project.description,
-                                            image: project.cover_url,
-                                            type: project.type || 'Game',
-                                            tags: project.tags || [],
-                                            developer: project.developer,
-                                            version: project.version
-                                        };
+
+                        // ✅ Use unified feed — same strategy as wishlist page
+                        // Handles both Blogger and Supabase projects correctly
+                        const allGames = await getUnifiedFeed({ limit: 2000 });
+                        let validGames = [];
+
+                        if (allGames && allGames.length > 0) {
+                            validGames = wishData.map(item => {
+                                return allGames.find(g =>
+                                    g.id === item.game_id ||
+                                    g.slug === item.game_id ||
+                                    g.slug?.endsWith(`-${item.game_id}`) ||
+                                    (g.original_blogger_id && g.original_blogger_id === item.game_id)
+                                ) || null;
+                            }).filter(Boolean);
+
+                            console.log('✅ Valid items loaded from unified feed:', validGames.length);
+                        } else {
+                            // ✅ Fallback: individual Blogger lookups if feed is empty
+                            console.log('⚠️ Unified feed empty, falling back to individual lookups');
+                            const fallback = await Promise.all(
+                                wishData.map(async (item) => {
+                                    try {
+                                        const game = await fetchGameById(item.game_id);
+                                        return game || null;
+                                    } catch (err) {
+                                        console.error('Error fetching item:', item.game_id, err);
+                                        return null;
                                     }
-                                    
-                                    // If not found in projects, try Blogger API
-                                    const game = await fetchGameById(item.game_id);
-                                    if (game) {
-                                        console.log('✅ Game loaded from Blogger:', game.title);
-                                        return game;
-                                    }
-                                    
-                                    console.warn('❌ Item not found:', item.game_id);
-                                    return null;
-                                } catch (err) {
-                                    console.error('Error fetching item:', item.game_id, err);
-                                    return null;
-                                }
-                            })
-                        );
-                        
-                        const validGames = games.filter(Boolean);
-                        console.log('✅ Valid items loaded:', validGames.length);
-                        
+                                })
+                            );
+                            validGames = fallback.filter(Boolean);
+                            console.log('✅ Valid items loaded from fallback:', validGames.length);
+                        }
+
                         if (isMounted) {
                             setWishlistPreview(validGames);
                         }
@@ -248,7 +249,26 @@ export default function ProfileClient() {
     } catch (e) {}
   };
 
-  // ✅ 1. INITIALIZING STATE
+  // ✅ 1. TIMEOUT STATE (must come first — catches both init + load hangs)
+  if (timeout) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
+        <AlertTriangle className="text-amber-500" size={48} />
+        <div>
+          <h2 className="text-xl font-bold text-white mb-2">Connection Interrupted</h2>
+          <p className="text-slate-400 text-sm">The network is unresponsive.</p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold uppercase text-xs tracking-widest transition-all"
+        >
+          <RefreshCw size={16} /> Retry Connection
+        </button>
+      </div>
+    );
+  }
+
+  // ✅ 2. INITIALIZING STATE
   if (!initialized) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
@@ -258,7 +278,7 @@ export default function ProfileClient() {
     );
   }
 
-  // ✅ 2. LOADING STATE
+  // ✅ 3. LOADING STATE
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
@@ -266,25 +286,6 @@ export default function ProfileClient() {
         <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">Decrypting Identity...</p>
       </div>
     );
-  }
-
-  // ✅ 3. TIMEOUT STATE
-  if (timeout) {
-      return (
-        <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
-            <AlertTriangle className="text-amber-500" size={48} />
-            <div>
-                <h2 className="text-xl font-bold text-white mb-2">Connection Interrupted</h2>
-                <p className="text-slate-400 text-sm">The network is unresponsive.</p>
-            </div>
-            <button 
-                onClick={() => window.location.reload()} 
-                className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold uppercase text-xs tracking-widest transition-all"
-            >
-                <RefreshCw size={16} /> Retry Connection
-            </button>
-        </div>
-      );
   }
 
   // ✅ 4. ERROR / 404 STATE

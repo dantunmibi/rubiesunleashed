@@ -13,5 +13,6 @@ export default function robots() {
       disallow: ['/api/', '/private/', '/admin/'], // Security exclusions
     },
     sitemap: 'https://rubiesunleashed.app/sitemap.xml',
+    rss: 'https://rubiesunleashed.app/rss.xml',
   }
 }

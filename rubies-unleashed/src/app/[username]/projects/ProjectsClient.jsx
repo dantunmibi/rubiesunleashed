@@ -91,10 +91,9 @@ export default function ProjectsClient({ username: propUsername }) {
         if (isMounted) setProfile(profileData);
 
         const { data: projectsData, error: projectsError } = await supabase
-          .from("projects")
+          .from("projects_public")
           .select("*")
-          .eq("user_id", profileData.id)
-          .eq("status", "published")
+          .eq("uploader_username", profileData.username)
           .order("created_at", { ascending: false });
 
         if (checkSupabaseError(projectsError)) return;

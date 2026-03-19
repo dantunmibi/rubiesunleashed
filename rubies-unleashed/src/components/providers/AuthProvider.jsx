@@ -421,6 +421,7 @@ export default function AuthProvider({ children }) {
     needsDevNameSetup: profile && !profile?.developer_name,
     refreshProfile,
     signOut,
+    getValidToken,
     preloadUserData: () => user?.id ? preloadUserData(user.id) : null,
     updateWishlistCache,
   };

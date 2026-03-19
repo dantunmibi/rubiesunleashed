@@ -35,15 +35,6 @@ class ErrorBoundary extends React.Component {
     });
   }
 
-  handleReset = () => {
-    console.log('🔄 Resetting error boundary...');
-    this.setState({ 
-      hasError: false, 
-      error: null, 
-      errorInfo: null,
-    });
-  };
-
   handleReload = () => {
     if (typeof window !== 'undefined') {
       window.location.reload();
@@ -112,15 +103,6 @@ class ErrorBoundary extends React.Component {
 
               {/* Action Buttons - Cinematic Style */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={this.handleReset}
-                  className="flex-1 group relative flex items-center justify-center gap-2 bg-ruby hover:bg-ruby/80 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  <RefreshCw className="w-4 h-4 relative z-10" />
-                  <span className="relative z-10">Try Again</span>
-                </button>
-
                 <button
                   onClick={this.handleReload}
                   className="flex-1 flex items-center justify-center gap-2 bg-surface hover:bg-slate-800 text-white px-6 py-3 rounded-lg font-semibold border border-slate-700 hover:border-slate-600 transition-all duration-300"

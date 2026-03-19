@@ -2,10 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Star, Gem, Play, LockKeyhole, Unlock } from "lucide-react";
-import { fetchGames } from "@/lib/blogger";
+import { getUnifiedFeed } from "@/lib/game-service-client";
 import Link from "next/link"; 
-
-const FEATURED_TAG = "Featured"; 
 
 export default function GiantRuby() {
   const [featured, setFeatured] = useState([]);
@@ -13,12 +11,27 @@ export default function GiantRuby() {
 
   useEffect(() => {
     async function load() {
-      const data = await fetchGames(20);
-      let topPicks = data.filter(g => 
-        g.tags && g.tags.some(t => t.toLowerCase() === FEATURED_TAG.toLowerCase())
-      );
-      if (topPicks.length < 2) topPicks = data.slice(0, 2);
-      setFeatured(topPicks.slice(0, 2));
+const data = await getUnifiedFeed({ limit: 20 });
+
+// ✅ Prioritise database-featured projects (Supabase is_featured flag)
+// Fallback to Featured tag for Blogger posts, then newest items
+let topPicks = data.filter(g => g.isFeatured === true);
+
+if (topPicks.length < 2) {
+  const tagFeatured = data.filter(g =>
+    !g.isFeatured &&
+    g.tags &&
+    g.tags.some(t => t.toLowerCase() === 'featured')
+  );
+  topPicks = [...topPicks, ...tagFeatured];
+}
+
+if (topPicks.length < 2) {
+  const rest = data.filter(g => !topPicks.includes(g));
+  topPicks = [...topPicks, ...rest];
+}
+
+setFeatured(topPicks.slice(0, 2));
     }
     load();
   }, []);

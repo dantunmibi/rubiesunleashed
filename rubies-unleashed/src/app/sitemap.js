@@ -40,6 +40,7 @@ export default async function sitemap() {
       { route: '/help', priority: 0.4, freq: 'monthly' },
       { route: '/terms', priority: 0.3, freq: 'yearly' },
       { route: '/privacy', priority: 0.3, freq: 'yearly' },
+      { route: '/rss.xml', priority: 0.3, freq: 'hourly' },
     ].map(({ route, priority, freq }) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),

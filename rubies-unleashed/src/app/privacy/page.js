@@ -114,16 +114,12 @@ export default function PrivacyPage() {
           text: "We use browser storage for essential functionality like user authentication, session management, and maintaining your wishlist while browsing.",
         },
         {
-          subtitle: "Guest Data",
-          text: "If you browse without an account, your wishlist is stored locally on your device. This data migrates to your account when you sign up.",
-        },
-        {
           subtitle: "Preferences",
           text: "We store your theme preferences, archetype selection, and other settings to provide a consistent experience across visits.",
         },
         {
           subtitle: "Managing Storage",
-          text: "You can clear browser data through your browser settings. Note that this may reset your preferences and guest wishlist.",
+          text: "You can clear browser data through your browser settings. Note that this may reset your saved preferences and session data.",
         },
       ],
     },
@@ -170,8 +166,8 @@ export default function PrivacyPage() {
               </span>
             </h1>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-              Your data is protected with enterprise-grade security. Here's how we 
-              safeguard your information on our creator platform.
+              Your data is protected with enterprise-grade security. Here's how
+              we safeguard your information on our creator platform.
             </p>
             <p className="text-sm text-slate-500 mt-4 font-bold">
               Last Updated: January 13, 2026
@@ -197,7 +193,8 @@ export default function PrivacyPage() {
               <li className="flex items-start gap-3">
                 <span className="text-ruby text-xl">🔒</span>
                 <span>
-                  We collect only what's necessary to operate the platform and creator tools
+                  We collect only what's necessary to operate the platform and
+                  creator tools
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -221,7 +218,8 @@ export default function PrivacyPage() {
               <li className="flex items-start gap-3">
                 <span className="text-violet-400 text-xl">🔨</span>
                 <span>
-                  Creators have full control over their published content and portfolios
+                  Creators have full control over their published content and
+                  portfolios
                 </span>
               </li>
             </ul>
@@ -280,9 +278,9 @@ export default function PrivacyPage() {
                 Creator Rights
               </h3>
               <p className="text-slate-300 font-medium leading-relaxed">
-                As a creator using The Forge, you retain ownership of your content.
-                We only use your project information to display it on our platform.
-                You can modify or remove your content at any time.
+                As a creator using The Forge, you retain ownership of your
+                content. We only use your project information to display it on
+                our platform. You can modify or remove your content at any time.
               </p>
             </div>
           </div>
@@ -294,7 +292,8 @@ export default function PrivacyPage() {
             </h2>
             <p className="text-slate-300 font-medium mb-6">
               Have concerns about your privacy or data? Want to exercise your
-              rights? Need help with creator account settings? We're here to help!
+              rights? Need help with creator account settings? We're here to
+              help!
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a

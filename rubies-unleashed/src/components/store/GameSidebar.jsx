@@ -41,7 +41,7 @@ export default function GameSidebar({ game }) {
 
   // Run Helpers with Safe Data
   const platform = getPlatformInfo(game, safeTags);
-  const license = getLicenseDisplay(game.license || 'Free');
+  const license = getLicenseDisplay(game.license || "Free");
 
   // Social link handler (same as before)
   const handleSocialClick = (e, url) => {
@@ -156,16 +156,31 @@ export default function GameSidebar({ game }) {
               </div>
             )}
 
-            {/* Published */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <div className="flex items-center gap-3 text-slate-400">
-                <Calendar size={18} />
-                <span className="text-sm font-bold">Published</span>
-              </div>
-              <span className="text-white font-bold truncate max-w-35 text-right">
-                {formatDate(game.publishedDate)}
-              </span>
-            </div>
+            {/* Published / Coming Soon */}
+            {(() => {
+              const isComingSoon = safeTags.some(
+                (t) => t.toLowerCase() === "coming soon",
+              );
+              return (
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <Calendar size={18} />
+                    <span className="text-sm font-bold">
+                      {isComingSoon ? "Release" : "Published"}
+                    </span>
+                  </div>
+                  {isComingSoon ? (
+                    <span className="px-2 py-1 bg-violet-500/10 border border-violet-500/30 rounded-lg text-violet-400 text-xs font-black uppercase tracking-wider">
+                      Coming Soon
+                    </span>
+                  ) : (
+                    <span className="text-white font-bold truncate max-w-35 text-right">
+                      {formatDate(game.publishedDate)}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
 
             {game.size && (
               <div className="flex items-center justify-between border-b border-white/5 pb-3">

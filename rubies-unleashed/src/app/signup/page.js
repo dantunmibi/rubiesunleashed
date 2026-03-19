@@ -205,6 +205,9 @@ export default function SignupPage() {
               We sent a verification code to<br />
               <strong className="text-white">{email}</strong>
             </p>
+            <p className="text-slate-500 text-xs mt-2">
+              Can't find it? Check your <span className="text-slate-300 font-semibold">spam or junk folder</span>.
+            </p>
           </div>
            
           {error && (

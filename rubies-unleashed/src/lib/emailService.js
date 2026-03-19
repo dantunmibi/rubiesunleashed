@@ -131,8 +131,8 @@ You received this email because you have a project on Rubies Unleashed.
               </div>
               <div style="margin-top: 32px; text-align: center;">
                 <a href="https://rubiesunleashed.app/${developerUsername}/dashboard" style="display: inline-block; background-color: ${
-      isModeration ? "#f59e0b" : "#8b5cf6"
-    }; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">
+                  isModeration ? "#f59e0b" : "#8b5cf6"
+                }; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">
                   View Dashboard
                 </a>
               </div>
@@ -263,14 +263,24 @@ Rubies Unleashed Team`;
     };padding:20px;margin:24px 0">${content.features
       .map((f) => `<p style="margin:8px 0;color:#cbd5e1">✦ ${f}</p>`)
       .join(
-        ""
+        "",
       )}</div><div style="text-align:center;margin:32px 0"><a href="https://rubiesunleashed.app/" style="display:inline-block;background:${
       content.color
     };color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:bold;text-transform:uppercase">${
       content.ctaText
     }</a></div><p>${
       content.closing
-    },<br><strong>Rubies Unleashed Team</strong></p></div></div></body></html>`;
+    },<br><strong>Rubies Unleashed Team</strong></p>
+<div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:16px;margin-top:24px">
+  <p style="margin:0 0 8px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Follow Us</p>
+  <table cellpadding="0" cellspacing="0">
+    <tr><td style="padding:4px 0"><a href="https://twitter.com/rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">𝕏</span><span style="color:#94a3b8;">twitter.com/</span><span style="color:#fff;font-weight:600;">rubiesunleashed</span></a></td></tr>
+    <tr><td style="padding:4px 0"><a href="https://www.instagram.com/official_rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">📸</span><span style="color:#94a3b8;">instagram.com/</span><span style="color:#fff;font-weight:600;">official_rubiesunleashed</span></a></td></tr>
+    <tr><td style="padding:4px 0"><a href="https://facebook.com/rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">📘</span><span style="color:#94a3b8;">facebook.com/</span><span style="color:#fff;font-weight:600;">rubiesunleashed</span></a></td></tr>
+    <tr><td style="padding:4px 0"><a href="https://discord.gg/zgCh55JfWF" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">💬</span><span style="color:#94a3b8;">discord.gg/</span><span style="color:#fff;font-weight:600;">zgCh55JfWF</span></a></td></tr>
+  </table>
+</div>
+</div></div></body></html>`;
 
     const info = await getTransporter().sendMail({
       from: process.env.SMTP_FROM,
@@ -318,10 +328,32 @@ As an Architect, you now have:
 
 Manage your project: ${projectUrl}
 
+Join our Discord to connect with other creators, get feedback, and stay updated:
+https://discord.gg/zgCh55JfWF
+
 Keep building,
 Rubies Unleashed Team`;
 
-    const htmlContent = `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0b0f19;color:#e2e8f0;padding:40px"><div style="max-width:600px;margin:0 auto;background:#161b2c;border:1px solid rgba(16,185,129,0.2);border-radius:16px;overflow:hidden"><div style="background:linear-gradient(to right,transparent,#10b981,transparent);height:4px"></div><div style="padding:40px"><div style="text-align:center;margin-bottom:24px"><div style="font-size:64px">🏗️</div></div><h1 style="text-align:center;color:#fff;text-transform:uppercase">Welcome to The Forge</h1><p>Hi <strong>${username}</strong>,</p><p>You just took your first step as a creator on Rubies Unleashed!</p><p>Your project <strong>"${projectTitle}"</strong> is in draft mode.</p><div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:24px;margin:24px 0;border-radius:12px"><p style="font-size:12px;font-weight:bold;color:#10b981;text-transform:uppercase">As an Architect, you now have:</p><p>✦ Full publishing capabilities</p><p>✦ Project analytics dashboard</p><p>✦ Community reach tools</p></div><div style="text-align:center;margin:32px 0"><a href="${projectUrl}" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:bold;text-transform:uppercase">Manage Your Project</a></div><p>Keep building,<br><strong>Rubies Unleashed Team</strong></p></div></div></body></html>`;
+    const htmlContent = `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0b0f19;color:#e2e8f0;padding:40px"><div style="max-width:600px;margin:0 auto;background:#161b2c;border:1px solid rgba(16,185,129,0.2);border-radius:16px;overflow:hidden"><div style="background:linear-gradient(to right,transparent,#10b981,transparent);height:4px"></div><div style="padding:40px"><div style="text-align:center;margin-bottom:24px"><div style="font-size:64px">🏗️</div></div><h1 style="text-align:center;color:#fff;text-transform:uppercase">Welcome to The Forge</h1><p>Hi <strong>${username}</strong>,</p><p>You just took your first step as a creator on Rubies Unleashed!</p><p>Your project <strong>"${projectTitle}"</strong> is in draft mode.</p><div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:24px;margin:24px 0;border-radius:12px"><p style="font-size:12px;font-weight:bold;color:#10b981;text-transform:uppercase">As an Architect, you now have:</p><p>✦ Full publishing capabilities</p><p>✦ Project analytics dashboard</p><p>✦ Community reach tools</p></div><div style="text-align:center;margin:32px 0"><a href="${projectUrl}" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:bold;text-transform:uppercase">Manage Your Project</a></div><div style="background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.3);border-radius:12px;padding:20px;margin:24px 0">
+  <p style="margin:0 0 8px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5865F2;">
+    💬 Join the Creator Community
+  </p>
+  <p style="margin:0 0 12px 0;font-size:13px;color:#cbd5e1;line-height:1.6;">
+    Join our Discord to connect with other creators, get feedback, and stay updated.
+  </p>
+  <a href="https://discord.gg/zgCh55JfWF" style="display:inline-block;background:#5865F2;color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">
+    Join Discord
+  </a>
+</div>
+<div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:16px;margin-top:8px">
+  <p style="margin:0 0 8px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Follow Us</p>
+  <table cellpadding="0" cellspacing="0">
+    <tr><td style="padding:4px 0"><a href="https://twitter.com/rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">𝕏</span><span style="color:#94a3b8;">twitter.com/</span><span style="color:#fff;font-weight:600;">rubiesunleashed</span></a></td></tr>
+    <tr><td style="padding:4px 0"><a href="https://www.instagram.com/official_rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">📸</span><span style="color:#94a3b8;">instagram.com/</span><span style="color:#fff;font-weight:600;">official_rubiesunleashed</span></a></td></tr>
+    <tr><td style="padding:4px 0"><a href="https://facebook.com/rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:12px;"><span style="display:inline-block;width:20px;">📘</span><span style="color:#94a3b8;">facebook.com/</span><span style="color:#fff;font-weight:600;">rubiesunleashed</span></a></td></tr>
+  </table>
+</div>
+<p>Keep building,<br><strong>Rubies Unleashed Team</strong></p></div></div></body></html>`;
 
     const info = await getTransporter().sendMail({
       from: process.env.SMTP_FROM,
@@ -359,17 +391,166 @@ export async function sendProjectPublishedEmail({
 
     const textContent = `Congrats ${username}!
 
-Your project is now discoverable by users worldwide.
+"${projectTitle}" is now live and discoverable by users worldwide.
 
 📱 Public Page: ${publicUrl}
 📊 Dashboard: ${dashboardUrl}
 
+Your project may also be featured on our socials:
+• Twitter/X: https://twitter.com/rubiesunleashed
+• Instagram: https://www.instagram.com/official_rubiesunleashed
+• Facebook: https://facebook.com/rubiesunleashed
+• Discord: https://discord.gg/zgCh55JfWF
+
 Keep the momentum going - create more!
+
+Join our Discord to connect with other creators, get feedback, and stay updated:
+https://discord.gg/zgCh55JfWF
 
 Celebrate your launch,
 Rubies Unleashed Team`;
 
-    const htmlContent = `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0b0f19;color:#e2e8f0;padding:40px"><div style="max-width:600px;margin:0 auto;background:#161b2c;border:1px solid rgba(224,17,95,0.2);border-radius:16px;overflow:hidden"><div style="background:linear-gradient(to right,transparent,#E0115F,transparent);height:4px"></div><div style="padding:40px"><div style="text-align:center;margin-bottom:24px"><div style="font-size:64px">🚀</div></div><h1 style="text-align:center;color:#fff">Your Project is Live!</h1><p style="text-align:center;font-size:18px;color:#E0115F;font-weight:600">"${projectTitle}"</p><p style="text-align:center">Congrats <strong>${username}</strong>!<br>Your project is now discoverable by users worldwide.</p><div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin:24px 0"><p style="font-size:12px;font-weight:bold;color:#94a3b8;text-transform:uppercase">📱 Share Your Creation</p><a href="${publicUrl}" style="color:#E0115F;word-break:break-all">${publicUrl}</a><p style="font-size:12px;font-weight:bold;color:#94a3b8;text-transform:uppercase;margin-top:20px">📊 Track Performance</p><a href="${dashboardUrl}" style="color:#E0115F;word-break:break-all">${dashboardUrl}</a></div><p style="text-align:center">Keep the momentum going - create more!</p><div style="text-align:center;margin:32px 0"><a href="${publicUrl}" style="display:inline-block;background:#E0115F;color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:bold;text-transform:uppercase">View Your Project</a></div><p style="text-align:center">Celebrate your launch,<br><strong>Rubies Unleashed Team</strong></p></div></div></body></html>`;
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#0b0f19;color:#e2e8f0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b0f19;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#161b2c;border:1px solid rgba(224,17,95,0.2);border-radius:16px;overflow:hidden;">
+          
+          <!-- Top Bar -->
+          <tr>
+            <td style="background:linear-gradient(to right,transparent,#E0115F,transparent);height:4px;"></td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px;">
+
+              <!-- Icon -->
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="font-size:64px;line-height:1;">🚀</div>
+              </div>
+
+              <!-- Heading -->
+              <h1 style="margin:0 0 8px 0;text-align:center;color:#fff;font-size:26px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;">
+                Your Project is Live!
+              </h1>
+              <p style="margin:0 0 24px 0;text-align:center;font-size:18px;color:#E0115F;font-weight:700;">
+                "${projectTitle}"
+              </p>
+
+              <!-- Intro -->
+              <p style="margin:0 0 24px 0;font-size:15px;color:#cbd5e1;text-align:center;line-height:1.6;">
+                Congrats <strong style="color:#fff;">${username}</strong>!<br>
+                Your project is now discoverable by users worldwide.
+              </p>
+
+              <!-- Links Block -->
+              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin:0 0 24px 0;">
+                <p style="margin:0 0 6px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">
+                  📱 Your Public Page
+                </p>
+                <a href="${publicUrl}" style="color:#E0115F;font-size:13px;word-break:break-all;text-decoration:none;">${publicUrl}</a>
+
+                <p style="margin:20px 0 6px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">
+                  📊 Your Dashboard
+                </p>
+                <a href="${dashboardUrl}" style="color:#E0115F;font-size:13px;word-break:break-all;text-decoration:none;">${dashboardUrl}</a>
+              </div>
+
+              <!-- Socials Block -->
+              <div style="background:rgba(224,17,95,0.05);border:1px solid rgba(224,17,95,0.15);border-radius:12px;padding:24px;margin:0 0 32px 0;">
+                <p style="margin:0 0 16px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#E0115F;">
+                  📣 We May Feature You On Our Socials
+                </p>
+                <p style="margin:0 0 16px 0;font-size:13px;color:#cbd5e1;line-height:1.6;">
+                  Your project is now live on Rubies Unleashed. Keep an eye on our channels — new launches may get a spotlight.
+                </p>
+                <table cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <a href="https://twitter.com/rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:13px;">
+                        <span style="display:inline-block;width:20px;">𝕏</span>
+                        <span style="color:#94a3b8;">twitter.com/</span><span style="color:#fff;font-weight:600;">rubiesunleashed</span>
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <a href="https://www.instagram.com/official_rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:13px;">
+                        <span style="display:inline-block;width:20px;">📸</span>
+                        <span style="color:#94a3b8;">instagram.com/</span><span style="color:#fff;font-weight:600;">official_rubiesunleashed</span>
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <a href="https://facebook.com/rubiesunleashed" style="text-decoration:none;color:#e2e8f0;font-size:13px;">
+                        <span style="display:inline-block;width:20px;">📘</span>
+                        <span style="color:#94a3b8;">facebook.com/</span><span style="color:#fff;font-weight:600;">rubiesunleashed</span>
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <a href="https://discord.gg/zgCh55JfWF" style="text-decoration:none;color:#e2e8f0;font-size:13px;">
+                        <span style="display:inline-block;width:20px;">💬</span>
+                        <span style="color:#94a3b8;">discord.gg/</span><span style="color:#fff;font-weight:600;">zgCh55JfWF</span>
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Discord Prompt -->
+              <div style="background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.3);border-radius:12px;padding:20px;margin:0 0 24px 0;">
+                <p style="margin:0 0 8px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5865F2;">
+                  💬 Join the Creator Community
+                </p>
+                <p style="margin:0 0 12px 0;font-size:13px;color:#cbd5e1;line-height:1.6;">
+                  Join our Discord to connect with other creators, get feedback, and stay updated.
+                </p>
+                <a href="https://discord.gg/zgCh55JfWF" style="display:inline-block;background:#5865F2;color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">
+                  Join Discord
+                </a>
+              </div>
+
+              <!-- CTA -->
+              <div style="text-align:center;margin:0 0 32px 0;">
+                <a href="${publicUrl}" style="display:inline-block;background:#E0115F;color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(224,17,95,0.3);">
+                  View Your Project
+                </a>
+              </div>
+
+              <!-- Sign off -->
+              <p style="margin:0;font-size:14px;color:#cbd5e1;text-align:center;">
+                Celebrate your launch,<br>
+                <strong style="color:#fff;">Rubies Unleashed Team</strong>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:rgba(0,0,0,0.3);padding:20px;text-align:center;border-top:1px solid rgba(255,255,255,0.05);">
+              <p style="margin:0;font-size:11px;color:#64748b;">
+                You received this email because you published a project on Rubies Unleashed.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
     const info = await getTransporter().sendMail({
       from: process.env.SMTP_FROM,
@@ -512,12 +693,20 @@ You can complete this anytime at: ${initializeUrl}`;
           
           <tr>
             <td style="background-color: rgba(0, 0, 0, 0.3); padding: 20px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05);">
-              <p style="margin: 0; font-size: 11px; color: #64748b;">
-                You can complete this anytime at: <a href="${initializeUrl}" style="color: #8b5cf6; text-decoration: none;">${initializeUrl}</a>
-              </p>
-            </td>
-          </tr>
-        </table>
+              <p style="margin: 0 0 12px 0; font-size: 11px; color: #64748b;">
+  You can complete this anytime at: <a href="${initializeUrl}" style="color: #8b5cf6; text-decoration: none;">${initializeUrl}</a>
+</p>
+<table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+  <tr>
+    <td style="padding:3px 8px"><a href="https://twitter.com/rubiesunleashed" style="text-decoration:none;color:#64748b;font-size:11px;">𝕏 Twitter</a></td>
+    <td style="padding:3px 8px;color:#374151">•</td>
+    <td style="padding:3px 8px"><a href="https://www.instagram.com/official_rubiesunleashed" style="text-decoration:none;color:#64748b;font-size:11px;">📸 Instagram</a></td>
+    <td style="padding:3px 8px;color:#374151">•</td>
+    <td style="padding:3px 8px"><a href="https://facebook.com/rubiesunleashed" style="text-decoration:none;color:#64748b;font-size:11px;">📘 Facebook</a></td>
+    <td style="padding:3px 8px;color:#374151">•</td>
+    <td style="padding:3px 8px"><a href="https://discord.gg/zgCh55JfWF" style="text-decoration:none;color:#64748b;font-size:11px;">💬 Discord</a></td>
+  </tr>
+</table>
       </td>
     </tr>
   </table>

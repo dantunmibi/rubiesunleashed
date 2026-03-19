@@ -299,7 +299,7 @@ Use this prompt to initialize **Phase 3**.
 | Archetype | Role | Variable | Color | Usage |
 | :--- | :--- | :--- | :--- | :--- |
 | **Hunter** | Brand / Games | `--color-ruby` | `#E0115F` | Primary Actions, Brand |
-| **Architect** | Creators | `--color-architect` | `#10b981` | The Forge, Dashboards, Publishing |
+| **Architect** | Creators | `--color-architect` | `#10b981` | The Forge, Dashboards, Publishing | note this is not selected on profile creation (initialization)
 | **Netrunner** | Apps / Tools | `--color-netrunner` | `#06b6d4` | Utility Apps, Software |
 | **Curator** | Collectors | `--color-curator` | `#f59e0b` | Collections, History |
 | **Phantom** | Privacy | `--color-phantom` | `#8b5cf6` | Legal, Privacy, Anon |
@@ -627,11 +627,16 @@ package.json
 postcss.config.mjs
 README.md
 
-📦 public/
- ┣ 📜 __forms.html            # Netlify Forms Detection
- ┣ 📜 ru-logo.png
- ┣ 📜 rubieslogo.png
- ┗ 📜 [SVG assets]
+📦public
+ ┣ 📜file.svg
+ ┣ 📜globe.svg
+ ┣ 📜next.svg
+ ┣ 📜ru-logo.png
+ ┣ 📜rubieslogo.png
+ ┣ 📜vercel.svg
+ ┣ 📜window.svg
+ ┣ 📜_headers
+ ┗ 📜__forms.html
 
 📦 scripts/
  ┗ 📜 update-snapshot.js      # Dual-blog snapshot generator
@@ -654,6 +659,9 @@ README.md
  ┃ ┃ ┃ ┃ ┗ 📂create
  ┃ ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┃ ┗ 📂moderate
+ ┃ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┣ 📂cron
+ ┃ ┃ ┃ ┗ 📂send-archetype-reminders
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂games
  ┃ ┃ ┃ ┣ 📜route copy.js.backup
@@ -685,10 +693,12 @@ README.md
  ┃ ┣ 📂contact
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂explore
+ ┃ ┃ ┣ 📜ExploreClient.jsx
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂forgot-password
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂help
+ ┃ ┃ ┣ 📜HelpClient.jsx
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂initialize
  ┃ ┃ ┗ 📜page.js
@@ -794,6 +804,7 @@ README.md
  ┃ ┣ 📂ui
  ┃ ┃ ┣ 📜AboutSection.js
  ┃ ┃ ┣ 📜BackgroundEffects.js
+ ┃ ┃ ┣ 📜ErrorBoundary.jsx
  ┃ ┃ ┣ 📜ExternalLinkWarning.jsx
  ┃ ┃ ┣ 📜FeatureTriangles.js
  ┃ ┃ ┣ 📜Footer.js
@@ -808,14 +819,14 @@ README.md
  ┃ ┃ ┣ 📜SearchDropdown.jsx
  ┃ ┃ ┣ 📜SessionErrorOverlay.jsx
  ┃ ┃ ┣ 📜Skeleton.jsx
+ ┃ ┃ ┣ 📜SocialLinks.jsx
  ┃ ┃ ┣ 📜Toast.jsx
  ┃ ┃ ┗ 📜ToastContainer.jsx
- ┃ ┣ 📂wishlist
+ ┃ ┗ 📂wishlist
  ┃ ┃ ┣ 📜EmptyWishlist.jsx
  ┃ ┃ ┣ 📜WishlistControls.jsx
  ┃ ┃ ┣ 📜WishlistGrid.jsx
  ┃ ┃ ┗ 📜WishlistStats.jsx
- ┃ ┗ 📜SessionErrorOverlay.jsx
  ┣ 📂hooks
  ┃ ┣ 📜useDebounce.js
  ┃ ┣ 📜useGameFilters.js
@@ -844,6 +855,7 @@ README.md
  ┃ ┣ 📜backup-data copy.json.backup
  ┃ ┣ 📜backup-data.json
  ┃ ┣ 📜blogger.js
+ ┃ ┣ 📜brand.js
  ┃ ┣ 📜databaseNotifications.js
  ┃ ┣ 📜emailService.js
  ┃ ┣ 📜feed-utils.js
@@ -857,6 +869,15 @@ README.md
  ┃ ┣ 📜supabase.js
  ┃ ┗ 📜theme-utils.js
  ┗ 📜proxy.js
+.env.local
+.gitignore
+eslint.config.mjs
+jsconfig.json
+netlify.toml
+next.config.mjs
+package-lock.json
+package.json
+postcss.config.mjs
  ```
 
 ## 🚀 9. Development Roadmap
@@ -1015,7 +1036,7 @@ images: {
 ---
 
 **End of Master Prompt v23.0 💎**
-*This document captures the entire project state, including the Phase 2 completion of Hybrid Architecture and SEO Discovery.*
+*This document captures the entire project state.*
 
 
 
