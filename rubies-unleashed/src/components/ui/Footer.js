@@ -80,14 +80,6 @@ export default function Footer() {
                   <span>📱</span> Apps & Tools
                 </Link>
               </li>
-              <li>
-                <a
-                  href="/publish"
-                  className="hover:text-ruby-light transition-colors flex items-center gap-3"
-                >
-                  <span>📜</span> Start Publishing
-                </a>
-              </li>
             </ul>
           </div>
 
