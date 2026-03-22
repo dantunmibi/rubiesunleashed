@@ -1,10 +1,35 @@
-# No caching for HTML pages
-/*
-  Cache-Control: no-cache, no-store, must-revalidate
-  X-Content-Type-Options: nosniff
+# ============================================
+# RUBIES UNLEASHED - Netlify Headers
+# ============================================
 
-# Strong caching for hashed static assets (they never change)
-/_next/static/*
+# JavaScript chunks - MUST be application/javascript
+/_next/static/chunks/*.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
+
+# CSS chunks
+/_next/static/chunks/*.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
+
+# CSS directory
+/_next/static/css/*.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
+
+# JS media/webpack files
+/_next/static/media/*.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
+
+# Catch-all for _next/static JS
+/_next/static/*.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
+
+# Catch-all for _next/static CSS
+/_next/static/*.css
+  Content-Type: text/css; charset=utf-8
   Cache-Control: public, max-age=31536000, immutable
 
 # Image optimization
@@ -23,3 +48,8 @@
 
 /*.jpg
   Cache-Control: public, max-age=604800
+
+# HTML pages - no cache
+/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff

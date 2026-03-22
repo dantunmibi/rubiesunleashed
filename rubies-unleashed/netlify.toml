@@ -8,23 +8,6 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Add cache control headers
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-    X-Content-Type-Options = "nosniff"
-
-[[headers]]
-  for = "/_next/static/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/_next/image/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
 [[redirects]]
   from = "https://rubiesunleashed.netlify.app/*"
   to = "https://rubiesunleashed.app/:splat"
