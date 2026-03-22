@@ -3,6 +3,13 @@ const nextConfig = {
   // ✅ React Compiler
   reactCompiler: true,
 
+  // ✅ Disable Turbopack for stable production chunk hashes
+  experimental: {
+    turbo: {
+      enabled: false,
+    },
+  },
+
   // ✅ Image Optimization
   images: {
     remotePatterns: [
