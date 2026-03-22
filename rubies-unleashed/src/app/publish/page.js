@@ -6,6 +6,8 @@
   - Onboarding page for Developers & Creators.
   - Converts regular users to architects via first project creation.
   - Theme: Architect (Emerald).
+  - v2: Replaced "Resilient Hosting" with "Community Discovery".
+       Replaced Google Forms CTA with /signup.
 */
 
 import React, { useState, useEffect } from "react";
@@ -17,41 +19,41 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useToastContext } from "@/components/providers/ToastProvider";
 import { supabase } from "@/lib/supabase";
 import { notifyProjectCreated } from "@/lib/projectNotifications";
-import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay"; // ✅ ADD THIS
+import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
 import { useSessionGuard } from "@/hooks/useSessionGuard";
 import { generateSlug } from "@/lib/game-utils";
 import {
   Terminal,
-  ShieldCheck,
   Zap,
   Globe,
-  ExternalLink,
   Code,
   UserPlus,
-  Rocket,
   Loader2,
   ArrowRight,
   Crown,
-  Sparkles
+  Sparkles,
+  Users,
 } from "lucide-react";
 
 export default function PublishPage() {
   const { user, profile, refreshProfile, getDeveloperName } = useAuth();
   const { showToast } = useToastContext();
   const router = useRouter();
-  
-  // ✅ ADD SESSION GUARD
-  const { showSessionError, triggerError } = useSessionGuard(); // ✅ GET VISIBILITY STATE
-  
+
+  // ✅ Session Guard
+  const { showSessionError, triggerError } = useSessionGuard();
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [creating, setCreating] = useState(false);
   const [projectTitle, setProjectTitle] = useState("");
 
-    useEffect(() => {
+  useEffect(() => {
     let timer;
     if (creating) {
       timer = setTimeout(() => {
-        console.warn("Project creation timed out. Triggering session recovery.");
+        console.warn(
+          "Project creation timed out. Triggering session recovery.",
+        );
         setCreating(false);
         if (triggerError) triggerError();
       }, 10000); // 10 second timeout
@@ -63,82 +65,84 @@ export default function PublishPage() {
   useEffect(() => {
     if (user && profile) {
       // Show onboarding if user is authenticated but not an architect yet
-      setShowOnboarding(!profile.role || profile.role === 'user');
+      setShowOnboarding(!profile.role || profile.role === "user");
     }
   }, [user, profile]);
 
-const handleCreateFirstProject = async (e) => {
-  e.preventDefault();
-  
-  if (!projectTitle.trim()) {
-    showToast("Project title is required", "error");
-    return;
-  }
+  const handleCreateFirstProject = async (e) => {
+    e.preventDefault();
 
-  setCreating(true);
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      showToast("Please log in to continue", "error");
-      router.push("/login");
+    if (!projectTitle.trim()) {
+      showToast("Project title is required", "error");
       return;
     }
 
-    const res = await fetch('/api/projects/create', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ 
-        title: projectTitle.trim(),
-        developer: profile?.username || "Indie Developer" 
-      })
-    });
+    setCreating(true);
 
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || "Failed to create project");
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        showToast("Please log in to continue", "error");
+        router.push("/login");
+        return;
+      }
+
+      const res = await fetch("/api/projects/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          title: projectTitle.trim(),
+          developer: profile?.username || "Indie Developer",
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create project");
+      }
+
+      const { project } = await res.json();
+
+      // Auto-promote user to architect
+      const profileRes = await fetch("/api/profile/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          role: "architect",
+          archetype: profile?.archetype || "architect",
+        }),
+      });
+
+      if (profileRes.ok) {
+        await refreshProfile();
+      }
+
+      notifyProjectCreated(project);
+      showToast("🎉 Welcome to The Forge! You're now an Architect!", "success");
+
+      const username =
+        user?.user_metadata?.username ||
+        profile?.username ||
+        user?.email?.split("@")[0] ||
+        "user";
+
+      router.push(`/${username}/dashboard/project/${project.id}/edit`);
+    } catch (error) {
+      console.error("Create project error:", error);
+      showToast(error.message || "Failed to create project", "error");
+    } finally {
+      setCreating(false);
     }
-
-    const { project } = await res.json();
-
-    // Auto-promote user to architect
-    const profileRes = await fetch('/api/profile/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ 
-        role: 'architect',
-        archetype: profile?.archetype || 'architect'
-      })
-    });
-
-    if (profileRes.ok) {
-      await refreshProfile();
-    }
-
-    notifyProjectCreated(project);
-    showToast("🎉 Welcome to The Forge! You're now an Architect!", "success");
-    
-    const username = user?.user_metadata?.username || 
-                    profile?.username || 
-                    user?.email?.split('@')[0] || 
-                    'user';
-    
-    router.push(`/${username}/dashboard/project/${project.id}/edit`);
-
-  } catch (error) {
-    console.error('Create project error:', error);
-    showToast(error.message || "Failed to create project", "error");
-  } finally {
-    setCreating(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-background text-slate-200 font-sans selection:bg-architect-light/30">
@@ -172,95 +176,96 @@ const handleCreateFirstProject = async (e) => {
           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
             {showOnboarding ? (
               <>
-                Ready to become an <span className="text-architect font-bold">Architect</span>? 
-                Create your first project and join the elite creators in The Forge.
+                Ready to become an{" "}
+                <span className="text-architect font-bold">Architect</span>?
+                Create your first project and join the elite creators in The
+                Forge.
               </>
             ) : (
               <>
-                Join the ecosystem. Submit your games and tools to a dedicated
-                audience of power users. No gatekeepers. No hidden fees.
-                Just pure distribution.
+                Join the ecosystem. Get showcased to users seeking quality
+                content and gain access to a supportive community of creators.
+                No gatekeepers. No hidden fees. Just pure distribution.
               </>
             )}
           </p>
 
-{/* CTAs */}
-{showOnboarding ? (
-  /* --- ONBOARDING CTA --- */
-  <div className="max-w-md mx-auto">
+          {/* CTAs */}
+          {showOnboarding ? (
+            /* --- ONBOARDING CTA --- */
+            <div className="max-w-md mx-auto">
+              <form onSubmit={handleCreateFirstProject} className="space-y-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={projectTitle}
+                    onChange={(e) => setProjectTitle(e.target.value)}
+                    placeholder="Enter your project title..."
+                    className="w-full px-6 py-4 bg-surface border border-architect/30 rounded-xl text-white placeholder:text-slate-500 focus:border-architect focus:outline-none focus:ring-2 focus:ring-architect/20 transition-all"
+                    disabled={creating}
+                    autoFocus
+                  />
+                </div>
 
-    <form onSubmit={handleCreateFirstProject} className="space-y-4">
-      <div className="relative">
-        <input
-          type="text"
-          value={projectTitle}
-          onChange={(e) => setProjectTitle(e.target.value)}
-          placeholder="Enter your project title..."
-          className="w-full px-6 py-4 bg-surface border border-architect/30 rounded-xl text-white placeholder:text-slate-500 focus:border-architect focus:outline-none focus:ring-2 focus:ring-architect/20 transition-all"
-          disabled={creating}
-          autoFocus
-        />
-      </div>
-      
-      <button
-        type="submit"
-        disabled={creating || !projectTitle.trim()}
-        className="w-full px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {creating ? (
-          <>
-            <Loader2 size={16} className="animate-spin" />
-            Initializing...
-          </>
-        ) : (
-          <>
-            <Crown size={16} />
-            Become an Architect
-          </>
-        )}
-      </button>
-    </form>
-    
-    <p className="text-xs text-slate-500 mt-4 flex items-center justify-center gap-1">
-      <Sparkles size={12} />
-      This will create your first project and unlock The Forge
-    </p>
-  </div>
-) : user ? (
-  /* --- EXISTING ARCHITECT --- */
-  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-    <Link
-      href={`/${user?.user_metadata?.username || profile?.username || user?.email?.split('@')[0] || 'user'}/dashboard`}
-      className="px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2"
-    >
-      <Terminal size={16} />
-      Open The Forge
-    </Link>
-    <Link
-      href="#protocol"
-      className="px-8 py-4 bg-surface border border-white/10 hover:border-architect/50 text-slate-300 font-bold uppercase tracking-widest text-sm rounded-xl transition-all hover:bg-white/5 flex items-center justify-center gap-2"
-    >
-      Learn More
-    </Link>
-  </div>
-) : (
-  /* --- GUEST USER --- */
-  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-    <Link
-      href="/signup"
-      className="px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2"
-    >
-      <UserPlus size={16} />
-      Join The Forge
-    </Link>
-    <Link
-      href="#protocol"
-      className="px-8 py-4 bg-surface border border-white/10 hover:border-architect/50 text-slate-300 font-bold uppercase tracking-widest text-sm rounded-xl transition-all hover:bg-white/5 flex items-center justify-center gap-2"
-    >
-      Learn More
-    </Link>
-  </div>
-)}
+                <button
+                  type="submit"
+                  disabled={creating || !projectTitle.trim()}
+                  className="w-full px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Initializing...
+                    </>
+                  ) : (
+                    <>
+                      <Crown size={16} />
+                      Become an Architect
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <p className="text-xs text-slate-500 mt-4 flex items-center justify-center gap-1">
+                <Sparkles size={12} />
+                This will create your first project and unlock The Forge
+              </p>
+            </div>
+          ) : user ? (
+            /* --- EXISTING ARCHITECT --- */
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href={`/${user?.user_metadata?.username || profile?.username || user?.email?.split("@")[0] || "user"}/dashboard`}
+                className="px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2"
+              >
+                <Terminal size={16} />
+                Open The Forge
+              </Link>
+              <Link
+                href="#protocol"
+                className="px-8 py-4 bg-surface border border-white/10 hover:border-architect/50 text-slate-300 font-bold uppercase tracking-widest text-sm rounded-xl transition-all hover:bg-white/5 flex items-center justify-center gap-2"
+              >
+                Learn More
+              </Link>
+            </div>
+          ) : (
+            /* --- GUEST USER --- */
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/signup"
+                className="px-8 py-4 bg-architect hover:bg-architect-dark text-white font-bold uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_var(--color-architect-glow)] hover:shadow-[0_0_30px_var(--color-architect-glow)] hover:-translate-y-1 flex items-center justify-center gap-2"
+              >
+                <UserPlus size={16} />
+                Join The Forge
+              </Link>
+              <Link
+                href="#protocol"
+                className="px-8 py-4 bg-surface border border-white/10 hover:border-architect/50 text-slate-300 font-bold uppercase tracking-widest text-sm rounded-xl transition-all hover:bg-white/5 flex items-center justify-center gap-2"
+              >
+                Learn More
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -271,7 +276,7 @@ const handleCreateFirstProject = async (e) => {
             <h2 className="text-3xl font-black uppercase tracking-tight text-white mb-12 text-center">
               Architect <span className="text-architect">Privileges</span>
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <ArchitectBenefit
                 icon={<Terminal size={32} />}
@@ -293,7 +298,7 @@ const handleCreateFirstProject = async (e) => {
         </section>
       )}
 
-      {/* --- BENEFITS GRID (Original) --- */}
+      {/* --- BENEFITS GRID --- */}
       <section
         id="protocol"
         className="py-20 bg-surface/30 border-y border-white/5 scroll-mt-32"
@@ -305,10 +310,11 @@ const handleCreateFirstProject = async (e) => {
               title="Universal Visibility"
               desc="Your project is instantly indexed for search engines and distributed globally through our high-speed content network."
             />
+            {/* ✅ CHANGED: Resilient Hosting → Community Discovery */}
             <FeatureCard
-              icon={<ShieldCheck size={32} />}
-              title="Resilient Hosting"
-              desc="We prioritize preservation. Once your project is added to the Vault, it is backed up and protected against link rot."
+              icon={<Users size={32} />}
+              title="Community Discovery"
+              desc="Your project surfaces in a curated feed of power users actively hunting for their next obsession. Join a growing community of creators and get real eyes on your work from day one."
             />
             <FeatureCard
               icon={<Zap size={32} />}
@@ -319,57 +325,58 @@ const handleCreateFirstProject = async (e) => {
         </div>
       </section>
 
-{/* --- SUBMISSION SEQUENCE (Updated for onboarding) --- */}
-<section className="py-24 relative">
-  <div className="container mx-auto px-6 max-w-4xl">
-    <h2 className="text-3xl font-black uppercase tracking-tight text-white mb-16 text-center">
-      {showOnboarding ? "Architect Onboarding" : "Publishing Process"}
-    </h2>
+      {/* --- SUBMISSION SEQUENCE (Updated for onboarding) --- */}
+      <section className="py-24 relative">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <h2 className="text-3xl font-black uppercase tracking-tight text-white mb-16 text-center">
+            {showOnboarding ? "Architect Onboarding" : "Publishing Process"}
+          </h2>
 
-    <div className="space-y-12 relative">
-      {/* Connecting Line */}
-      <div className="absolute left-6 top-0 bottom-0 w-px bg-white/10 hidden md:block" />
+          <div className="space-y-12 relative">
+            {/* Connecting Line */}
+            <div className="absolute left-6 top-0 bottom-0 w-px bg-white/10 hidden md:block" />
 
-      {showOnboarding ? (
-        <>
-          <Step
-            num="01"
-            title="Create First Project"
-            desc="Enter your project title above to initialize your first project and unlock architect privileges."
-          />
-          <Step
-            num="02"
-            title="Access The Forge"
-            desc="Get instant access to your personal dashboard with project management, analytics, and publishing tools."
-          />
-          <Step
-            num="03"
-            title="Build & Deploy"
-            desc="Use the project editor to add details, upload media, and publish your project to the global feed."
-          />
-        </>
-      ) : (
-        <>
-          <Step
-            num="01"
-            title="Initialize Project"
-            desc="Create your project in The Forge with title, description, and media assets."
-          />
-          <Step
-            num="02"
-            title="Configure Distribution"
-            desc="Add download links, platform support, and technical specifications."
-          />
-          <Step
-            num="03"
-            title="Instant Deployment"
-            desc="Hit publish and your project goes live immediately on the global feed with full SEO optimization."
-          />
-        </>
-      )}
-    </div>
-  </div>
-</section>
+            {showOnboarding ? (
+              <>
+                <Step
+                  num="01"
+                  title="Create First Project"
+                  desc="Enter your project title above to initialize your first project and unlock architect privileges."
+                />
+                <Step
+                  num="02"
+                  title="Access The Forge"
+                  desc="Get instant access to your personal dashboard with project management, analytics, and publishing tools."
+                />
+                <Step
+                  num="03"
+                  title="Build & Deploy"
+                  desc="Use the project editor to add details, upload media, and publish your project to the global feed."
+                />
+              </>
+            ) : (
+              <>
+                <Step
+                  num="01"
+                  title="Initialize Project"
+                  desc="Create your project in The Forge with title, description, and media assets."
+                />
+                <Step
+                  num="02"
+                  title="Configure Distribution"
+                  desc="Add download links, platform support, and technical specifications."
+                />
+                <Step
+                  num="03"
+                  title="Instant Deployment"
+                  desc="Hit publish and your project goes live immediately on the global feed with full SEO optimization."
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* --- CTA FOOTER --- */}
       <section className="py-20 border-t border-white/5 bg-linear-to-b from-surface to-background text-center">
         <div className="container mx-auto px-6">
@@ -377,30 +384,30 @@ const handleCreateFirstProject = async (e) => {
           <h2 className="text-3xl font-bold text-white mb-6 uppercase tracking-tight">
             Ready to deploy?
           </h2>
-          
+
           {showOnboarding ? (
             <p className="text-slate-400 mb-6">
               Join thousands of creators who have already unlocked The Forge
             </p>
           ) : user ? (
             <Link
-              href={`/${user.user_metadata?.username || 'user'}/dashboard`}
+              href={`/${user.user_metadata?.username || profile?.username || user?.email?.split("@")[0] || "user"}/dashboard`}
               className="inline-flex items-center gap-2 text-architect-light hover:text-architect font-bold uppercase tracking-widest border-b border-architect/30 hover:border-architect pb-1 transition-colors"
             >
               Open The Forge <ArrowRight size={14} />
             </Link>
           ) : (
+            /* ✅ CHANGED: Google Forms → /signup */
             <Link
-              href="https://forms.gle/i7X2sUJ5cnqsUciA6"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/signup"
               className="inline-flex items-center gap-2 text-architect-light hover:text-architect font-bold uppercase tracking-widest border-b border-architect/30 hover:border-architect pb-1 transition-colors"
             >
-              Open Submission Form <ExternalLink size={14} />
+              Join The Forge <UserPlus size={14} />
             </Link>
           )}
         </div>
       </section>
+
       <SessionErrorOverlay show={showSessionError} />
       <Footer />
     </div>
@@ -457,4 +464,3 @@ function Step({ num, title, desc }) {
     </div>
   );
 }
-          
