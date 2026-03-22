@@ -3,9 +3,6 @@ const nextConfig = {
   // ✅ React Compiler
   reactCompiler: true,
 
-  // ✅ DISABLE Turbopack for stable production chunk hashes
-  turbopack: false,
-
   // ✅ Image Optimization
   images: {
     remotePatterns: [
@@ -31,14 +28,8 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // ✅ REMOVED - This was the primary culprit
-  // generateBuildId: async () => { return `${Date.now()}`; },
-
   // ✅ Strict Mode
   reactStrictMode: true,
-
-  // ✅ Experimental Features
-  experimental: {},
 
   // ✅ Page Extensions
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
