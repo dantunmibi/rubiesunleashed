@@ -1,11 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ✅ REMOVED: output: 'export' (using Netlify SSR instead)
-
   // ✅ React Compiler
   reactCompiler: true,
 
-  // ✅ Image Optimization (Re-enabled)
+  // ✅ DISABLE Turbopack for stable production chunk hashes
+  turbopack: false,
+
+  // ✅ Image Optimization
   images: {
     remotePatterns: [
       {
@@ -22,7 +23,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'dcnyisjzvnmzweqkolqe.supabase.co', // Supabase Storage
+        hostname: 'dcnyisjzvnmzweqkolqe.supabase.co',
       },
     ],
     dangerouslyAllowSVG: true,
@@ -30,16 +31,15 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  generateBuildId: async () => {
-    return `${Date.now()}`;
-  },
+  // ✅ REMOVED - This was the primary culprit
+  // generateBuildId: async () => { return `${Date.now()}`; },
 
   // ✅ Strict Mode
   reactStrictMode: true,
 
   // ✅ Experimental Features
   experimental: {},
-  
+
   // ✅ Page Extensions
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
 };

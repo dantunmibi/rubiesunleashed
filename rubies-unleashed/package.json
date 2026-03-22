@@ -21,7 +21,7 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.15.5",
+    "@netlify/plugin-nextjs": "^5.15.9",
     "@tailwindcss/postcss": "^4.1.18",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
