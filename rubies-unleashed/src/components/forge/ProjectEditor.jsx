@@ -37,6 +37,7 @@ import {
   Scale,
   ArrowLeft,
   ArrowRight,
+  RefreshCW
 } from "lucide-react";
 import {
   PROJECT_STATUSES,
@@ -378,17 +379,24 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
     setIsDirty(true);
   };
 
-  // Navigation Logic
-  const handleNextSection = () => {
-    const idx = SECTIONS.findIndex((s) => s.id === activeSection);
-    if (idx < SECTIONS.length - 1) setActiveSection(SECTIONS[idx + 1].id);
-  };
+// Navigation Logic
+const handleNextSection = () => {
+  const idx = SECTIONS.findIndex((s) => s.id === activeSection);
+  if (idx < SECTIONS.length - 1) {
+    setActiveSection(SECTIONS[idx + 1].id);
+    // ✅ Snap to top so new section content is fully visible
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
-  const handlePrevSection = () => {
-    const idx = SECTIONS.findIndex((s) => s.id === activeSection);
-    if (idx > 0) setActiveSection(SECTIONS[idx - 1].id);
-  };
-
+const handlePrevSection = () => {
+  const idx = SECTIONS.findIndex((s) => s.id === activeSection);
+  if (idx > 0) {
+    setActiveSection(SECTIONS[idx - 1].id);
+    // ✅ Same for going back
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
   // Safe Back Button (Alerts on unsaved changes)
   const handleBack = () => {
     if (isDirty) {
@@ -553,95 +561,159 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
       setUploading(false);
     }
   };
-  // Main Form Submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+// ✅ SAVE IN PLACE — header button, no navigation
+const handleSave = async (e) => {
+  if (e?.preventDefault) e.preventDefault();
 
-    // ✅ PREVENT DOUBLE SUBMISSION
-    if (loading || uploading) {
-      console.warn("⚠️ Already processing, ignoring duplicate submit");
-      return;
+  if (loading || uploading) {
+    console.warn("⚠️ Already processing, ignoring duplicate submit");
+    return;
+  }
+
+  console.log("💾 Saving in place...");
+  setLoading(true);
+  setSaveSuccess(false);
+
+  try {
+    if (!formData.title) throw new Error("Title is required.");
+
+    const token = await getAuthToken();
+
+    const endpoint =
+      mode === "create" ? "/api/projects/create" : "/api/projects/update";
+    const method = mode === "create" ? "POST" : "PUT";
+
+    const primaryPlatform =
+      formData.download_links?.[0]?.platform || "Windows";
+
+    const payload = {
+      ...formData,
+      platform: primaryPlatform,
+      id: project?.id,
+    };
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) throw new Error("AUTH_EXPIRED");
+      const err = await response.json();
+      throw new Error(err.error || "Save failed");
     }
 
-    console.log("💾 Starting save operation...");
-    setLoading(true);
-    setSaveSuccess(false);
+    const data = await response.json();
 
-    try {
-      if (!formData.title) throw new Error("Title is required.");
+    setIsDirty(false);
+    setSaveSuccess(true);
 
-      // 1. Get Token (might throw AUTH_EXPIRED)
-      const token = await getAuthToken();
+    if (mode === "edit") {
+      notifyProjectUpdated(data.project);
+    }
 
-      const endpoint =
-        mode === "create" ? "/api/projects/create" : "/api/projects/update";
-      const method = mode === "create" ? "POST" : "PUT";
+    showToast("Changes saved!", "success");
+    setTimeout(() => setSaveSuccess(false), 5000);
 
-      const primaryPlatform =
-        formData.download_links?.[0]?.platform || "Windows";
-
-      const payload = {
-        ...formData,
-        platform: primaryPlatform,
-        id: project?.id,
-      };
-
-      // 2. Perform Request
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      // 3. Check Response
-      if (!response.ok) {
-        // Explicitly check for 401 Unauthorized here too
-        if (response.status === 401) {
-          throw new Error("AUTH_EXPIRED");
-        }
-        const err = await response.json();
-        throw new Error(err.error || "Save failed");
-      }
-
-      const data = await response.json();
-
-      // 4. Success State
-      setIsDirty(false);
-      setSaveSuccess(true);
-      if (mode === "edit") {
-        notifyProjectUpdated(data.project);
-      }
-      showToast(
-        mode === "create"
-          ? "Project initialized!"
-          : "Changes saved successfully!",
-        "success",
+    // ✅ CREATE mode still needs to redirect to the new project's edit page
+    if (mode === "create") {
+      router.push(
+        `/${user.username}/dashboard/project/${data.project.id}/edit`,
       );
-      setTimeout(() => setSaveSuccess(false), 5000);
-
-      if (mode === "create") {
-        router.push(
-          `/${user.username}/dashboard/project/${data.project.id}/edit`,
-        );
-      } else {
-        router.refresh();
-      }
-    } catch (err) {
-      // 5. Error Handling & Overlay Trigger
-      console.error("Save Error:", err);
-
-      if (err.message === "AUTH_EXPIRED" || err.message.includes("jwt")) {
-        setShowSessionError(true); // <--- TRIGGERS OVERLAY
-      } else {
-        showToast(err.message, "error");
-      }
-    } finally {
-      setLoading(false); // <--- STOPS SPINNER ALWAYS
     }
-  };
+    // ✅ EDIT mode — stays on editor, no navigation
+
+  } catch (err) {
+    console.error("Save Error:", err);
+    if (err.message === "AUTH_EXPIRED" || err.message.includes("jwt")) {
+      setShowSessionError(true);
+    } else {
+      showToast(err.message, "error");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ✅ SAVE & GO TO COCKPIT — footer last section button only
+const handleSaveAndExit = async (e) => {
+  if (e?.preventDefault) e.preventDefault();
+
+  if (loading || uploading) {
+    console.warn("⚠️ Already processing, ignoring duplicate submit");
+    return;
+  }
+
+  console.log("💾 Saving and returning to cockpit...");
+  setLoading(true);
+  setSaveSuccess(false);
+
+  try {
+    if (!formData.title) throw new Error("Title is required.");
+
+    const token = await getAuthToken();
+
+    const endpoint =
+      mode === "create" ? "/api/projects/create" : "/api/projects/update";
+    const method = mode === "create" ? "POST" : "PUT";
+
+    const primaryPlatform =
+      formData.download_links?.[0]?.platform || "Windows";
+
+    const payload = {
+      ...formData,
+      platform: primaryPlatform,
+      id: project?.id,
+    };
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) throw new Error("AUTH_EXPIRED");
+      const err = await response.json();
+      throw new Error(err.error || "Save failed");
+    }
+
+    const data = await response.json();
+
+    setIsDirty(false);
+    setSaveSuccess(true);
+
+    if (mode === "edit") {
+      notifyProjectUpdated(data.project);
+    }
+
+    showToast("Saved! Head to the cockpit to publish your project.", "success");
+
+    // ✅ Always navigate to cockpit after this action
+    setTimeout(() => {
+      router.push(
+        `/${user?.user_metadata?.username}/dashboard/project/${project.id}`,
+      );
+    }, 800);
+
+  } catch (err) {
+    console.error("Save & Exit Error:", err);
+    if (err.message === "AUTH_EXPIRED" || err.message.includes("jwt")) {
+      setShowSessionError(true);
+    } else {
+      showToast(err.message, "error");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
   // Tagging Logic Helper
   const getVisibleTags = () => {
     const typeTags = isApp ? APP_TAGS : GAME_TAGS;
@@ -684,10 +756,10 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* --- LEFT COLUMN: FORM EDITOR --- */}
         <div className="lg:col-span-2">
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-8 bg-[#161b2c] border border-white/5 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col min-h-150"
-          >
+<form
+  onSubmit={handleSave} // ✅ Header save = in place
+  className="space-y-8 bg-[#161b2c] border border-white/5 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col min-h-150"
+>
             {/* Theme Accent Bar */}
             <div
               className={`absolute top-0 left-0 w-full h-1 ${themeBg} opacity-50`}
@@ -726,44 +798,39 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
 
             {/* Header Action (Save) */}
             <div className="flex justify-end items-center mb-2">
-              <button
-                type="submit"
-                disabled={
-                  loading ||
-                  uploading ||
-                  (!isDirty && mode !== "create" && !saveSuccess)
-                }
-                className={`hidden md:flex ${saveSuccess ? "bg-green-500 border-green-600" : themeBg} hover:opacity-90 text-white font-bold uppercase text-xs px-4 py-2 rounded-xl transition-all items-center gap-2 disabled:opacity-50 disabled:cursor-not-wait`}
-                title={
-                  loading
-                    ? "Saving..."
-                    : uploading
-                      ? "Upload in progress..."
-                      : ""
-                }
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={14} />
-                    Saving...
-                  </>
-                ) : uploading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={14} />
-                    Processing Upload...
-                  </>
-                ) : saveSuccess ? (
-                  <>
-                    <Check size={14} />
-                    Saved!
-                  </>
-                ) : (
-                  <>
-                    <Save size={14} />
-                    Save Changes
-                  </>
-                )}
-              </button>
+{/* Header Action (Save) — desktop */}
+<button
+  type="submit"
+  disabled={
+    loading ||
+    uploading ||
+    (!isDirty && mode !== "create" && !saveSuccess)
+  }
+  className={`hidden md:flex ${saveSuccess ? "bg-green-500 border-green-600" : themeBg} hover:opacity-90 text-white font-bold uppercase text-xs px-4 py-2 rounded-xl transition-all items-center gap-2 disabled:opacity-50 disabled:cursor-not-wait`}
+  title="Save your progress without leaving the editor"
+>
+  {loading ? (
+    <>
+      <Loader2 className="animate-spin" size={14} />
+      Saving...
+    </>
+  ) : uploading ? (
+    <>
+      <Loader2 className="animate-spin" size={14} />
+      Processing Upload...
+    </>
+  ) : saveSuccess ? (
+    <>
+      <Check size={14} />
+      Saved!
+    </>
+  ) : (
+    <>
+      <Save size={14} />
+      Save Changes {/* ✅ Stays as "Save Changes" always */}
+    </>
+  )}
+</button>
             </div>
 
             {/* --- SECTIONS CONTENT --- */}
@@ -1323,25 +1390,38 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
                       decisions.
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">
-                      Age Rating
-                    </label>
-                    <select
-                      value={formData.age_rating || "NR"}
-                      onChange={(e) =>
-                        updateField("age_rating", e.target.value)
-                      }
-                      className={`w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white ${themeFocus} outline-none`}
-                    >
-                      <option value="All Ages">All Ages</option>
-                      <option value="Teen (12+)">Teen (12+)</option>
-                      <option value="Mature (16+)">Mature (16+)</option>
-                      <option value="Adults Only (18+)">
-                        Adults Only (18+)
-                      </option>
-                    </select>
-                  </div>
+<div className="space-y-2">
+  <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">
+    Age Rating
+  </label>
+  <select
+    value={formData.age_rating || "All Ages"}
+    onChange={(e) => updateField("age_rating", e.target.value)}
+    className={`w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-white ${themeFocus} outline-none`}
+  >
+    <option value="All Ages">All Ages</option>
+    <option value="Teen (12+)">Teen (12+)</option>
+    <option value="Mature (16+)">Mature (16+)</option>
+    <option value="Adults Only (18+)">Adults Only (18+)</option>
+  </select>
+
+  {/* ✅ Contextual hint — changes based on selection */}
+  <p className="text-[11px] text-slate-500 leading-relaxed flex items-start gap-1.5">
+    <Lightbulb size={11} className="text-amber-400 shrink-0 mt-0.5" />
+    {formData.age_rating === "All Ages" && (
+      "No violence, strong language, or mature themes. Suitable for everyone."
+    )}
+    {formData.age_rating === "Teen (12+)" && (
+      "Mild violence, light horror, or slightly mature themes. No explicit content."
+    )}
+    {formData.age_rating === "Mature (16+)" && (
+      "Heavier violence, strong language, or intense themes. When in doubt, choose this over Teen."
+    )}
+    {formData.age_rating === "Adults Only (18+)" && (
+      "Explicit content, graphic violence, or adult themes. Strictly 18+ audiences only."
+    )}
+  </p>
+</div>
 
                   <Input
                     area
@@ -1355,17 +1435,36 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
               )}
 
               {/* 5. DISTRIBUTION */}
-              {activeSection === "distribution" && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-                  <div
-                    className={`p-4 ${themeBgLight} ${themeBorderLight} border rounded-xl mb-4 flex items-start gap-3`}
-                  >
-                    <ShieldCheck className={themeText} size={20} />
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      Ensure download links are accessible. You can add multiple
-                      platforms.
-                    </p>
-                  </div>
+{activeSection === "distribution" && (
+  <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+    
+    {/* ✅ Publish callout — first thing seen, only for drafts */}
+    {project?.status === "draft" && (
+      <div className="relative overflow-hidden p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-2 duration-300 mb-2">
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-emerald-500/60 via-emerald-400/20 to-transparent" />
+        <div className="shrink-0 w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mt-0.5">
+          <Lightbulb size={16} className="text-emerald-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">
+            Next Step: Publish
+          </p>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Add your download links below, then save. The{" "}
+            <span className="text-emerald-400 font-bold">Project Cockpit</span>{" "}
+            is where you review and publish your project to the platform.
+          </p>
+        </div>
+      </div>
+    )}
+
+    {/* Existing distribution warning */}
+    <div className={`p-4 ${themeBgLight} ${themeBorderLight} border rounded-xl mb-4 flex items-start gap-3`}>
+      <ShieldCheck className={themeText} size={20} />
+      <p className="text-xs text-slate-300 leading-relaxed">
+        Ensure download links are accessible. You can add multiple platforms.
+      </p>
+    </div>
 
                   {/* ✅ NEW: Dedicated Web App/PWA Section (Apps Only) */}
                   {isApp && (
@@ -1545,39 +1644,89 @@ export default function ProjectEditor({ project = null, mode = "create" }) {
               )}
             </div>
 
-            {/* Footer Navigation Buttons */}
-            <div className="pt-6 border-t border-white/5 flex justify-between items-center mt-auto">
-              <button
-                type="button"
-                onClick={handlePrevSection}
-                disabled={activeSection === SECTIONS[0].id}
-                className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-white disabled:opacity-30 flex items-center gap-2 transition-colors"
-              >
-                <ArrowLeft size={14} /> Previous
-              </button>
+{/* Footer Navigation Buttons */}
+<div className="pt-6 border-t border-white/5 flex justify-between items-center mt-auto">
+  
+  {/* Previous — same on all screen sizes */}
+  <button
+    type="button"
+    onClick={handlePrevSection}
+    disabled={activeSection === SECTIONS[0].id}
+    className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-white disabled:opacity-30 flex items-center gap-2 transition-colors"
+  >
+    <ArrowLeft size={14} /> Previous
+  </button>
 
-              {/* Mobile Save Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className={`md:hidden ${themeBg} text-white p-3 rounded-full shadow-lg`}
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <Save size={20} />
-                )}
-              </button>
+  {/* ✅ MOBILE: Next or Save — mirrors desktop logic */}
+  {activeSection === SECTIONS[SECTIONS.length - 1].id ? (
+    <button
+      type="button"
+      onClick={handleSaveAndExit}
+      disabled={loading || uploading}
+      className={`md:hidden ${themeBg} text-white p-3 rounded-full shadow-lg transition-all scale-110`}
+    >
+      {loading ? (
+        <Loader2 className="animate-spin" size={20} />
+      ) : saveSuccess ? (
+        <Check size={20} />
+      ) : (
+        <Save size={20} />
+      )}
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={handleNextSection}
+      className="md:hidden bg-white/10 hover:bg-white/20 text-white p-3 rounded-full shadow-lg transition-all"
+    >
+      <ArrowRight size={20} />
+    </button>
+  )}
 
-              <button
-                type="button"
-                onClick={handleNextSection}
-                disabled={activeSection === SECTIONS[SECTIONS.length - 1].id}
-                className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-white disabled:opacity-30 flex items-center gap-2 transition-colors"
-              >
-                Next <ArrowRight size={14} />
-              </button>
-            </div>
+  {/* ✅ DESKTOP: Next or Save & Go to Cockpit */}
+  {activeSection === SECTIONS[SECTIONS.length - 1].id ? (
+    <div className="hidden md:flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleSaveAndExit}
+        disabled={loading || uploading}
+        className={`flex items-center gap-2 px-5 py-2.5 ${themeBg} hover:opacity-90 text-white font-bold uppercase text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg`}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="animate-spin" size={14} />
+            Saving...
+          </>
+        ) : saveSuccess ? (
+          <>
+            <Check size={14} />
+            Saved!
+          </>
+        ) : (
+          <>
+            <Save size={14} />
+            {mode === "edit" ? "Save & Go to Cockpit" : "Save & Continue"}
+          </>
+        )}
+      </button>
+      {mode === "edit" && !saveSuccess && (
+        <p className="text-[10px] text-slate-500 flex items-center gap-1">
+          <Lightbulb size={10} className="text-amber-400" />
+          You can publish from the cockpit
+        </p>
+      )}
+    </div>
+  ) : (
+    <button
+      type="button"
+      onClick={handleNextSection}
+      className="hidden md:flex text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-white items-center gap-2 transition-colors"
+    >
+      Next <ArrowRight size={14} />
+    </button>
+  )}
+
+</div>
           </form>
         </div>
 
