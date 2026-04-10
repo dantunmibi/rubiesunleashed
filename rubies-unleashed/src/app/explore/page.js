@@ -2,6 +2,8 @@ import { generateBreadcrumbSchema, generateSpeakableSchema } from '@/lib/seo-uti
 import ExploreClient from './ExploreClient';
 import { getUnifiedFeed } from '@/lib/game-service';
 
+export const revalidate = 300;
+
 export const metadata = {
   title: 'Explore - The Vault | Rubies Unleashed',
   description: 'Discover curated indie games, apps, and digital projects. Browse by platform, genre, and archetype on Rubies Unleashed.',

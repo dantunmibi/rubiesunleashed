@@ -2,7 +2,7 @@ import { getUnifiedFeed } from '@/lib/game-service';
 import HomeWrapper from '@/components/home/HomeWrapper';
 import LandingPage from '@/components/home/LandingPage';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: 'Rubies Unleashed | Where New Ideas Rise',
