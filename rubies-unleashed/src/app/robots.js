@@ -44,5 +44,6 @@ export default function robots() {
     ],
     sitemap: 'https://rubiesunleashed.app/sitemap.xml',
     rss: 'https://rubiesunleashed.app/rss.xml',
+    host: 'https://rubiesunleashed.app',
   };
 }

@@ -2,7 +2,7 @@
  * ================================================================
  * SIGNUP PAGE - User Registration (Supabase Integrated)
  * ================================================================
- * 
+ *
  * Features:
  * - Email verification with OTP
  * - Resend verification email with 60s cooldown
@@ -16,14 +16,464 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserPlus, Check, X, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff, RefreshCw } from "lucide-react";
+import {
+  UserPlus,
+  Check,
+  X,
+  Mail,
+  Lock,
+  User,
+  ArrowLeft,
+  Loader2,
+  Eye,
+  EyeOff,
+  RefreshCw,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/useToast";
+
+/**
+ * Reserved usernames — cannot be registered.
+ * Covers all current routes, brand terms, system words,
+ * and common squats. Case-insensitive at validation time.
+ */
+const RESERVED_USERNAMES = new Set([
+  // Core Routes
+  "explore",
+  "publish",
+  "about",
+  "help",
+  "contact",
+  "privacy",
+  "terms",
+  "status",
+  "directory",
+  "sitemap",
+  "rss",
+  "llms",
+
+  // Auth Routes
+  "login",
+  "logout",
+  "signup",
+  "register",
+  "signin",
+  "signout",
+  "auth",
+  "verify",
+  "reset",
+  "forgot",
+  "password",
+  "callback",
+  "oauth",
+  "token",
+  "session",
+  "refresh",
+
+  // API & System
+  "api",
+  "admin",
+  "private",
+  "system",
+  "config",
+  "settings",
+  "dashboard",
+  "internal",
+  "webhook",
+  "webhooks",
+  "cron",
+  "jobs",
+  "queue",
+  "cache",
+  "logs",
+  "log",
+  "debug",
+  "trace",
+  "metrics",
+  "health",
+  "ping",
+  "pong",
+
+  // The Forge / Platform Terms
+  "forge",
+  "vault",
+  "codex",
+  "guild",
+  "the-forge",
+  "the-vault",
+  "the-codex",
+  "the-guild",
+
+  // Brand & Platform Names
+  "rubies",
+  "rubiesunleashed",
+  "rubyapks",
+  "tkprobix",
+  "fullondani",
+
+  // Staff / Authority
+  "administrator",
+  "moderator",
+  "mod",
+  "mods",
+  "staff",
+  "team",
+  "support",
+  "official",
+  "owner",
+  "founder",
+  "superuser",
+  "root",
+  "operator",
+  "op",
+  "helper",
+  "guide",
+  "ambassador",
+
+  // Common Web Conventions
+  "www",
+  "mail",
+  "email",
+  "ftp",
+  "cdn",
+  "static",
+  "assets",
+  "images",
+  "uploads",
+  "files",
+  "download",
+  "downloads",
+  "media",
+  "public",
+  "secure",
+  "ssl",
+  "tls",
+
+  // Social & SEO Pages
+  "blog",
+  "news",
+  "press",
+  "careers",
+  "jobs",
+  "partners",
+  "advertise",
+  "legal",
+  "security",
+  "report",
+  "feedback",
+  "about-us",
+  "contact-us",
+  "terms-of-service",
+  "privacy-policy",
+  "cookie-policy",
+  "disclaimer",
+  "dmca",
+  "copyright",
+  "license",
+
+  // User Related
+  "user",
+  "users",
+  "profile",
+  "profiles",
+  "account",
+  "accounts",
+  "me",
+  "my",
+  "you",
+  "your",
+  "self",
+  "anonymous",
+  "guest",
+  "visitor",
+  "unknown",
+
+  // Content Related
+  "game",
+  "games",
+  "app",
+  "apps",
+  "tool",
+  "tools",
+  "project",
+  "projects",
+  "listing",
+  "listings",
+  "search",
+  "tag",
+  "tags",
+  "category",
+  "categories",
+  "genre",
+  "genres",
+  "featured",
+  "trending",
+  "new",
+  "latest",
+  "top",
+  "popular",
+  "recommended",
+  "curated",
+  "spotlight",
+  "picks",
+  "best",
+  "worst",
+  "random",
+  "shuffle",
+  "discover",
+  "discovery",
+  "browse",
+
+  // Creator Related
+  "creator",
+  "creators",
+  "developer",
+  "developers",
+  "dev",
+  "devs",
+  "publisher",
+  "publishers",
+  "architect",
+  "architects",
+  "hunter",
+  "hunters",
+  "netrunner",
+  "netrunners",
+  "curator",
+  "curators",
+  "phantom",
+  "phantoms",
+
+  // Archetypes
+  "ruby",
+  "cyan",
+  "amber",
+  "violet",
+  "emerald",
+
+  // Wishlist / Social
+  "wishlist",
+  "wishlists",
+  "follow",
+  "followers",
+  "following",
+  "likes",
+  "liked",
+  "reviews",
+  "review",
+  "comments",
+  "comment",
+  "feed",
+  "notifications",
+  "notification",
+  "inbox",
+  "messages",
+  "message",
+  "chat",
+  "discuss",
+  "discussion",
+  "forum",
+  "forums",
+  "community",
+  "communities",
+  "group",
+  "groups",
+  "clan",
+  "clans",
+
+  // Technical & System
+  "404",
+  "500",
+  "403",
+  "401",
+  "error",
+  "errors",
+  "null",
+  "undefined",
+  "true",
+  "false",
+  "test",
+  "testing",
+  "demo",
+  "sandbox",
+  "staging",
+  "production",
+  "prod",
+  "localhost",
+  "127",
+  "000",
+  "dev-null",
+  "void",
+
+  // Financial
+  "pricing",
+  "plans",
+  "billing",
+  "payment",
+  "payments",
+  "checkout",
+  "invoice",
+  "invoices",
+  "subscription",
+  "subscriptions",
+  "refund",
+  "refunds",
+  "upgrade",
+  "downgrade",
+  "free",
+  "premium",
+  "pro",
+  "plus",
+  "enterprise",
+
+  // Legal
+  "tos",
+  "eula",
+  "gdpr",
+  "ccpa",
+  "report-abuse",
+  "abuse",
+  "spam",
+  "fraud",
+
+  // Misc Squats
+  "help-center",
+  "gem",
+  "gems",
+  "treasure",
+  "unleashed",
+  "rising",
+  "rise",
+  "legendary",
+  "iconic",
+  "epic",
+  "rare",
+  "common",
+  "mythic",
+  "forge-it",
+  "deploy",
+  "unleash",
+  "launch",
+  "ignite",
+  "ascend",
+  "level",
+  "level-up",
+  "grind",
+  "loot",
+  "drop",
+  "chest",
+  "key",
+  "badge",
+  "badges",
+  "rank",
+  "ranks",
+  "leaderboard",
+  "leaderboards",
+  "achievement",
+  "achievements",
+  "quest",
+  "quests",
+  "mission",
+  "missions",
+
+  // Short / Reserved singles
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+  "aa",
+  "bb",
+  "cc",
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "00",
+  "11",
+  "22",
+  "33",
+  "44",
+  "55",
+  "66",
+  "77",
+  "88",
+  "99",
+  "000",
+  "111",
+]);
+
+/**
+ * Validates username format and reserved list.
+ * Returns error string or null if valid.
+ */
+function validateUsername(value) {
+  if (!value) return null;
+
+  // Minimum length
+  if (value.length < 3) {
+    return "Username must be at least 3 characters.";
+  }
+
+  // Maximum length
+  if (value.length > 30) {
+    return "Username must be 30 characters or less.";
+  }
+
+  // Only alphanumeric, underscores, hyphens
+  if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+    return "Only letters, numbers, underscores and hyphens allowed.";
+  }
+
+  // Cannot start or end with underscore or hyphen
+  if (/^[_-]|[_-]$/.test(value)) {
+    return "Username cannot start or end with _ or -.";
+  }
+
+  // No consecutive special characters
+  if (/[_-]{2,}/.test(value)) {
+    return "No consecutive underscores or hyphens.";
+  }
+
+  // Reserved list — case insensitive
+  if (RESERVED_USERNAMES.has(value.toLowerCase())) {
+    return "That username is reserved. Please choose another.";
+  }
+
+  return null; // valid
+}
 
 export default function SignupPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,17 +495,28 @@ export default function SignupPage() {
   // ✅ DEBOUNCED USERNAME VALIDATION
   useEffect(() => {
     const checkUsername = async () => {
-      if (!username || username.length < 3) {
+      if (!username) {
         setUsernameAvailable(null);
+        setError(null);
         return;
       }
 
+      // Format + reserved check first — no DB call needed
+      const formatError = validateUsername(username);
+      if (formatError) {
+        setUsernameAvailable(false);
+        setError(formatError);
+        return;
+      }
+
+      // Clear any format error before DB check
+      setError(null);
       setIsCheckingUsername(true);
-      
+
       const { data } = await supabase
-        .from('profiles')
-        .select('username')
-        .ilike('username', username)
+        .from("profiles")
+        .select("username")
+        .ilike("username", username)
         .maybeSingle();
 
       setUsernameAvailable(!data);
@@ -69,14 +530,18 @@ export default function SignupPage() {
   // ✅ NEW: Cooldown Timer Effect
   useEffect(() => {
     if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      const timer = setTimeout(
+        () => setResendCooldown(resendCooldown - 1),
+        1000,
+      );
       return () => clearTimeout(timer);
     }
   }, [resendCooldown]);
 
   const validatePassword = (pwd) => {
     if (pwd.length < 8) return "Password must be at least 8 characters.";
-    if (!/[A-Z]/.test(pwd)) return "Must contain at least one uppercase letter.";
+    if (!/[A-Z]/.test(pwd))
+      return "Must contain at least one uppercase letter.";
     if (!/[0-9]/.test(pwd)) return "Must contain at least one number.";
     return "";
   };
@@ -92,7 +557,15 @@ export default function SignupPage() {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-        
+
+    // ✅ Final format + reserved check before submission
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
+      setLoading(false);
+      return;
+    }
+
     const err = validatePassword(password);
     if (err) {
       setPasswordError(err);
@@ -119,10 +592,13 @@ export default function SignupPage() {
       }
     } catch (err) {
       console.error("Signup Error:", err.message);
-      
-      if (err.message.includes('duplicate key') || err.message.includes('username')) {
+
+      if (
+        err.message.includes("duplicate key") ||
+        err.message.includes("username")
+      ) {
         setError("That username is already taken. Please choose another.");
-      } else if (err.message.includes('rate limit')) {
+      } else if (err.message.includes("rate limit")) {
         setError("Too many attempts. Please try again later.");
       } else {
         setError(err.message);
@@ -135,13 +611,13 @@ export default function SignupPage() {
   // ✅ NEW: Resend Verification Email Handler
   const handleResendEmail = async () => {
     if (isResending || resendCooldown > 0) return;
-    
+
     setIsResending(true);
     setError(null);
 
     try {
       const { error } = await supabase.auth.resend({
-        type: 'signup',
+        type: "signup",
         email: email,
       });
 
@@ -169,7 +645,7 @@ export default function SignupPage() {
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'signup'
+        type: "signup",
       });
 
       if (error) throw error;
@@ -200,16 +676,23 @@ export default function SignupPage() {
             <div className="w-16 h-16 bg-ruby/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail size={32} className="text-ruby" />
             </div>
-            <h2 className="text-2xl font-black text-white mb-2">Check Your Email</h2>
+            <h2 className="text-2xl font-black text-white mb-2">
+              Check Your Email
+            </h2>
             <p className="text-slate-400 text-sm">
-              We sent a verification code to<br />
+              We sent a verification code to
+              <br />
               <strong className="text-white">{email}</strong>
             </p>
             <p className="text-slate-500 text-xs mt-2">
-              Can't find it? Check your <span className="text-slate-300 font-semibold">spam or junk folder</span>.
+              Can't find it? Check your{" "}
+              <span className="text-slate-300 font-semibold">
+                spam or junk folder
+              </span>
+              .
             </p>
           </div>
-           
+
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold text-center">
               {error}
@@ -224,7 +707,9 @@ export default function SignupPage() {
               <input
                 type="text"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 placeholder="000000"
                 maxLength={6}
                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl py-4 text-center text-white text-3xl tracking-[0.5em] font-bold focus:border-ruby/50 focus:outline-none transition-colors"
@@ -252,7 +737,9 @@ export default function SignupPage() {
 
           {/* ✅ NEW: Resend Email Section */}
           <div className="mt-6 text-center">
-            <p className="text-slate-500 text-xs mb-3">Didn't receive the code?</p>
+            <p className="text-slate-500 text-xs mb-3">
+              Didn't receive the code?
+            </p>
             <button
               onClick={handleResendEmail}
               disabled={isResending || resendCooldown > 0}
@@ -304,7 +791,10 @@ export default function SignupPage() {
         href="/explore"
         className="absolute top-8 left-8 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
       >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <ArrowLeft
+          size={20}
+          className="group-hover:-translate-x-1 transition-transform"
+        />
         <span className="text-sm font-bold uppercase tracking-wider">Back</span>
       </Link>
 
@@ -316,7 +806,9 @@ export default function SignupPage() {
           <h1 className="text-4xl font-black text-white uppercase tracking-tight mb-2">
             Join The <span className="text-ruby">Vault</span>
           </h1>
-          <p className="text-slate-400 text-sm">Create your account and start collecting</p>
+          <p className="text-slate-400 text-sm">
+            Create your account and start collecting
+          </p>
         </div>
 
         {/* Error / Success Messages */}
@@ -325,7 +817,7 @@ export default function SignupPage() {
             {error}
           </div>
         )}
-        
+
         {successMsg && (
           <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-bold text-center">
             {successMsg}
@@ -338,25 +830,40 @@ export default function SignupPage() {
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
               Username
               {isCheckingUsername ? (
-                <span className="text-slate-500 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Checking...</span>
+                <span className="text-slate-500 flex items-center gap-1">
+                  <Loader2 size={10} className="animate-spin" /> Checking...
+                </span>
               ) : usernameAvailable === true ? (
-                <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Available</span>
+                <span className="text-emerald-400 flex items-center gap-1">
+                  <Check size={10} /> Available
+                </span>
               ) : usernameAvailable === false ? (
-                <span className="text-red-400 flex items-center gap-1"><X size={10} /> Taken</span>
+                <span className="text-red-400 flex items-center gap-1">
+                  <X size={10} /> Taken
+                </span>
               ) : null}
             </label>
             <div className="relative">
-              <User size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${usernameAvailable === false ? "text-red-500" : usernameAvailable === true ? "text-emerald-500" : "text-slate-500"}`} />
+              <User
+                size={18}
+                className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${usernameAvailable === false ? "text-red-500" : usernameAvailable === true ? "text-emerald-500" : "text-slate-500"}`}
+              />
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/\s+/g, '_'))}
+                onChange={(e) =>
+                  setUsername(e.target.value.replace(/\s+/g, "_"))
+                }
                 placeholder="RubyHunter_42"
                 required
                 className={`w-full bg-[#0b0f19] border rounded-xl py-3 px-12 text-white placeholder:text-slate-600 focus:outline-none transition-colors 
-                  ${usernameAvailable === false ? "border-red-500/50 focus:border-red-500" : 
-                    usernameAvailable === true ? "border-emerald-500/50 focus:border-emerald-500" : 
-                    "border-white/10 focus:border-ruby/50"}`}
+                  ${
+                    usernameAvailable === false
+                      ? "border-red-500/50 focus:border-red-500"
+                      : usernameAvailable === true
+                        ? "border-emerald-500/50 focus:border-emerald-500"
+                        : "border-white/10 focus:border-ruby/50"
+                  }`}
               />
             </div>
           </div>
@@ -367,7 +874,10 @@ export default function SignupPage() {
               Email
             </label>
             <div className="relative">
-              <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Mail
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              />
               <input
                 type="email"
                 value={email}
@@ -385,14 +895,17 @@ export default function SignupPage() {
               Password
             </label>
             <div className="relative">
-              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Lock
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder="••••••••"
                 required
-                className={`w-full bg-[#0b0f19] border rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-slate-600 focus:outline-none transition-colors ${passwordError ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-ruby/50'}`}
+                className={`w-full bg-[#0b0f19] border rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-slate-600 focus:outline-none transition-colors ${passwordError ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-ruby/50"}`}
               />
               <button
                 type="button"
@@ -403,7 +916,9 @@ export default function SignupPage() {
               </button>
             </div>
             {passwordError && (
-              <p className="text-red-400 text-[10px] mt-2 font-bold ml-1">{passwordError}</p>
+              <p className="text-red-400 text-[10px] mt-2 font-bold ml-1">
+                {passwordError}
+              </p>
             )}
           </div>
 

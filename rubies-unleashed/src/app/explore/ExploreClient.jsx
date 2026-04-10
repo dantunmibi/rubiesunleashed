@@ -17,13 +17,12 @@ export default function ExploreClient({ initialGames = [] }) {
       <BackgroundEffects />
       <Navbar />
       <Suspense
-        fallback={
-          <div className="h-screen flex items-center justify-center text-ruby">
-            <Loader2 className="animate-spin" size={48} />
-          </div>
-        }
+        fallback={<div className="h-screen bg-background" aria-hidden="true" />}
       >
-        <ExploreContent triggerError={triggerError} initialGames={initialGames} />
+        <ExploreContent
+          triggerError={triggerError}
+          initialGames={initialGames}
+        />
       </Suspense>
       <Footer />
       <SessionErrorOverlay show={showSessionError} />

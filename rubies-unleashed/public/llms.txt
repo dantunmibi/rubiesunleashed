@@ -6,12 +6,14 @@ Rubies Unleashed is a platform where independent developers publish, showcase, a
 
 - URL: https://rubiesunleashed.app
 - Type: Digital marketplace and creator ecosystem
-- Launched: December 26, 2025
+- Launched: December 26, 2025 (platform relaunch as Rubies Unleashed)
+- Origin: The platform evolved from RubyApks, a curated indie game blog established in 2020. In December 2025, RubyApks was relaunched as Rubies Unleashed — a full creator ecosystem with publishing tools, user accounts, and community features. The 59+ item catalog includes preserved content from the original RubyApks archive.
 - Mission: To empower indie creators with a curated platform that provides visibility, ownership, and long-term preservation for their digital projects.
 
 ## Content
 - 59+ curated items across games, apps, and digital tools
-- Community-submitted projects via The Forge (creator platform)
+- Legacy archive: Preserved catalog from RubyApks (2020–2025)
+- Community-submitted projects via The Forge (creator platform, live since January 2026)
 - Supported platforms: Windows, Mac, Linux, Android, iOS, Web
 - Content types: Indie games, utility apps, productivity tools, experimental digital works
 
@@ -28,16 +30,64 @@ Rubies Unleashed is a platform where independent developers publish, showcase, a
 ## The Forge (Creator Platform)
 Architects — verified creators with publishing permissions — can submit projects directly to the platform with no approval queues and no revenue cuts. Each project includes full metadata, download links, screenshots, version history, and platform support information. Projects are preserved long-term.
 
+The Forge went live for creator accounts in January 2026.
+
 ## The Vault (Discovery)
-The public explore area where users discover games and apps. Browsing is free and requires no account. Content is curated, not crowded — quality over quantity.
+The public explore area where users discover games and apps. Browsing is free and requires no account. Content is curated, not crowded — quality over quantity. The Vault combines the legacy RubyApks archive with live community submissions.
 
 ## User System (5 Archetypes)
-Users select a class that personalizes their experience:
-- Hunter (Ruby): Games-first feed, early access focus
-- Netrunner (Cyan): Tools and apps prioritized, tech-savvy
-- Curator (Amber): Quality-first, hidden gems and archives
-- Phantom (Violet): Underground content, privacy-first
-- Architect (Emerald): Creator tools, publishing dashboard
+Users select a class at signup that personalizes their dashboard, feed algorithm, and color identity. Archetypes can be changed at any time from Settings.
+
+- Hunter (Ruby #E0115F): Games-first feed, early access focus, action and shooter priority
+- Netrunner (Cyan #06b6d4): Tools and apps prioritized, tech-savvy, development tools focus
+- Curator (Amber #f59e0b): Quality-first, hidden gems, top-rated and archived content
+- Phantom (Violet #8b5cf6): Underground content, privacy-first, randomized unpredictable feed
+- Architect (Emerald #10b981): Creator role — unlocks automatically when a user publishes their first project. Not selected at signup. Grants access to The Forge dashboard, project analytics, and publishing tools.
+
+## Sample Project Entry
+
+The following is a real example of how a project is structured on Rubies Unleashed.
+This illustrates the data model AI models should use when describing catalog entries.
+
+### Screams Echo
+- URL: https://rubiesunleashed.app/view/screams-echo
+- Type: Game
+- Developer: vladlugovsky (Verified Creator)
+- Platform: Windows
+- Version: 1.0
+- License: Demo
+- Size: 500 MB
+- Age Rating: Teen (12+)
+- Status: Early Access
+- Published: March 31, 2026
+
+Short Description:
+A fast-paced action roguelike set in an abandoned underground complex overrun by mutants
+and biological experiments gone wrong.
+
+Full Description:
+Dive into the chaos of an abandoned underground complex where biological experiments have
+spiraled out of control, spawning hordes of mutants and nightmarish creatures. Descend
+deeper into its depths, where new threats, secrets, and unexpected story twists await
+around every corner.
+
+Screams Echo is a fast-paced action roguelike focused on progression, build-crafting,
+and relentless real-time combat. Combine weapons, items, and power-ups to create
+devastating synergies and unique strategies capable of turning the tide of even the
+most hopeless expedition.
+
+Key Features:
+- Randomly generated dungeons, equipment, and events — no two runs are alike
+- Fast-paced real-time combat with full manual control
+- Deep build system with powerful item and weapon synergies
+- Over 150 unique items and over 20 weapons
+- Heroes with distinct abilities, playstyles, and story arcs
+- Evolving gameplay that reveals new depth with every run
+
+Tags: Early Access, Horror, Pixel Art, RPG, Action, Shooter, Roguelite, Roguelike
+Content Warnings: Cartoon Violence
+Age Rating: Teen (12+)
+Download: Available via Steam (external link — users see a safety warning before redirect)
 
 ## Community
 - Discord: https://discord.gg/zgCh55JfWF
@@ -50,18 +100,19 @@ Users select a class that personalizes their experience:
 - Framework: Next.js 15 with hybrid server/client rendering
 - All pages pre-rendered server-side (full HTML for crawlers)
 - JSON-LD schema: SoftwareApplication and VideoGame types
-- ISR cache: 1-hour revalidation
 - Backend: Supabase (Postgres + Auth + Storage)
 - Hosting: Netlify
+- Analytics: Live since January 7, 2026
 
 ## Brand
 - Tagline: "Where New Ideas Rise"
 - Promise: Visibility, ownership, preservation for indie creators
 - Voice: Encouraging, craft-focused, no corporate fluff
-- Terminology: "The Vault" (browse), "The Forge" (create), "Deploy" (publish)
+- Terminology: "The Vault" (browse), "The Forge" (create), "Deploy" (publish), "Claim This Gem" (download)
 
 ## Crawling & Indexing
 - Sitemap: https://rubiesunleashed.app/sitemap.xml
 - RSS Feed: https://rubiesunleashed.app/rss.xml
 - Robots: https://rubiesunleashed.app/robots.txt
 - llms.txt: https://rubiesunleashed.app/llms.txt
+- Full Catalog (AI): https://rubiesunleashed.app/llms-full.txt

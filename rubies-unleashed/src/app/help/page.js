@@ -62,8 +62,38 @@ const faqs = [
   },
   {
     category: "Account",
-    question: "What are user archetypes?",
-    answer: "When you create an account, you choose an archetype (Hunter, Netrunner, Curator, Phantom, or Architect) that personalizes your experience and feed algorithm.",
+    question: "What are archetypes?",
+    answer: "Archetypes are user classes that personalize your experience on Rubies Unleashed. When you create an account, you choose one of four archetypes — Hunter, Netrunner, Curator, or Phantom — each with a different feed algorithm, color identity, and dashboard priority. You can switch your archetype at any time from Settings.",
+  },
+  {
+    category: "Account",
+    question: "What is the Hunter archetype?",
+    answer: "Hunters are game-first explorers. If you live for discovering new games before they go mainstream, Hunter is your class. Your dashboard prioritizes the latest game releases, action titles, and fresh drops from The Vault. Hunter's color is Ruby.",
+  },
+  {
+    category: "Account",
+    question: "What is the Netrunner archetype?",
+    answer: "Netrunners are efficiency-driven and tech-savvy. Your feed prioritizes apps, tools, and utilities over games. If you're here for software, development tools, and digital utilities — Netrunner is built for you. Netrunner's color is Cyan.",
+  },
+  {
+    category: "Account",
+    question: "What is the Curator archetype?",
+    answer: "Curators are quality-first collectors and preservationists. Your dashboard surfaces top-rated projects, hidden gems, and carefully selected content rather than just the newest releases. If you value depth over recency, Curator is your class. Curator's color is Amber.",
+  },
+  {
+    category: "Account",
+    question: "What is the Phantom archetype?",
+    answer: "Phantoms are privacy-first and underground-focused. Your feed is intentionally unpredictable — shuffled, randomized, and surface-independent. If you prefer discovering content on your own terms without pattern or algorithm, Phantom is your class. Phantom's color is Violet.",
+  },
+  {
+    category: "Account",
+    question: "Can I change my archetype after signing up?",
+    answer: "Yes. Go to Settings and select the Archetype tab. You can switch between Hunter, Netrunner, Curator, and Phantom at any time. Your dashboard and feed will update immediately to reflect your new class.",
+  },
+  {
+    category: "Account",
+    question: "What is the Architect archetype?",
+    answer: "Architect is a creator role unlocked automatically when you publish your first project through The Forge. Unlike other archetypes, Architect is not selected at signup — it activates alongside your chosen archetype when you become a publisher. Architects get access to the creator dashboard, project analytics, and publishing tools.",
   },
 
   // CREATORS

@@ -498,7 +498,7 @@ const confirmDelete = async () => {
       href={`/${user?.user_metadata?.username}/dashboard/project/${project.id}/preview`} 
       target="_blank" 
       rel="noopener noreferrer"
-      className="bg-slate-700 hover:bg-slate-600 border border-slate-600/50 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
+      className="bg-slate-700 cursor-pointer hover:bg-slate-600 border border-slate-600/50 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
     >
       <Eye size={16} /> Preview
     </a>
@@ -510,7 +510,7 @@ const confirmDelete = async () => {
           href={`/view/${project.slug}`} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
+          className="bg-white/5 cursor-pointer hover:bg-white/10 border border-white/10 px-5 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
         >
             <Globe size={16} /> Public Page
         </a>
@@ -521,7 +521,7 @@ const confirmDelete = async () => {
         <button 
             onClick={() => handleStatusChange('published')}
             disabled={loading}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 shadow-lg hover:shadow-emerald-900/20 transition-all disabled:opacity-50"
+            className="bg-emerald-600 cursor-pointer hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 shadow-lg hover:shadow-emerald-900/20 transition-all disabled:opacity-50"
         >
             {loading ? <Loader2 className="animate-spin" size={16} /> : <Rocket size={16} />}
             Publish Now
@@ -530,7 +530,7 @@ const confirmDelete = async () => {
         <button 
             onClick={() => router.refresh()}
             disabled={loading}
-            className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
+            className="bg-white/5 cursor-pointer hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl font-bold uppercase text-xs flex items-center gap-2 transition-all hover:text-white text-slate-300"
         >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Sync
         </button>
@@ -553,7 +553,7 @@ const confirmDelete = async () => {
            {/* Card 1: Edit Details */}
            <button 
                 onClick={() => router.push(`/${user?.user_metadata?.username || 'user'}/dashboard/project/${project.id}/edit`)} 
-                className="group p-8 rounded-2xl bg-[#161b2c] border border-white/5 hover:border-emerald-500/50 transition-all text-left hover:-translate-y-1 shadow-lg relative overflow-hidden"
+                className="group cursor-pointer p-8 rounded-2xl bg-[#161b2c] border border-white/5 hover:border-emerald-500/50 transition-all text-left hover:-translate-y-1 shadow-lg relative overflow-hidden"
            >
               <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <Edit size={32} className="text-emerald-500 mb-4 group-hover:scale-110 transition-transform relative z-10" />
@@ -603,7 +603,7 @@ const confirmDelete = async () => {
                     <button 
                       onClick={() => handleStatusChange('published')}
                       disabled={loading}
-                      className="w-full group/btn relative overflow-hidden bg-linear-to-r from-emerald-600/20 to-green-600/20 hover:from-emerald-600/30 hover:to-green-600/30 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300 hover:text-emerald-400 px-4 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-emerald-900/20"
+                      className="w-full cursor-pointer group/btn relative overflow-hidden bg-linear-to-r from-emerald-600/20 to-green-600/20 hover:from-emerald-600/30 hover:to-green-600/30 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300 hover:text-emerald-400 px-4 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-emerald-900/20"
                     >
                       <div className="absolute inset-0 bg-linear-to-r from-transparent via-emerald-500/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                       {loading ? (
@@ -653,7 +653,7 @@ const confirmDelete = async () => {
            <button 
                 onClick={requestDelete}
                 disabled={loading}
-                className="group p-8 rounded-2xl bg-[#161b2c] border border-white/5 hover:border-red-500/50 transition-all text-left hover:-translate-y-1 shadow-lg relative overflow-hidden"
+                className="group cursor-pointer p-8 rounded-2xl bg-[#161b2c] border border-white/5 hover:border-red-500/50 transition-all text-left hover:-translate-y-1 shadow-lg relative overflow-hidden"
            >
               <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <ShieldAlert size={32} className="text-red-500 mb-4 group-hover:scale-110 transition-transform relative z-10" />
