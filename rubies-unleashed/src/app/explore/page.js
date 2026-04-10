@@ -58,56 +58,6 @@ export default async function ExplorePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
       />
 
-      {/*
-        ─── CRAWLER CONTENT LAYER ───────────────────────────────────────
-        Visually hidden but fully readable by crawlers and AI bots.
-        Semantic HTML with real game data — no JS required to see this.
-        ExploreClient renders the interactive UI on top for real users.
-        ─────────────────────────────────────────────────────────────────
-      */}
-      <div data-crawler="true" style={{ opacity: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <h1>Explore The Vault — Indie Games, Apps & Digital Projects</h1>
-        <p>
-          Discover and download indie games, apps, and tools on Rubies Unleashed.
-          Curated by archetypes, not algorithms. Where new ideas rise.
-        </p>
-
-        {initialGames.length > 0 && (
-          <section>
-            <h2>New Arrivals</h2>
-            <ul>
-              {initialGames.map((game) => (
-                <li key={game.id}>
-                  <article>
-                    <h3>{game.title}</h3>
-                    {game.description && (
-                      <p>{game.description.replace(/<[^>]*>/g, '').slice(0, 200)}</p>
-                    )}
-                    {game.tags?.length > 0 && (
-                      <p>Tags: {game.tags.join(', ')}</p>
-                    )}
-                    {game.slug && (
-                      <a href={`/view/${game.slug}`}>
-                        View {game.title}
-                      </a>
-                    )}
-                  </article>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <nav aria-label="Platform navigation">
-          <h2>Browse by Category</h2>
-          <ul>
-            <li><a href="/explore?type=game">Games</a></li>
-            <li><a href="/explore?type=app">Apps & Tools</a></li>
-            <li><a href="/explore">All Projects</a></li>
-          </ul>
-        </nav>
-      </div>
-
       {/* Interactive UI — for real users */}
       <ExploreClient initialGames={initialGames} />
     </>
