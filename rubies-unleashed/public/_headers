@@ -49,7 +49,11 @@
 /*.jpg
   Cache-Control: public, max-age=604800
 
-# HTML pages - no cache
+# HTML pages - no cache + security headers
 /*
   Cache-Control: no-cache, no-store, must-revalidate
   X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()

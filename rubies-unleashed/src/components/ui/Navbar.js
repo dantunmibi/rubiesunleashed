@@ -719,11 +719,11 @@ export default function Navbar() {
             </div>
 
             <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">
-              Terminate <span className="text-red-500">Session?</span>
+              Sign <span className="text-red-500">Out?</span>
             </h3>
             
             <p className="text-slate-400 mb-8 text-sm leading-relaxed">
-              You are about to disconnect from the Vault. Local data will be cleared.
+              You'll be signed out of your account. Any unsaved changes will be lost.
             </p>
             
             <div className="flex gap-3">

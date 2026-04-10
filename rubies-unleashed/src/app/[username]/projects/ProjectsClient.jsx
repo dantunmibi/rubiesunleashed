@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { processSupabaseProject } from "@/lib/game-utils";
@@ -53,15 +52,19 @@ function getSocialIcon(label, url) {
   return Globe;
 }
 
-export default function ProjectsClient({ username: propUsername }) {
+export default function ProjectsClient({
+  username: propUsername,
+  initialProfile = null,
+  initialProjects = [],
+}) {
+  const [profile, setProfile] = useState(initialProfile);
+  const [projects, setProjects] = useState(initialProjects);
+  const [loading, setLoading] = useState(initialProfile === null);
   const { user } = useAuth();
   const targetUsername = decodeURIComponent(propUsername);
 
   const { showSessionError, checkSupabaseError, triggerError } =
     useSessionGuard();
-  const [profile, setProfile] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   // Load Data
@@ -78,6 +81,9 @@ export default function ProjectsClient({ username: propUsername }) {
     }, 10000);
 
     async function loadData() {
+      // ✅ Skip if server already provided data
+      if (initialProfile) return;
+
       try {
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
@@ -229,37 +235,37 @@ export default function ProjectsClient({ username: propUsername }) {
                 <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-2">
                   {profile.display_name || profile.username}
                 </h1>
-              <a href={`/${profile.username}`}>
-                <p className="text-sm text-blue-500 hover:text-blue-600 font-medium cursor-pointer transition-colors">
-                  @{profile.username}
-                </p>
-              </a>
+                <a href={`/${profile.username}`}>
+                  <p className="text-sm text-blue-500 hover:text-blue-600 font-medium cursor-pointer transition-colors">
+                    @{profile.username}
+                  </p>
+                </a>
               </div>
 
               {/* Bio */}
-                <p className="text-base text-slate-400 leading-relaxed">
-                  {profile.architect_bio || profile.bio}
-                </p>
+              <p className="text-base text-slate-400 leading-relaxed">
+                {profile.architect_bio || profile.bio}
+              </p>
 
               {/* Actions */}
               <div className="flex gap-3">
                 {/* Social Links - Smart Grid */}
-                  <div className="grid grid-cols-4 gap-2 w-full">
-                    {profile.social_links.map((link, i) => {
-                      const IconComponent = getSocialIcon(link.label, link.url);
-                      const totalLinks = profile.social_links.length;
+                <div className="grid grid-cols-4 gap-2 w-full">
+                  {profile.social_links.map((link, i) => {
+                    const IconComponent = getSocialIcon(link.label, link.url);
+                    const totalLinks = profile.social_links.length;
 
-                      // ✅ Special styling for 5th and 6th links
-                      const isLastRow = totalLinks === 5 && i === 4; // 5th link (index 4)
-                      const isSixthLink = totalLinks === 6 && i >= 4; // 5th and 6th links
+                    // ✅ Special styling for 5th and 6th links
+                    const isLastRow = totalLinks === 5 && i === 4; // 5th link (index 4)
+                    const isSixthLink = totalLinks === 6 && i >= 4; // 5th and 6th links
 
-                      return (
-                        <a
-                          key={i}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`
+                    return (
+                      <a
+                        key={i}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`
             h-12 border border-white/10 rounded-xl 
             flex items-center justify-center 
             hover:border-emerald-500/50 hover:text-emerald-500 
@@ -267,12 +273,12 @@ export default function ProjectsClient({ username: propUsername }) {
             ${isLastRow ? "col-span-4" : ""} 
             ${isSixthLink ? "col-span-2" : ""}
           `}
-                        >
-                          <IconComponent size={18} />
-                        </a>
-                      );
-                    })}
-                  </div>
+                      >
+                        <IconComponent size={18} />
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Profile Completion */}

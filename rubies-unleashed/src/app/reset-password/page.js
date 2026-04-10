@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, ArrowLeft, Loader2, CheckCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
+import {
+  Lock,
+  ArrowLeft,
+  Loader2,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  AlertCircle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function ResetPasswordPage() {
@@ -19,24 +27,25 @@ export default function ResetPasswordPage() {
   // Password validation (matching signup requirements)
   const validatePassword = (pwd) => {
     if (pwd.length < 8) return "Password must be at least 8 characters.";
-    if (!/[A-Z]/.test(pwd)) return "Must contain at least one uppercase letter.";
+    if (!/[A-Z]/.test(pwd))
+      return "Must contain at least one uppercase letter.";
     if (!/[0-9]/.test(pwd)) return "Must contain at least one number.";
     return "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (loading) {
-      console.log('⚠️ Already submitting, ignoring duplicate request');
+      console.log("⚠️ Already submitting, ignoring duplicate request");
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    console.log('🔐 Starting password update...');
+    console.log("🔐 Starting password update...");
 
     // Client-side validation
     const validationError = validatePassword(password);
@@ -54,43 +63,75 @@ export default function ResetPasswordPage() {
 
     try {
       // Create timeout promise (10 seconds)
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout - please try again')), 10000)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Request timeout - please try again")),
+          15000,
+        ),
       );
 
       // Race between update and timeout
       const updatePromise = supabase.auth.updateUser({ password });
 
-      const { error: updateError } = await Promise.race([updatePromise, timeoutPromise]);
+      const { error: updateError } = await Promise.race([
+        updatePromise,
+        timeoutPromise,
+      ]);
 
       if (updateError) {
-        console.error('❌ Update error:', updateError);
+        console.error("❌ Update error:", updateError);
         throw updateError;
       }
 
-      console.log('✅ Password updated successfully');
+      console.log("✅ Password updated successfully");
+
+      // Fetch session to get user details
+      const {
+        data: { user: updatedUser },
+      } = await supabase.auth.getUser();
+
+      if (updatedUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", updatedUser.id)
+          .single();
+
+        // Call API route — not emailService directly
+        await fetch("/api/send-password-changed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: updatedUser.email,
+            username: profile?.username || updatedUser.email,
+          }),
+        });
+      }
+
       setSuccess(true);
-      
       // Redirect after showing success
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-
     } catch (err) {
       console.error("❌ Password Update Failed:", err);
-      
+
       let errorMessage = "Failed to update password. ";
-      
-      if (err.message?.includes('timeout')) {
-        errorMessage = "Request timed out. Your reset link may have expired. Please request a new one.";
-      } else if (err.message?.includes('session') || err.message?.includes('JWT')) {
+
+      if (err.message?.includes("timeout")) {
+        errorMessage =
+          "Request timed out. Your reset link may have expired. Please request a new one.";
+      } else if (
+        err.message?.includes("session") ||
+        err.message?.includes("JWT")
+      ) {
         errorMessage = "Your reset link has expired. Please request a new one.";
-      } else if (err.message?.includes('same password')) {
+      } else if (err.message?.includes("same password")) {
         errorMessage = "New password cannot be the same as your old password.";
       } else {
         errorMessage += err.message || "Please try again.";
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -104,7 +145,7 @@ export default function ResetPasswordPage() {
     const hasUpper = /[A-Z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const score = [hasLength, hasUpper, hasNumber].filter(Boolean).length;
-    
+
     if (score === 3) return { label: "Strong", color: "text-emerald-400" };
     if (score === 2) return { label: "Medium", color: "text-amber-400" };
     return { label: "Weak", color: "text-red-400" };
@@ -118,7 +159,7 @@ export default function ResetPasswordPage() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-500/10 blur-[120px] rounded-full" />
         </div>
-        
+
         <div className="text-center space-y-4 relative z-10">
           <CheckCircle size={64} className="mx-auto text-emerald-400" />
           <h2 className="text-xl font-bold text-white">Password Updated!</h2>
@@ -140,7 +181,10 @@ export default function ResetPasswordPage() {
         href="/login"
         className="absolute top-8 left-8 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group z-50"
       >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <ArrowLeft
+          size={20}
+          className="group-hover:-translate-x-1 transition-transform"
+        />
         <span className="text-sm font-bold uppercase tracking-wider">Back</span>
       </Link>
 
@@ -171,7 +215,10 @@ export default function ResetPasswordPage() {
               New Password
             </label>
             <div className="relative">
-              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Lock
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -203,7 +250,10 @@ export default function ResetPasswordPage() {
               Confirm Password
             </label>
             <div className="relative">
-              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Lock
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              />
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
@@ -235,7 +285,13 @@ export default function ResetPasswordPage() {
             <p className={/[0-9]/.test(password) ? "text-emerald-400" : ""}>
               • At least one number
             </p>
-            <p className={password === confirmPassword && password ? "text-emerald-400" : ""}>
+            <p
+              className={
+                password === confirmPassword && password
+                  ? "text-emerald-400"
+                  : ""
+              }
+            >
               • Passwords match
             </p>
           </div>

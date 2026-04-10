@@ -55,9 +55,9 @@ const STATUS_CONFIG = {
 
 const PERFORMANCE_CONFIG = {
   excellent: { label: 'Excellent', color: 'emerald' },
-  good: { label: 'Good', color: 'green' },
-  degraded: { label: 'Slow', color: 'amber' },
-  poor: { label: 'Poor', color: 'ruby' }
+  good: { label: 'Good', color: 'emerald' },      // ✅ green → emerald (consistent)
+  degraded: { label: 'Degraded', color: 'amber' },
+  poor: { label: 'Poor', color: 'ruby' },
 };
 
 // Special styling for Forge services

@@ -1,0 +1,67 @@
+# Rubies Unleashed
+> Where New Ideas Rise — A creator-first digital marketplace for indie games, apps, and digital projects.
+
+## About
+Rubies Unleashed is a platform where independent developers publish, showcase, and share their digital projects with a global audience. We focus on visibility, ownership, and long-term preservation — helping emerging creators turn passion projects into recognized work, while giving users early access to innovative games, apps, and tools they won't find elsewhere.
+
+- URL: https://rubiesunleashed.app
+- Type: Digital marketplace and creator ecosystem
+- Launched: December 26, 2025
+- Mission: To empower indie creators with a curated platform that provides visibility, ownership, and long-term preservation for their digital projects.
+
+## Content
+- 59+ curated items across games, apps, and digital tools
+- Community-submitted projects via The Forge (creator platform)
+- Supported platforms: Windows, Mac, Linux, Android, iOS, Web
+- Content types: Indie games, utility apps, productivity tools, experimental digital works
+
+## Key Pages
+- Explore (The Vault): https://rubiesunleashed.app/explore
+- Creator Platform (The Forge): https://rubiesunleashed.app/publish
+- About: https://rubiesunleashed.app/about
+- Help Center: https://rubiesunleashed.app/help
+- Platform Status: https://rubiesunleashed.app/status
+- Privacy Policy: https://rubiesunleashed.app/privacy
+- Terms of Service: https://rubiesunleashed.app/terms
+- Sitemap: https://rubiesunleashed.app/sitemap.xml
+
+## The Forge (Creator Platform)
+Architects — verified creators with publishing permissions — can submit projects directly to the platform with no approval queues and no revenue cuts. Each project includes full metadata, download links, screenshots, version history, and platform support information. Projects are preserved long-term.
+
+## The Vault (Discovery)
+The public explore area where users discover games and apps. Browsing is free and requires no account. Content is curated, not crowded — quality over quantity.
+
+## User System (5 Archetypes)
+Users select a class that personalizes their experience:
+- Hunter (Ruby): Games-first feed, early access focus
+- Netrunner (Cyan): Tools and apps prioritized, tech-savvy
+- Curator (Amber): Quality-first, hidden gems and archives
+- Phantom (Violet): Underground content, privacy-first
+- Architect (Emerald): Creator tools, publishing dashboard
+
+## Community
+- Discord: https://discord.gg/zgCh55JfWF
+- Twitter/X: https://twitter.com/rubiesunleashed
+- Instagram: https://www.instagram.com/official_rubiesunleashed
+- Facebook: https://facebook.com/rubiesunleashed
+- LinkedIn: https://linkedin.com/company/rubies-unleashed
+
+## Technical
+- Framework: Next.js 15 with hybrid server/client rendering
+- All pages pre-rendered server-side (full HTML for crawlers)
+- JSON-LD schema: SoftwareApplication and VideoGame types
+- ISR cache: 1-hour revalidation
+- Backend: Supabase (Postgres + Auth + Storage)
+- Hosting: Netlify
+
+## Brand
+- Tagline: "Where New Ideas Rise"
+- Promise: Visibility, ownership, preservation for indie creators
+- Voice: Encouraging, craft-focused, no corporate fluff
+- Terminology: "The Vault" (browse), "The Forge" (create), "Deploy" (publish)
+
+## Crawling & Indexing
+- Sitemap: https://rubiesunleashed.app/sitemap.xml
+- RSS Feed: https://rubiesunleashed.app/rss.xml
+- Robots: https://rubiesunleashed.app/robots.txt
+- llms.txt: https://rubiesunleashed.app/llms.txt

@@ -1,0 +1,34 @@
+name: Send Draft Reminders
+
+# Schedule: Every Thursday at 10:00 AM UTC
+on:
+  schedule:
+    - cron: '0 10 * * 4'  # Every Thursday at 10 AM UTC
+  
+  # Allow manual trigger from GitHub
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send Draft Reminder Emails
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            https://rubiesunleashed.app/api/cron/send-draft-reminders)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response Body: $body"
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Draft reminder cron failed with status $http_code"
+            exit 1
+          fi
+          
+          echo "✅ Draft reminder cron completed successfully"

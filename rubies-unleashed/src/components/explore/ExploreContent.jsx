@@ -12,10 +12,11 @@ import ScrollToTopButton from "./ScrollToTopButton";
 import { useGameFilters } from "@/hooks/useGameFilters";
 import { useScrollBehavior } from "@/hooks/useScrollBehavior";
 
-export default function ExploreContent({ triggerError }) { // ✅ Accept triggerError prop
+export default function ExploreContent({ triggerError, initialGames = [] }) {
+  // ✅ Accept triggerError prop
   const searchParams = useSearchParams();
-  const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [games, setGames] = useState(initialGames); // ✅ Hydrate from server
+  const [loading, setLoading] = useState(initialGames.length === 0); // ✅ Skip loading if prefetched
   const [selectedGame, setSelectedGame] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
@@ -42,7 +43,9 @@ export default function ExploreContent({ triggerError }) { // ✅ Accept trigger
     let timer;
     if (loading) {
       timer = setTimeout(() => {
-        console.warn("Explore content loading timed out (10s). Triggering session recovery.");
+        console.warn(
+          "Explore content loading timed out (10s). Triggering session recovery.",
+        );
         setLoading(false);
         if (triggerError) triggerError();
       }, 10000);
@@ -52,53 +55,58 @@ export default function ExploreContent({ triggerError }) { // ✅ Accept trigger
 
   // ✅ Load unified games data (Blogger + Supabase)
   useEffect(() => {
+    if (initialGames.length > 0) return; // ✅ Server already provided data
     async function load() {
       try {
         setLoading(true);
         setLoadError(null);
-        
+
         // ✅ Use client-safe unified feed
-        const data = await getUnifiedFeed({ 
+        const data = await getUnifiedFeed({
           limit: 1000,
-          includeArchived: false // Only show published projects
+          includeArchived: false, // Only show published projects
         });
-        
+
         console.log(`📊 Loaded ${data.length} items from unified feed`);
-        
+
         // Log the mix of content sources
-        const bloggerCount = data.filter(g => g.source !== 'supabase').length;
-        const supabaseCount = data.filter(g => g.source === 'supabase').length;
-        console.log(`📊 Content mix: ${bloggerCount} Blogger + ${supabaseCount} Community`);
-        
+        const bloggerCount = data.filter((g) => g.source !== "supabase").length;
+        const supabaseCount = data.filter(
+          (g) => g.source === "supabase",
+        ).length;
+        console.log(
+          `📊 Content mix: ${bloggerCount} Blogger + ${supabaseCount} Community`,
+        );
+
         setGames(data);
       } catch (error) {
-        console.error('❌ Failed to load games:', error);
+        console.error("❌ Failed to load games:", error);
         setLoadError(error.message);
-        
+
         // Fallback: Try to load just Blogger games if unified feed fails
         try {
-          const { fetchGames } = await import('@/lib/blogger');
+          const { fetchGames } = await import("@/lib/blogger");
           const fallbackData = await fetchGames(1000);
-          console.log('🔄 Fallback to Blogger-only feed');
+          console.log("🔄 Fallback to Blogger-only feed");
           setGames(fallbackData);
         } catch (fallbackError) {
-          console.error('❌ Fallback also failed:', fallbackError);
+          console.error("❌ Fallback also failed:", fallbackError);
           setGames([]); // Empty state
         }
       } finally {
         setLoading(false);
       }
     }
-    
+
     load();
   }, []);
 
   // Auto-scroll to vault when filters change
   useEffect(() => {
     if (!loading) {
-      const hasActiveFilters = 
-        filters.searchQuery || 
-        filters.selectedPlatform !== "All" || 
+      const hasActiveFilters =
+        filters.searchQuery ||
+        filters.selectedPlatform !== "All" ||
         filters.selectedCollection;
 
       if (hasActiveFilters) {
@@ -133,9 +141,11 @@ export default function ExploreContent({ triggerError }) { // ✅ Accept trigger
       <main className="md:pt-4 pb-24 px-4 lg:px-8 max-w-7xl mx-auto">
         <div className="h-96 flex flex-col items-center justify-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <p className="text-slate-400 font-bold mb-2">Failed to load content</p>
+          <p className="text-slate-400 font-bold mb-2">
+            Failed to load content
+          </p>
           <p className="text-slate-600 text-sm mb-4">{loadError}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-ruby text-white rounded-lg hover:bg-ruby/80 transition-colors"
           >
@@ -151,8 +161,8 @@ export default function ExploreContent({ triggerError }) { // ✅ Accept trigger
       <main className="md:pt-4 pb-24 px-4 lg:px-8 max-w-7xl mx-auto">
         <div className="flex flex-col gap-16 pt-20">
           <SpotlightHero games={games} />
-          
-          <SpecialCollections games={games} /> 
+
+          <SpecialCollections games={games} />
 
           <VaultSection
             filteredGames={filteredGames}

@@ -4,52 +4,60 @@ import ToastProvider from "@/components/providers/ToastProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import { GoogleAnalytics } from '@next/third-parties/google'
+import { GoogleAnalytics } from "@next/third-parties/google";
 import InternalTrafficGuard from "@/components/analytics/InternalTrafficGuard";
 import Script from "next/script";
 import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
-import { generateOrganizationSchema, generateWebSiteSchema, BRAND } from "@/lib/seo-utils";
+import NextTopLoader from "nextjs-toploader";
+import {
+  generateOrganizationSchema,
+  generateWebSiteSchema,
+  BRAND,
+} from "@/lib/seo-utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  metadataBase: new URL('https://rubiesunleashed.app'),
+  metadataBase: new URL("https://rubiesunleashed.app"),
 
   verification: {
-    google: 'LBbxq-Qizd1DQakDQ2vUfJrd-PAV8oCJ-ufn20kaRXM',
+    google: "LBbxq-Qizd1DQakDQ2vUfJrd-PAV8oCJ-ufn20kaRXM",
   },
-  
+
   title: {
     default: `${BRAND.name} | Indie Games & App Marketplace`,
-    template: `%s | ${BRAND.name}`
+    template: `%s | ${BRAND.name}`,
   },
-  description: "A launchpad for indie games, apps, and digital creators. Building a home for rising games, apps, and digital creations.",
-  
+  description:
+    "A launchpad for indie games, apps, and digital creators. Building a home for rising games, apps, and digital creations.",
+
   openGraph: {
     title: `${BRAND.name} | ${BRAND.slogan}`,
-    description: "A creator-first platform where independent developers publish, showcase, and share their digital projects with a global audience.",
+    description:
+      "A creator-first platform where independent developers publish, showcase, and share their digital projects with a global audience.",
     url: BRAND.url,
     siteName: BRAND.name,
     images: [
       {
-        url: '/rubieslogo.png',
+        url: "/rubieslogo.png",
         width: 800,
         height: 600,
         alt: `${BRAND.name} Logo - Where New Ideas Rise`,
       },
     ],
-    locale: 'en_US',
-    type: 'website',
+    locale: "en_US",
+    type: "website",
   },
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
     title: `${BRAND.name} | ${BRAND.slogan}`,
-    description: "Building a home for rising games, apps, and digital creations.",
-    images: ['/rubieslogo.png'],
+    description:
+      "Building a home for rising games, apps, and digital creations.",
+    images: ["/rubieslogo.png"],
   },
-  
+
   alternates: {
-    canonical: '/',
+    canonical: "/",
   },
 };
 
@@ -64,7 +72,9 @@ export default function RootLayout({ children }) {
         {/* ✅ Organization Schema (Critical for Brand Recognition) */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
         />
 
         {/* ✅ WebSite Schema (Enables Search in AI) */}
@@ -84,9 +94,14 @@ export default function RootLayout({ children }) {
             }
           `}
         </Script>
-        <meta name="blogarama-site-verification" content="blogarama-6b2bba5a-d0dd-423a-b697-fe4c28e64bb3" />
       </head>
       <body>
+        <NextTopLoader
+          color="#E0115F"
+          height={3}
+          showSpinner={false}
+          shadow="0 0 10px #E0115F, 0 0 5px #E0115F"
+        />
         <ErrorBoundary>
           <AuthProvider>
             <ThemeProvider>

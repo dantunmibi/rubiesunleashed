@@ -4,7 +4,7 @@
  */
 
 export const SERVICES = [
-  // CORE SERVICES (Critical Path)
+  // CORE SERVICES
   {
     id: 'api',
     name: 'Content Delivery API',
@@ -13,7 +13,8 @@ export const SERVICES = [
     endpoint: '/api/games?limit=1',
     checkType: 'http',
     icon: 'Database',
-    criticalPath: true
+    criticalPath: true,
+    healthKey: 'content_api'  // ✅ ADD THIS — matches route.js key
   },
   {
     id: 'auth',
@@ -22,7 +23,7 @@ export const SERVICES = [
     category: 'core',
     endpoint: '/api/health',
     checkType: 'http',
-    healthKey: 'auth', // ✅ NEW: Which key to read from health response
+    healthKey: 'auth',
     icon: 'Shield',
     criticalPath: true
   },
@@ -33,12 +34,12 @@ export const SERVICES = [
     category: 'core',
     endpoint: '/api/health',
     checkType: 'http',
-    healthKey: 'database', // ✅ NEW: Which key to read from health response
+    healthKey: 'database',
     icon: 'Server',
     criticalPath: true
   },
 
-  // THE FORGE (Creator Platform)
+  // THE FORGE
   {
     id: 'forge_api',
     name: 'Project Management API',
@@ -46,7 +47,7 @@ export const SERVICES = [
     category: 'forge',
     endpoint: '/api/health',
     checkType: 'http',
-    healthKey: 'projects_api', // ✅ NEW: Which key to read from health response
+    healthKey: 'projects_api',
     icon: 'Wrench',
     criticalPath: true
   },
@@ -57,7 +58,7 @@ export const SERVICES = [
     category: 'forge',
     endpoint: '/api/health',
     checkType: 'http',
-    healthKey: 'database', // ✅ Storage uses same DB connection
+    healthKey: 'database',
     icon: 'Image',
     criticalPath: true
   },
@@ -68,7 +69,7 @@ export const SERVICES = [
     category: 'forge',
     endpoint: '/api/health',
     checkType: 'http',
-    healthKey: 'database', // ✅ Dashboard uses profiles table
+    healthKey: 'database',
     icon: 'LayoutDashboard',
     criticalPath: false
   },
@@ -82,6 +83,7 @@ export const SERVICES = [
     checkType: 'client',
     icon: 'Search',
     criticalPath: false
+    // No healthKey — client-side check, handled by fallback
   },
   {
     id: 'wishlist',
@@ -90,19 +92,19 @@ export const SERVICES = [
     category: 'feature',
     endpoint: '/api/health',
     checkType: 'http',
-    healthKey: 'wishlist_api', // ✅ NEW: Which key to read from health response
+    healthKey: 'wishlist_api',
     icon: 'Heart',
     criticalPath: false
   },
+  // USER FEATURES
   {
     id: 'forms',
     name: 'Submission System',
     description: 'Contact & feedback forms',
     category: 'feature',
-    endpoint: '/__forms.html',
-    checkType: 'http',
     icon: 'Mail',
-    criticalPath: false
+    criticalPath: false,
+    healthKey: 'forms',        // ✅ Now has its own dedicated check
   },
 
   // INFRASTRUCTURE
@@ -111,10 +113,9 @@ export const SERVICES = [
     name: 'Global CDN',
     description: 'Static asset delivery',
     category: 'infrastructure',
-    endpoint: '/rubieslogo.png',
-    checkType: 'http',
     icon: 'Globe',
-    criticalPath: false
+    criticalPath: false,
+    healthKey: 'cdn',          // ✅ Now has its own dedicated check
   },
   {
     id: 'security',
@@ -124,6 +125,7 @@ export const SERVICES = [
     checkType: 'client',
     icon: 'Shield',
     criticalPath: false
+    // No healthKey — derived from DB health
   }
 ];
 

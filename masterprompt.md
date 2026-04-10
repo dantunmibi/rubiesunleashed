@@ -661,7 +661,9 @@ README.md
  ┃ ┃ ┃ ┗ 📂moderate
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂cron
- ┃ ┃ ┃ ┗ 📂send-archetype-reminders
+ ┃ ┃ ┃ ┣ 📂send-archetype-reminders
+ ┃ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┃ ┗ 📂send-draft-reminders
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂games
  ┃ ┃ ┃ ┣ 📜route copy.js.backup
@@ -686,7 +688,11 @@ README.md
  ┃ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂report
  ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┣ 📂send-password-changed
+ ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┣ 📂send-welcome-email
+ ┃ ┃ ┃ ┗ 📜route.js
+ ┃ ┃ ┣ 📂status-check
  ┃ ┃ ┃ ┗ 📜route.js
  ┃ ┃ ┗ 📂wishlist
  ┃ ┃ ┃ ┗ 📜route.js
@@ -710,6 +716,8 @@ README.md
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂reset-password
  ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂rss.xml
+ ┃ ┃ ┗ 📜route.js
  ┃ ┣ 📂settings
  ┃ ┃ ┣ 📜layout.js
  ┃ ┃ ┗ 📜page.js
@@ -721,6 +729,9 @@ README.md
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂view
  ┃ ┃ ┗ 📂[slug]
+ ┃ ┃ ┃ ┣ 📂similar
+ ┃ ┃ ┃ ┃ ┣ 📜page.js
+ ┃ ┃ ┃ ┃ ┗ 📜SimilarPageClient.jsx
  ┃ ┃ ┃ ┣ 📜error.js
  ┃ ┃ ┃ ┣ 📜loading.js
  ┃ ┃ ┃ ┗ 📜page.js
@@ -744,6 +755,7 @@ README.md
  ┃ ┃ ┣ 📜page.js
  ┃ ┃ ┗ 📜ProfileClient.jsx
  ┃ ┣ 📜favicon.ico
+ ┃ ┣ 📜favicon2.ico
  ┃ ┣ 📜globals.css
  ┃ ┣ 📜layout.js
  ┃ ┣ 📜not-found.js

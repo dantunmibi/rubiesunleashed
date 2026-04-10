@@ -9,7 +9,7 @@ import Footer from "@/components/ui/Footer";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import ExploreContent from "@/components/explore/ExploreContent";
 
-export default function ExploreClient() {
+export default function ExploreClient({ initialGames = [] }) {
   const { showSessionError, triggerError } = useSessionGuard();
 
   return (
@@ -23,7 +23,7 @@ export default function ExploreClient() {
           </div>
         }
       >
-        <ExploreContent triggerError={triggerError} />
+        <ExploreContent triggerError={triggerError} initialGames={initialGames} />
       </Suspense>
       <Footer />
       <SessionErrorOverlay show={showSessionError} />

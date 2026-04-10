@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
+import SessionErrorOverlay from "@/components/ui/SessionErrorOverlay";
 import BackgroundEffects from "@/components/ui/BackgroundEffects";
 import {
   User,
@@ -20,8 +21,6 @@ import {
   LayoutDashboard,
   Heart,
   Share2,
-  AlertTriangle,
-  RefreshCw,
   ChevronRight,
   Box,
 } from "lucide-react";
@@ -47,12 +46,13 @@ const ArchetypeIcon = ({ type, size = 20 }) => {
   }
 };
 
-export default function ProfileClient() {
+export default function ProfileClient({ initialProfile = null }) {
   const { user, initialized } = useAuth();
   const params = useParams();
   const targetUsername = decodeURIComponent(params.username);
 
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(initialProfile);
+  const [loading, setLoading] = useState(initialProfile === null);
   const [wishlistPreview, setWishlistPreview] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
@@ -61,7 +61,6 @@ export default function ProfileClient() {
   const [needsBio, setNeedsBio] = useState(false);
   const [needsCover, setNeedsCover] = useState(false);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(false);
@@ -84,7 +83,12 @@ export default function ProfileClient() {
     if (!initialized) return;
 
     let isMounted = true;
-    setLoading(true);
+
+    // ✅ Only set loading true if we don't have server data
+    if (!initialProfile) {
+      setLoading(true);
+    }
+
     setError(false);
     setTimeoutState(false);
 
@@ -96,20 +100,31 @@ export default function ProfileClient() {
     }, 8000);
 
     async function loadProfile() {
-      try {
-        // 1. Fetch Profile
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .ilike("username", targetUsername)
-          .single();
+      // ✅ Skip DB fetch if server already provided profile
+      if (initialProfile) {
+        // Still need to fetch wishlist and projects
+        // so don't return early — just skip the profile fetch
+      }
 
-        if (error) {
-          if (error.code !== "PGRST116") {
-            console.warn("Profile Load Error:", error.message);
+      try {
+        // ✅ Only fetch profile if not server-provided
+        let data = initialProfile;
+
+        if (!data) {
+          const { data: fetched, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .ilike("username", targetUsername)
+            .single();
+
+          if (error) {
+            if (error.code !== "PGRST116") {
+              console.warn("Profile Load Error:", error.message);
+            }
+            if (isMounted) setError(true);
+            return;
           }
-          if (isMounted) setError(true);
-          return;
+          data = fetched;
         }
 
         if (data && isMounted) {
@@ -301,31 +316,12 @@ export default function ProfileClient() {
     } catch (e) {}
   };
 
-  // ✅ 1. TIMEOUT STATE (must come first — catches both init + load hangs)
-  if (timeout) {
-    return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-6 text-center px-4">
-        <AlertTriangle className="text-amber-500" size={48} />
-        <div>
-          <h2 className="text-xl font-bold text-white mb-2">
-            Connection Interrupted
-          </h2>
-          <p className="text-slate-400 text-sm">The network is unresponsive.</p>
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold uppercase text-xs tracking-widest transition-all"
-        >
-          <RefreshCw size={16} /> Retry Connection
-        </button>
-      </div>
-    );
-  }
-
   // ✅ 2. INITIALIZING STATE
   if (!initialized) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
+        {/* SessionErrorOverlay sits above the spinner if timeout fires during init */}
+        <SessionErrorOverlay show={timeout} />
         <Loader2 className="animate-spin text-slate-600" size={48} />
         <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">
           Establishing Link...
@@ -338,6 +334,7 @@ export default function ProfileClient() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center gap-4">
+        <SessionErrorOverlay show={timeout} />
         <Loader2 className="animate-spin text-ruby" size={48} />
         <p className="text-slate-500 text-sm tracking-widest uppercase animate-pulse">
           Decrypting Identity...
@@ -715,6 +712,7 @@ export default function ProfileClient() {
         )}
       </main>
       <Footer />
+      <SessionErrorOverlay show={timeout} />
     </div>
   );
 }
