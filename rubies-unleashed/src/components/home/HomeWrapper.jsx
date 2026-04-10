@@ -1,12 +1,15 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import UserDashboard from './UserDashboard';
 import { Skeleton } from '@/components/ui/Skeleton';
 
+const SESSION_CACHE_KEY = 'ruby_session_state';
+
 // ----------------------------------------------------------------
 // AUTH TRANSITION SKELETON
-// Shown during auth resolution window.
+// Shown during auth resolution window ONLY for likely-authenticated users.
 // Mirrors UserDashboard structure to prevent content flash.
 // ----------------------------------------------------------------
 function AuthTransitionSkeleton() {
@@ -66,14 +69,41 @@ function AuthTransitionSkeleton() {
 //   - Auth resolves client-side after hydration
 //   - Authenticated users see skeleton → dashboard swap
 //   - Guests see the server-rendered landing with no JS dependency
+//
+// Fix: Only show AuthTransitionSkeleton if session cache indicates
+//   a likely-authenticated user. Guests and crawlers always see
+//   serverLanding immediately — no skeleton, no flash, no empty shell.
 // ----------------------------------------------------------------
 export default function HomeWrapper({ games, serverLanding }) {
   const { user, loading, initialized } = useAuth();
 
-  // Auth still resolving —
-  // Show skeleton to hide the swap from authenticated users.
-  // Guests with JS disabled already have serverLanding visible.
-  if (loading || !initialized) {
+  // Read session cache synchronously to decide initial render.
+  // This runs once on mount before auth resolves.
+  const [likelyAuthenticated, setLikelyAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const cached = localStorage.getItem(SESSION_CACHE_KEY);
+      if (!cached) return false;
+      const { hasSession, timestamp } = JSON.parse(cached);
+      const cacheAge = Date.now() - timestamp;
+      return hasSession === true && cacheAge < 300000; // 5 min TTL
+    } catch {
+      return false;
+    }
+  });
+
+  // Once auth resolves, update likelyAuthenticated so subsequent
+  // renders are accurate (e.g. after login/logout in same session).
+  useEffect(() => {
+    if (initialized) {
+      setLikelyAuthenticated(!!user);
+    }
+  }, [initialized, user]);
+
+  // Auth still resolving AND user is likely authenticated —
+  // show skeleton to hide the dashboard swap.
+  // Guests, crawlers, and first-time visitors skip this entirely.
+  if ((loading || !initialized) && likelyAuthenticated) {
     return <AuthTransitionSkeleton />;
   }
 

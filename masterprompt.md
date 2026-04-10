@@ -630,8 +630,10 @@ README.md
 📦public
  ┣ 📜file.svg
  ┣ 📜globe.svg
+ ┣ 📜llms.txt
  ┣ 📜next.svg
  ┣ 📜ru-logo.png
+ ┣ 📜ru-logo2.png
  ┣ 📜rubieslogo.png
  ┣ 📜vercel.svg
  ┣ 📜window.svg
@@ -708,6 +710,8 @@ README.md
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂initialize
  ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂llms-full.txt
+ ┃ ┃ ┗ 📜route.js
  ┃ ┣ 📂login
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂privacy
@@ -723,8 +727,11 @@ README.md
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂signup
  ┃ ┃ ┗ 📜page.js
+ ┃ ┣ 📂sitemap.xml
+ ┃ ┃ ┗ 📜route.js
  ┃ ┣ 📂status
- ┃ ┃ ┗ 📜page.js
+ ┃ ┃ ┣ 📜page.js
+ ┃ ┃ ┗ 📜StatusPageClient.jsx
  ┃ ┣ 📂terms
  ┃ ┃ ┗ 📜page.js
  ┃ ┣ 📂view
@@ -760,8 +767,7 @@ README.md
  ┃ ┣ 📜layout.js
  ┃ ┣ 📜not-found.js
  ┃ ┣ 📜page.js
- ┃ ┣ 📜robots.js
- ┃ ┗ 📜sitemap.js
+ ┃ ┗ 📜robots.js
  ┣ 📂components
  ┃ ┣ 📂admin
  ┃ ┃ ┣ 📜AdminCommentModal.jsx
