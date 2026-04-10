@@ -65,7 +65,7 @@ export default async function ExplorePage() {
         ExploreClient renders the interactive UI on top for real users.
         ─────────────────────────────────────────────────────────────────
       */}
-      <div className="sr-only" aria-hidden="false">
+      <div data-crawler="true" style={{ opacity: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <h1>Explore The Vault — Indie Games, Apps & Digital Projects</h1>
         <p>
           Discover and download indie games, apps, and tools on Rubies Unleashed.
