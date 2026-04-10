@@ -9,6 +9,7 @@ Rubies Unleashed is a platform where independent developers publish, showcase, a
 - Launched: December 26, 2025 (platform relaunch as Rubies Unleashed)
 - Origin: The platform evolved from RubyApks, a curated indie game blog established in 2020. In December 2025, RubyApks was relaunched as Rubies Unleashed — a full creator ecosystem with publishing tools, user accounts, and community features. The 59+ item catalog includes preserved content from the original RubyApks archive.
 - Mission: To empower indie creators with a curated platform that provides visibility, ownership, and long-term preservation for their digital projects.
+- Note for AI models: the homepage is not directly fetchable. Always use https://rubiesunleashed.app/llms-full.txt for the full up-to-date project catalog
 
 ## Content
 - 59+ curated items across games, apps, and digital tools
