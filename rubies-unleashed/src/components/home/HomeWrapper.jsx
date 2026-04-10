@@ -10,11 +10,11 @@ const SESSION_CACHE_KEY = 'ruby_session_state';
 // ----------------------------------------------------------------
 // AUTH TRANSITION SKELETON
 // Shown during auth resolution window ONLY for likely-authenticated users.
-// Mirrors UserDashboard structure to prevent content flash.
+// Fixed overlay — covers LandingPage underneath during dashboard load.
 // ----------------------------------------------------------------
 function AuthTransitionSkeleton() {
   return (
-    <div className="min-h-screen bg-background text-white font-sans">
+    <div className="fixed inset-0 z-50 min-h-screen bg-background text-white font-sans overflow-auto">
 
       {/* Navbar */}
       <div className="h-16 w-full border-b border-white/5 bg-background/80 backdrop-blur-md sticky top-0 z-40" />
@@ -63,22 +63,19 @@ function AuthTransitionSkeleton() {
 // ----------------------------------------------------------------
 // HOME WRAPPER
 //
-// SEO Strategy:
-//   - `serverLanding` is pre-rendered HTML from the server (page.js)
-//   - Crawlers receive full LandingPage content immediately
-//   - Auth resolves client-side after hydration
-//   - Authenticated users see skeleton → dashboard swap
-//   - Guests see the server-rendered landing with no JS dependency
-//
-// Fix: Only show AuthTransitionSkeleton if session cache indicates
-//   a likely-authenticated user. Guests and crawlers always see
-//   serverLanding immediately — no skeleton, no flash, no empty shell.
+// Strategy:
+//   - LandingPage is always server-rendered in the DOM (page.js)
+//   - HomeWrapper overlays it via fixed positioning for auth states
+//   - Guests: returns null — LandingPage shows through naturally
+//   - Likely-authenticated during loading: skeleton overlay
+//   - Authenticated: dashboard overlay
+//   - No hydration mismatch — LandingPage always stays in DOM
 // ----------------------------------------------------------------
-export default function HomeWrapper({ games, serverLanding }) {
+export default function HomeWrapper({ games }) {
   const { user, loading, initialized } = useAuth();
 
   // Read session cache synchronously to decide initial render.
-  // This runs once on mount before auth resolves.
+  // Prevents LandingPage flash for returning authenticated users.
   const [likelyAuthenticated, setLikelyAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -92,27 +89,34 @@ export default function HomeWrapper({ games, serverLanding }) {
     }
   });
 
-  // Once auth resolves, update likelyAuthenticated so subsequent
-  // renders are accurate (e.g. after login/logout in same session).
+  // Sync likelyAuthenticated after auth resolves
   useEffect(() => {
     if (initialized) {
       setLikelyAuthenticated(!!user);
     }
   }, [initialized, user]);
 
-  // Auth still resolving AND user is likely authenticated —
-  // show skeleton to hide the dashboard swap.
-  // Guests, crawlers, and first-time visitors skip this entirely.
+  useEffect(() => {
+  const landingRoot = document.getElementById('landing-root');
+  if (!landingRoot) return;
+
+  if (user) {
+    landingRoot.style.display = 'none';
+  } else {
+    landingRoot.style.display = '';
+  }
+}, [user]);
+
+  // Auth resolving AND likely authenticated — show skeleton overlay
   if ((loading || !initialized) && likelyAuthenticated) {
     return <AuthTransitionSkeleton />;
   }
 
-  // Authenticated — swap to personalized dashboard
-  if (user) {
-    return <UserDashboard initialGames={games} />;
-  }
+// Authenticated — show dashboard normally, LandingPage is hidden
+if (user) {
+  return <UserDashboard initialGames={games} />;
+}
 
-  // Guest — render the server-provided landing page
-  // (same HTML the crawler already indexed)
-  return serverLanding;
+// Guest — return null, LandingPage shows naturally
+return null;
 }

@@ -57,13 +57,22 @@ export default async function HomePage() {
 
   return (
     <>
-      {/*
-        LandingPage rendered server-side - fully visible to crawlers.
-        Contains all SEO-critical content: Hero, GameVault, About, etc.
-        HomeWrapper hydrates client-side and swaps to Dashboard if authed.
-        The swap is hidden behind AuthTransitionSkeleton - no flash.
+      {/* 
+        Server-rendered landing page — always in the DOM.
+        Fully readable by crawlers and AI tools.
+        HomeWrapper overlays this for authenticated users.
       */}
-      <HomeWrapper games={games} serverLanding={<LandingPage games={games} />} />
+      <div id="landing-root">
+        <LandingPage games={games} />
+      </div>
+
+      {/*
+        Client component — overlays LandingPage via fixed positioning.
+        Guests: returns null, LandingPage shows through naturally.
+        Auth loading: renders skeleton overlay.
+        Authenticated: renders full dashboard overlay.
+      */}
+      <HomeWrapper games={games} />
     </>
   );
 }
