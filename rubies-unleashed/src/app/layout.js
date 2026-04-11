@@ -84,7 +84,7 @@ export default function RootLayout({ children }) {
         />
 
         {/* GA Blocker */}
-        <Script id="ga-blocker" strategy="beforeInteractive">
+        <Script id="ga-blocker" strategy="afterInteractive">
           {`
             if (window.location.hostname === 'localhost' || 
                 window.location.hostname === '127.0.0.1' ||
