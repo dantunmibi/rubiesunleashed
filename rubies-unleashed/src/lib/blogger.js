@@ -1530,41 +1530,30 @@ function getBackupGames(limit) {
 
 export async function fetchGames(limit = 500) {
   try {
-    const timestamp = Date.now();
-    
-    // ✅ FIX: Determine Base URL for Server-Side Fetches
     let baseUrl = '';
     if (typeof window === 'undefined') {
-      // Server-side: Use Netlify env var or localhost
-      // Note: Netlify sets URL to the deployment URL (e.g. https://rubies...app)
       baseUrl = process.env.URL || 'http://localhost:3000';
     }
     
-    // Construct absolute URL
-    const url = `${baseUrl}/api/games?limit=${limit}&_t=${timestamp}`;
+    // No timestamp — stable URL allows Next.js to cache it
+    const url = `${baseUrl}/api/games?limit=${limit}`;
 
-    console.log(`🌐 Fetching from: ${url}`); // Debug Log
+    console.log(`🌐 Fetching from: ${url}`);
 
     const res = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
+      next: { revalidate: 300 }, // Cache for 5 minutes, matching page revalidate
     });
     
     if (!res.ok) {
-        console.warn(`⚠️ API Error (${res.status}). Using Snapshot.`);
-        return getBackupGames(limit);
+      console.warn(`⚠️ API Error (${res.status}). Using Snapshot.`);
+      return getBackupGames(limit);
     }
     
     const data = await res.json();
     if (!data.feed || !data.feed.entry) {
-        console.warn('⚠️ API returned no data. Using Snapshot.');
-        return getBackupGames(limit);
+      console.warn('⚠️ API returned no data. Using Snapshot.');
+      return getBackupGames(limit);
     }
-    
-    // ✅ DEBUG: Log what we actually got
     
     const games = data.feed.entry.map(post => safeNormalizePost(post));
     return games;
