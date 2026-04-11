@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/components/providers/AuthProvider';
-import UserDashboard from './UserDashboard';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/components/providers/AuthProvider";
+import UserDashboard from "./UserDashboard";
+import { Skeleton } from "@/components/ui/Skeleton";
 
-const SESSION_CACHE_KEY = 'ruby_session_state';
+const SESSION_CACHE_KEY = "ruby_session_state";
 
 // ----------------------------------------------------------------
 // AUTH TRANSITION SKELETON
@@ -15,7 +15,6 @@ const SESSION_CACHE_KEY = 'ruby_session_state';
 function AuthTransitionSkeleton() {
   return (
     <div className="fixed inset-0 z-50 min-h-screen bg-background text-white font-sans overflow-auto">
-
       {/* Navbar */}
       <div className="h-16 w-full border-b border-white/5 bg-background/80 backdrop-blur-md sticky top-0 z-40" />
 
@@ -38,7 +37,10 @@ function AuthTransitionSkeleton() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={`s1-${i}`} className="aspect-3/4 rounded-xl bg-surface border border-white/5" />
+            <Skeleton
+              key={`s1-${i}`}
+              className="aspect-3/4 rounded-xl bg-surface border border-white/5"
+            />
           ))}
         </div>
       </div>
@@ -51,11 +53,13 @@ function AuthTransitionSkeleton() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={`s2-${i}`} className="aspect-3/4 rounded-xl bg-surface border border-white/5" />
+            <Skeleton
+              key={`s2-${i}`}
+              className="aspect-3/4 rounded-xl bg-surface border border-white/5"
+            />
           ))}
         </div>
       </div>
-
     </div>
   );
 }
@@ -76,18 +80,21 @@ export default function HomeWrapper({ games }) {
 
   // Read session cache synchronously to decide initial render.
   // Prevents LandingPage flash for returning authenticated users.
-  const [likelyAuthenticated, setLikelyAuthenticated] = useState(() => {
-    if (typeof window === 'undefined') return false;
+  const [likelyAuthenticated, setLikelyAuthenticated] = useState(false);
+
+  useEffect(() => {
     try {
       const cached = localStorage.getItem(SESSION_CACHE_KEY);
-      if (!cached) return false;
+      if (!cached) return;
       const { hasSession, timestamp } = JSON.parse(cached);
       const cacheAge = Date.now() - timestamp;
-      return hasSession === true && cacheAge < 300000; // 5 min TTL
+      if (hasSession === true && cacheAge < 300000) {
+        setLikelyAuthenticated(true);
+      }
     } catch {
-      return false;
+      // ignore
     }
-  });
+  }, []);
 
   // Sync likelyAuthenticated after auth resolves
   useEffect(() => {
@@ -97,26 +104,26 @@ export default function HomeWrapper({ games }) {
   }, [initialized, user]);
 
   useEffect(() => {
-  const landingRoot = document.getElementById('landing-root');
-  if (!landingRoot) return;
+    const landingRoot = document.getElementById("landing-root");
+    if (!landingRoot) return;
 
-  if (user) {
-    landingRoot.style.display = 'none';
-  } else {
-    landingRoot.style.display = '';
-  }
-}, [user]);
+    if (user) {
+      landingRoot.style.display = "none";
+    } else {
+      landingRoot.style.display = "";
+    }
+  }, [user]);
 
   // Auth resolving AND likely authenticated — show skeleton overlay
   if ((loading || !initialized) && likelyAuthenticated) {
     return <AuthTransitionSkeleton />;
   }
 
-// Authenticated — show dashboard normally, LandingPage is hidden
-if (user) {
-  return <UserDashboard initialGames={games} />;
-}
+  // Authenticated — show dashboard normally, LandingPage is hidden
+  if (user) {
+    return <UserDashboard initialGames={games} />;
+  }
 
-// Guest — return null, LandingPage shows naturally
-return null;
+  // Guest — return null, LandingPage shows naturally
+  return null;
 }
