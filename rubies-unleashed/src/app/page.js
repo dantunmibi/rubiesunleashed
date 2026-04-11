@@ -51,7 +51,7 @@ export const metadata = {
 
 export default async function HomePage() {
   const games = await getUnifiedFeed({
-    limit: 500,
+    limit: 12,
     includeArchived: false,
   });
 
